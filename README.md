@@ -39,7 +39,7 @@ Research Topics
   * Ideally I want to at least
   	* bundle and minify JavaScript files
   	* I don't have much css, but make a cursory less file, tranform it, minify it.
-  	* Update <script> references to point to the bundle
+  	* Update [script] references to point to the bundle
   	* Optionally minify html files and templates
   * Use CDN sources for libs.
   	* I don't think that's build related.
