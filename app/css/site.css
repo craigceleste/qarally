@@ -1,0 +1,105 @@
+
+/*
+Cause all ng-cloak elements to be hidden until Angular finishes loading.
+http://docs.angularjs.org/api/ng.directive:ngCloak
+*/
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak
+{
+  display: none !important;
+}
+
+/*
+The navbar-fixed-top requires us to push the content down past the nav.
+Recommended is margin-top the body, but some pages won't have the navbar.
+Also, individual templates don't have access to the <body> without code.
+I could have a <div> with margin-top around the main content of the page.
+For now a humble <div class="fix-it-hack"> after the navbar.
+*/
+.nav-spacer { display:block; height: 60px; }
+
+/*
+I have a dropdown-menu (Test Sets) that I expected to have 3 to 5 items, 8 or so on the extreme end.
+Turns out it was a bad assumption and some iterations have 15 or 18, which puts the extreme at 50 or so.
+The correct solution would be to think up a different UI.
+But for now I add a vertical scrollbar on the dropdown-menu. But don't pollute bootstrap styles by giving all dropdown-menu's the scrollbar.
+*/
+.dropdown-menu.ps-scroll
+{
+	max-height: 400px;
+	max-width: 500px;
+	overflow: auto;
+}
+
+/*
+The WPI drop-down on the top navbar contains user-entered text.
+Limit its length to avoid the navbar wrapping.
+TODO review. this solution loses the .caret in the overflow area. Alternate solutions get klugey with keeping the caret on the baseline
+*/
+#wpi-drop-down-label {
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/*
+Test Case sidebar navigation
+TODO I am expressing the full nesting with the expectation that this will get ported to less eventually.
+*/
+#tc-sidebar { position: fixed; top: 60px; left: 10px; bottom: 10px; width: 350px; }
+#tc-sidebar .well { height: 100%; }
+#tc-sidebar .well .form { margin-bottom: 10px; }
+#tc-sidebar .well .button-list { margin-bottom: 10px; }
+#tc-sidebar .well .button-list:after { content:''; display:block; clear: both; } /* use bootstrap mixin for clearfloat */
+#tc-sidebar .well .button-list .tc-button { float:left; width: 93px; text-align: center; white-space: nowrap; text-decoration: none; cursor: pointer; padding: 0 3px 2px 0; }
+
+/*
+Note that I am intentionally making the space between buttons INSIDE the click/hover area of the button.
+Meaning: the button border is actually a few pixels inside the button.
+I found it really annoying when the cursor and hover changed for the 2px or so between buttons.
+This is a much smoother experience while looking at the hover hint label.
+*/
+#tc-sidebar .well .button-list .tc-button > div { border: 1px solid silver; }
+#tc-sidebar .well .button-list .tc-button:hover > div { background-color: #eee; }
+
+/*
+	TC style by verdict
+	Note: "passed" is an expected, not exceptional state. It should fade into the background.
+	When the whole board is mostly untested, it should not look noisy. It's just a matrix of numbers.
+	When the whole board is mostly passed, the untested ones should pop out.
+	Failed ones should pop out all the time. The whole board should never be all failed. If everything is undelivered and offline, delay testing. Don't just fail everything.
+*/
+#tc-sidebar .button-list a             { color: #333; }
+#tc-sidebar .button-list .happy        { color: #ada; }
+#tc-sidebar .button-list .happy:hover  { color: #8c8; }
+#tc-sidebar .button-list .sad          { color: #d00;  }
+
+/*
+The TC label acts as both the "Test Cases" label, but also the hint-on-hover.
+Give it an ellipsis style because of that.
+*/
+#testCasesLabel {
+	display:block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/*
+Test Cases scrollable area.
+TODO review hack (maybe its not a hack)
+For #tc-list, 100% height makes its height equal to the INNER height (inside padding) of the parent .well.
+Except the parent well also has the "Test Cases" label and Search form in it, pushing the div below the bottom.
+Compensate by giving the .well artificial padding-bottom equal to the height of the search box, Test Cases label and related margins.
+*/
+#tc-list             { height: 100%; overflow:hidden; overflow-y: auto; }
+#tc-sidebar .well    { padding-bottom: 80px; }
+
+/*
+The Test Case Content area
+*/
+#tc-content {
+	margin-left: 370px;
+	padding: 0 10px;
+}
+
