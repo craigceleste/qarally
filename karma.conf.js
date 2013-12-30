@@ -22,7 +22,6 @@ module.exports = function(config) {
 			'app/lib/angular/angular-route.min.js',
 
 			// code under test
-			'app/_local/**/*.js',			// contains fake data for our business that I guess shouldn't be on github. I will generify it eventually
 			'app/js/**/*.js',
 
 			// testing tools
