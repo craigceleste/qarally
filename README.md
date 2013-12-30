@@ -51,4 +51,13 @@ Research Topics
   * Are there any CI solutions for this sort of thing? I'd hate to set  up my own server just for this.
   * What other stuff do people do during a build?
 
+LocalStorage
+------------
+window.localStorage will be used to cache rally data (and some easily recoverable user data) for faster day-to-day work.
+
+Subscription Data
+
+    ['SubscriptionData'] = {
+
+    };
 
