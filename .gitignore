@@ -1,0 +1,5 @@
+app/_local
+temp
+.idea
+coverage
+node_modules
