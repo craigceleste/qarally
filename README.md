@@ -55,9 +55,47 @@ LocalStorage
 ------------
 window.localStorage will be used to cache rally data (and some easily recoverable user data) for faster day-to-day work.
 
-Subscription Data
+Subscription Data: recurse through all Workspaces, Projects and Iterations and cache them.
+
+They change seldomly on the scale of a tester griding through a bunch of tests. They can hit Refresh when a new iteration starts.
 
     ['SubscriptionData'] = {
 
+      // Versioning scheme since localStorage will persist across software updates
+      "v":3,
+      "d":{
+
+        // Subscription info: not much
+        "_ref":"https://rally1.rallydev.com/slm/webservice/v3.0/subscription/365548e8-ec1c-4d82-9954-38a0e1fcd05a",
+
+        // List of workspaces. Expect 1 or 2.
+        "workspaces":{
+
+          // Keyed on _ref and _ref is duplicated in the object. If storage becomes seriously limited, this could be simplified
+
+          "https://rally1.rallydev.com/slm/webservice/v3.0/workspace/A155e1f8-3e96-471f-ac5a-a72a7825bb9d":{
+            "_ref":"https://rally1.rallydev.com/slm/webservice/v3.0/workspace/A155e1f8-3e96-471f-ac5a-a72a7825bb9d",
+            "name":"Sandbox",
+
+            // List of projects per workspace
+            "projects":{
+              "https://rally1.rallydev.com/slm/webservice/v3.0/project/06c8e783-aa04-4168-a206-f3f842a1a163":{
+                "_ref":"https://rally1.rallydev.com/slm/webservice/v3.0/project/06c8e783-aa04-4168-a206-f3f842a1a163",
+                "name":"My Web App",
+
+                // List of iterations per project
+                "iterations":{
+                  "https://rally1.rallydev.com/slm/webservice/v3.0/iteration/15a0b8cb-2f31-4b39-882f-961f223b5029":{
+                    "_ref":"https://rally1.rallydev.com/slm/webservice/v3.0/iteration/15a0b8cb-2f31-4b39-882f-961f223b5029",
+                    "name":"Sprint 1",
+                    "startDate":"2011-01-01T05:00:00.000Z",
+                    "endDate":"2011-02-01T04:59:59.000Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     };
 
