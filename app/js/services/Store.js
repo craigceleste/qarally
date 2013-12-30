@@ -10,7 +10,7 @@ app.factory('Store', ['$log', '$window', '$q', function($log, $window, $q) {
 
 	var maxStorage = 5 * 1024 * 1024; // 5 MB
 
-	// TODO inject it
+	// TODO inject it. how? should it be a service itself?
 
 	var sectionList = {
 
@@ -45,6 +45,7 @@ app.factory('Store', ['$log', '$window', '$q', function($log, $window, $q) {
 	};
 
 	// Initialize: fill and validate the sectionList
+
 	(function () {
 
 		var sectionStats = _.reduce(sectionList, function(memo, section) {
@@ -132,23 +133,20 @@ app.factory('Store', ['$log', '$window', '$q', function($log, $window, $q) {
 		// I want to be a little over-zealous with the validation on this one
 
 		if (!options.key || !options.expectedVersion || !options.fetch) {
-//			Console.assert(false, 'Store: missing required field.');
-			return undefined;
+			throw new Error('Store: missing required field.');
 		}
 
 		var section = sectionList[options.key];
 		if (!section) {
-//			Console.assert(false, 'Store: unrecognized key.');
-			return undefined;
+			throw new Error('Store: unrecognized key.');
 		}
 
 		if (section.isDictionary && !options.subkey) {
-//			Console.assert(false, 'Store: missing required field.');
-			return undefined;
+			throw new Error('Store: missing required field.');
 		}
 
 if (section.isDictionary) {
-//	Console.assert(false, 'Store: isDictionary not implemented yet.');
+// TODO isDictionary not implemented yet.
 	return undefined;
 }
 		// Attempt to find it in the store
@@ -194,7 +192,7 @@ if (section.isDictionary) {
 				} else if (typeof options.upgrade === 'function') {
 
 					innerData = options.upgrade(outerData[versionKey], outerData[dataKey]);
-					service.$put({
+					service.put({
 						key: options.key,
 						version: options.expectedVersion,
 						data: innerData
@@ -221,9 +219,11 @@ if (section.isDictionary) {
 			// If fetch returns a promise, then join the promise chain.
 
 			if (innerData && typeof innerData.then === 'function') {
-//				Console.assert(options.usePromise, 'fetch() should match the expectation of .usePromise.');
+
+				if (!options.usePromise) throw new Error('fetch() should match the expectation of .usePromise.');
+
 				return innerData.then(function(realInnerData) {
-					service.$put({
+					service.put({
 						key: options.key,
 						version: options.expectedVersion,
 						data: realInnerData
@@ -234,8 +234,9 @@ if (section.isDictionary) {
 
 			// Not a promise
 
-//			Console.assert(!options.usePromise, 'fetch() should match the expectation of .usePromise.');
-			service.$put({
+			if (options.usePromise) throw new Error('fetch() should match the expectation of .usePromise.');
+
+			service.put({
 				key: options.key,
 				version: options.expectedVersion,
 				data: innerData
@@ -250,7 +251,7 @@ if (section.isDictionary) {
 		return innerData;
 	};
 
-	service.$put = function(options) {
+	service.put = function(options) {
 
 		options = _.extend({
 			key: null,					// required: expect to be a string
@@ -260,23 +261,23 @@ if (section.isDictionary) {
 		}, options);
 
 		if (!options.key || !options.version) {
-//			Console.assert(false, 'Store: missing required field.');
+			$log.error('Store: missing required field.');
 			return;
 		}
 
 		var section = sectionList[options.key];
 		if (!section) {
-//			Console.assert(false, 'Store: unrecognized key.');
+			$log.error('Store: unrecognized key.');
 			return;
 		}
 
 		if (section.isDictionary && !options.subkey) {
-//			Console.assert(false, 'Store: missing required field.');
+			$log.error('Store: missing required field.');
 			return;
 		}
 
 if (section.isDictionary) {
-//	Console.assert(false, 'Store: isDictionary not implemented yet.');
+// TODO isDictionary not implemented yet.
 	return undefined;
 }
 
@@ -296,12 +297,14 @@ if (section.isDictionary) {
 		var actualSize = options.key.length + outerDataJson.length;
 		$log.debug('Store [' + options.key + '] size: ' + Math.ceil(actualSize / 1024) + ' KB (' + Math.ceil(actualSize / maxStorage * 100)  + ' % of localStorage)');
 
-		// I am using a naive fixed size silo/section kind of deal for now.
+		// I am using a naive fixed size silo for now.
 		// If any one section grows beyond what I expect, the app will continue to work, but some assertions may start failing which is a hint to review it.
-		// The app will hit the hard limit if the total storage is exceeded.
+		// The app will hit the hard limit if the total storage is exceeded, at which point browser exceptions will cause it to stop working.
 		// I may get more aggressive about the limit constraints eventually. But not yet.
 
-//		Console.assert(actualSize <= section.limit, 'Store [' + options.key + '] exceeded the expected upper range of size. This may compromize other parts of the application.');
+		if (actualSize > section.limit) {
+			$log.warn('Store [' + options.key + '] exceeded the expected upper range of size. This may compromize other parts of the application.');
+		}
 
 		$window.localStorage[options.key] = outerDataJson;
 	};

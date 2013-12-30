@@ -1,13 +1,14 @@
 
 // Rally service
-// ...mostly data access via webservices
+
+//		- Stateless data access service to interact with Rally web services.
+//		- Manage caching of data in window.localStorage via Store service
+//		- Transformation of Rally data into normalized local data (discard stuff we don't need)
 
 app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, Store) {
 	"use strict";
 
-	var service = {};
-
-	// URL's are read from responses to earlier requests. These are some URL's for convenience
+	// An overview of Rally web services we use.
 
 	// Entry point (hard coded url)
 	// https://rally1.rallydev.com/slm/webservice/v3.0/subscription
@@ -39,6 +40,8 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	// Test Cases Per Test Set (get this from test set)
 	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
 
+	var service = {};
+
 	var rallyMaxPageSize = 200;
 	var workspacesStoreVersion = 1; // increment when the schema of stored workspaces changes, in order to ignore-and-refresh store.
 
@@ -58,7 +61,8 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		return $http.jsonp(url);
 	};
 
-	// Helper
+	// Helper to return a promise that fulfills when each item of a list is processed by a promise-returning callback.
+
 	function allItemPromises(listOfItems, getPromiseForItem) {
 		var promises = [];
 		_.each(listOfItems, function(item) {
@@ -70,7 +74,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	// GET subscription.
 	// Extract relevant data.
 	// Return promise.
-	service.$getSubscriptionData = function() {
+	service.getSubscriptionData = function() {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/subscription').then(function(subscriptionResponse){
 			$log.info('subscriptionResponse', subscriptionResponse);
 
@@ -90,7 +94,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	// Extract relevant data.
 	// Return promise.
 	// workspacesRef: comes from getSubscriptionData
-	service.$getWorkspaceList = function (workspacesRef) {
+	service.getWorkspaceList = function (workspacesRef) {
 		return getRallyJson(workspacesRef, {pagesize: rallyMaxPageSize}).then(function(workspacesResponse){
 			$log.info('workspacesResponse', workspacesResponse);
 
@@ -119,7 +123,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	// Extract relevant data.
 	// Return promise.
 	// projectsRef: comes from getWorkspaceList
-	service.$getProjectList = function(projectsRef) {
+	service.getProjectList = function(projectsRef) {
 		return getRallyJson(projectsRef, {pagesize: rallyMaxPageSize}).then(function(projectsResponse){
 			$log.info('projectsResponse', projectsResponse);
 
@@ -148,7 +152,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	// Extract relevant data.
 	// Return promise.
 	// iterationsRef: comes from getProjectList
-	service.$getIterationList = function(iterationsRef) {
+	service.getIterationList = function(iterationsRef) {
 		return getRallyJson(iterationsRef, {pagesize: rallyMaxPageSize}).then(function(iterationsResponse){
 			$log.info('iterationsResponse', iterationsResponse);
 
@@ -201,7 +205,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	// Traverse Subscription -> Workspace -> Project -> Iteration
 	// Aggregate result of multiple queries.
 	// Return promise.
-	service.$getAllSubscriptionData = function() {
+	service.getAllSubscriptionData = function() {
 
 		// TODO review. Single or multiple subscriptions.
 		// 		When I started this app it was intended to be used by our QA people against our Rally subscription.
@@ -212,13 +216,13 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 
 		// Gets the entry point subscription data. Begin to accumulate the response here.
 
-		return service.$getSubscriptionData()
+		return service.getSubscriptionData()
 			.then(function(_subscriptionData){
 				subscriptionData = _subscriptionData;
 
 		// That leads into the list of workspaces. Aggregate that into the response.
 
-				return service.$getWorkspaceList(subscriptionData.workspacesRef);
+				return service.getWorkspaceList(subscriptionData.workspacesRef);
 			}).then(function(workspaceList){
 				subscriptionData.workspaces = _.reduce(workspaceList, function(memo, ws) { memo[ws._ref] = ws; return memo; }, {});
 
@@ -227,14 +231,14 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		// This promise finishes when all of them are done (including drilling into child objects)
 
 				return allItemPromises(workspaceList, function(workspace) {
-					return service.$getProjectList(workspace.projectsRef)
+					return service.getProjectList(workspace.projectsRef)
 						.then(function(projectList) {
 							workspace.projects = _.reduce(projectList, function(memo, p) { memo[p._ref] = p; return memo; }, {});
 
 		// For each project, drill into the iterations in the same way.
 
 							return allItemPromises(projectList, function(project){
-								return service.$getIterationList(project.iterationsRef)
+								return service.getIterationList(project.iterationsRef)
 									.then(function(iterationList){
 										project.iterations = _.reduce(iterationList, function(memo, it) { memo[it._ref] = it; return memo; }, {});
 									});
@@ -265,7 +269,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			ignoreStore: ignoreStore,
 			key: 'subscriptionData',
 			usePromise: true,
-			fetch: service.$getAllSubscriptionData,
+			fetch: service.getAllSubscriptionData,
 
 			// Upgrade strategy
 
@@ -298,7 +302,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 
 	// TODO review. incomplete
 
-	service.$getTestCasesForIteration = function(workspaceRef, iterationRef) {
+	service.getTestCasesForIteration = function(workspaceRef, iterationRef) {
 
 		// Expect a few hundred TC's. 2-3000 max. If it's more, the concept of loading all TC's into localStorage and working from there won't work.
 

@@ -43,7 +43,7 @@ app.factory('Wpi', ['$log', 'Store', 'Rally', function($log, Store, Rally) {
 
 	service.setCurrentId = function(id) {
 
-		Store.$put({
+		Store.put({
 			key: 'wpiCurrentId',
 			version: 1, // no upgrade path but required. it's just an int
 			data: id
@@ -63,7 +63,7 @@ app.factory('Wpi', ['$log', 'Store', 'Rally', function($log, Store, Rally) {
 	service.$currentListVersion = 2;
 
 	service.setList = function(list) {
-		Store.$put({
+		Store.put({
 			key: 'wpiList',
 			version: service.$currentListVersion,
 			data: list

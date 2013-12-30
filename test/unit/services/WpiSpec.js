@@ -49,12 +49,12 @@ describe('Wpi', function() {
 
 	it('.setCurrentIndex() saves value to store.', function(){
 
-		mockStore.$put = function() {};
-		spyOn(mockStore, '$put');
+		mockStore.put = function() {};
+		spyOn(mockStore, 'put');
 
 		wpiSvc.setCurrentId('a nice id');
 
-		expect(mockStore.$put).toHaveBeenCalledWith({
+		expect(mockStore.put).toHaveBeenCalledWith({
 			key: 'wpiCurrentId',
 			version: 1,
 			data: 'a nice id'
@@ -85,13 +85,13 @@ describe('Wpi', function() {
 
 	it('.setList() puts the value to store.', function() {
 
-		mockStore.$put = function() {};
-		spyOn(mockStore, '$put');
+		mockStore.put = function() {};
+		spyOn(mockStore, 'put');
 		var list = getSampleList();
 		
 		wpiSvc.setList(list);
 
-		expect(mockStore.$put).toHaveBeenCalledWith({
+		expect(mockStore.put).toHaveBeenCalledWith({
 			key: 'wpiList',
 			version: wpiSvc.$currentListVersion,
 			data: list

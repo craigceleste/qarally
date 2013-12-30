@@ -52,7 +52,7 @@ describe('Store', function() {
 
 		// Put the value into the store
 
-		store.$put({
+		store.put({
 			key:key,
 			version:version,
 			data: 'from put'
@@ -68,7 +68,7 @@ describe('Store', function() {
 
 		// Put undefined should clear it from store
 
-		store.$put({
+		store.put({
 			key:key,
 			version:version,
 			data: undefined
@@ -194,45 +194,45 @@ describe('Store', function() {
 	})
 
 	// this should be a bunch of tests... cheat and just blast through bad-input cases in one test.
-	it('get() returns undefined for bad inputs.', function() {
+	it('get() throws an error for bad inputs.', function() {
 
 		// no options
-		expect(store.get()).toBeUndefined();
+		expect(function(){store.get()}).toThrow();
 
 		// empty options
-		expect(store.get({})).toBeUndefined();
+		expect(function(){store.get({})}).toThrow();
 
 		// missing one of the 3 main required fields
-		expect(store.get({
+		expect(function(){store.get({
 // 			key: <-- is absent
 			expectedVersion:1,
 			fetch:function(){}
-		})).toBeUndefined();
-		expect(store.get({
+		})}).toThrow();
+		expect(function(){store.get({
 			key:'wpiList',
 // 			expectedVersion: <-- is absent
 			fetch:function(){}
-		})).toBeUndefined();
-		expect(store.get({
+		})}).toThrow();
+		expect(function(){store.get({
 			key:'wpiList',
 			expectedVersion:1,
 //			fetch: <-- is absent
-		})).toBeUndefined();
+		})}).toThrow();
 
 		// unrecognized section key
-		expect(store.get({
+		expect(function(){store.get({
 			key:'is bad',
 			expectedVersion:1,
 			fetch:function(){}
-		})).toBeUndefined();
+		})}).toThrow();
 
 		// subkey required for isDictionary sections
-		expect(store.get({
+		expect(function(){store.get({
 			key:'testSetLists',  // <-- isDictionary key
 //			subkey: 'is missing'
 			expectedVersion:1,
 			fetch:function(){}
-		})).toBeUndefined();
+		})}).toThrow();
 	});
 
 	it('get() guards against versionless data in store.', function() {
@@ -307,7 +307,7 @@ describe('Store', function() {
 	});
 
 	// should be a bunch of tests... just blast through bad-input cases in one test.
-	it('$put() ignores bad inputs.', function() {
+	it('put() ignores bad inputs.', function() {
 
 		var key = 'wpiList';
 		var version = 5;
@@ -315,35 +315,35 @@ describe('Store', function() {
 		mockWindow.localStorage[key] = 'unmolested';
 
 		// no options
-		store.$put();
+		store.put();
 		expect(mockWindow.localStorage[key]).toBe('unmolested');
 
 		// empty options
-		store.$put({});
+		store.put({});
 		expect(mockWindow.localStorage[key]).toBe('unmolested');
 
 		// missing one of the required fields
-		store.$put({
+		store.put({
 // 			key: key,  <-- is absent
 			version:version,
 		});
 		expect(mockWindow.localStorage[key]).toBe('unmolested');
 
-		store.$put({
+		store.put({
  			key: key
 //			version:version,    <-- is absent
 		});
 		expect(mockWindow.localStorage[key]).toBe('unmolested');
 
 		// unrecognized section key
-		store.$put({
+		store.put({
 			key:'is bad',
 			version:version
 		});
 		expect(mockWindow.localStorage[key]).toBe('unmolested');
 
 		// unrecognized section key
-		store.$put({
+		store.put({
 			key:'testSetLists',  // <-- isDictionary key
 //			subkey: 'is missing'
 			version:version

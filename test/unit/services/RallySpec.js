@@ -38,9 +38,9 @@ describe('Rally', function() {
 		$httpBackend.verifyNoOutstandingRequest();
 	});
 
-	it('$getSubscriptionData prepares request correctly and extracts data correctly from the response.', function() {
+	it('getSubscriptionData prepares request correctly and extracts data correctly from the response.', function() {
 
-		rally.$getSubscriptionData().then(function(subscriptionData) {
+		rally.getSubscriptionData().then(function(subscriptionData) {
 
 			expect(subscriptionData._ref).toEqual('https://rally1.rallydev.com/slm/webservice/v2.0/subscription/15647602362');
 			expect(subscriptionData.workspacesRef).toEqual('https://rally1.rallydev.com/slm/webservice/v2.0/Subscription/15647602362/Workspaces');
@@ -50,9 +50,9 @@ describe('Rally', function() {
 		$httpBackend.flush();
 	});
 
-	it('$getWorkspaceList prepares request correctly and extracts data correctly from the response.', function() {
+	it('getWorkspaceList prepares request correctly and extracts data correctly from the response.', function() {
 
-		rally.$getWorkspaceList('https://rally1.rallydev.com/slm/webservice/v2.0/Subscription/15647602362/Workspaces').then(function(workspaceList) {
+		rally.getWorkspaceList('https://rally1.rallydev.com/slm/webservice/v2.0/Subscription/15647602362/Workspaces').then(function(workspaceList) {
 
 			expect(workspaceList).toEqual([{
 				_ref: 'https://rally1.rallydev.com/slm/webservice/v2.0/workspace/15647602518',
@@ -65,9 +65,9 @@ describe('Rally', function() {
 		$httpBackend.flush();
 	});
 
-	it('$getProjectList prepares request correctly and extracts data correctly from the response.', function() {
+	it('getProjectList prepares request correctly and extracts data correctly from the response.', function() {
 
-		rally.$getProjectList('https://rally1.rallydev.com/slm/webservice/v2.0/Workspace/15647602518/Projects').then(function(projectList) {
+		rally.getProjectList('https://rally1.rallydev.com/slm/webservice/v2.0/Workspace/15647602518/Projects').then(function(projectList) {
 
 			expect(projectList).toEqual([{
 				_ref: 'https://rally1.rallydev.com/slm/webservice/v2.0/project/15647602608',
@@ -80,9 +80,9 @@ describe('Rally', function() {
 		$httpBackend.flush();
 	});
 
-	it('$getIterationList prepares request correctly and extracts data correctly from the response.', function() {
+	it('getIterationList prepares request correctly and extracts data correctly from the response.', function() {
 
-		rally.$getIterationList('https://rally1.rallydev.com/slm/webservice/v2.0/Project/15647602608/Iterations').then(function(iterationList) {
+		rally.getIterationList('https://rally1.rallydev.com/slm/webservice/v2.0/Project/15647602608/Iterations').then(function(iterationList) {
 
 			expect(iterationList).toEqual([{
 				_ref: 'https://rally1.rallydev.com/slm/webservice/v2.0/iteration/15647935070',
@@ -96,9 +96,9 @@ describe('Rally', function() {
 		$httpBackend.flush();
 	});
 
-	it('$getAllSubscriptionData traverses the promises correctly and aggregates data correctly', function() {
+	it('getAllSubscriptionData traverses the promises correctly and aggregates data correctly', function() {
 
-		rally.$getAllSubscriptionData().then(function(subscriptionData) {
+		rally.getAllSubscriptionData().then(function(subscriptionData) {
 
 			expect(subscriptionData._ref).toEqual('https://rally1.rallydev.com/slm/webservice/v2.0/subscription/15647602362');
 			expect(subscriptionData.workspacesRef).toEqual('https://rally1.rallydev.com/slm/webservice/v2.0/Subscription/15647602362/Workspaces');
