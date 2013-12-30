@@ -22,33 +22,32 @@ TODO list
 Research Topics
 ---------------
 
-1 How to discover template errors?
+1. How to discover template errors?
   * such as misspelled directives or expressions
   * discover at dev/build time (node script?)
   * discover at runtime (catch errors and report to console even)
 
-
-2 Service to mock fragility?
+2. Service to mock fragility?
   * when unit testing C# code, a DI and a mock share an interface or base class. If you change the DI, it's often clear where it is mocked and what mocks you need to change.
   * as this is my first foray into JavaScript unit testing, I immediately notice that I can change a service and fery few tests fail: even though they should. Because the mocks are completely disconnected.
   * it becomes an honor system and exercise in offline dilligence to find all the mocks and update them.
   * Are there any techniques to help ensure that mocks are a realistic representation of the object they mock?
-  ** Possible answer: do not create a mock object. Use the real object and override methods with spyOn. This guarantees that at least the method being mocked exists.
+  	* Possible answer: do not create a mock object. Use the real object and override methods with spyOn. This guarantees that at least the method being mocked exists.
 
-3 Build
+3. Build
   * Research grunt
   * Ideally I want to at least
-  ** bundle and minify JavaScript files
-  ** I don't have much css, but make a cursory less file, tranform it, minify it.
-  ** Update <script> references to point to the bundle
-  ** Optionally minify html files and templates
+  	* bundle and minify JavaScript files
+  	* I don't have much css, but make a cursory less file, tranform it, minify it.
+  	* Update <script> references to point to the bundle
+  	* Optionally minify html files and templates
   * Use CDN sources for libs.
-  ** I don't think that's build related.
-  ** What is best practice for using CDN with regards to unit tests?
+  	* I don't think that's build related.
+  	* What is best practice for using CDN with regards to unit tests?
   * It would be nice to publish code coverage
-  ** If unit tests could be run during build. build fails if any tests fail.
-  ** Code coverage result html report for that run is included in published folder.
-  ** Link to it from the site; some hard-coded (convention based) URL is probably fine.
+  	* If unit tests could be run during build. build fails if any tests fail.
+  	* Code coverage result html report for that run is included in published folder.
+  	* Link to it from the site; some hard-coded (convention based) URL is probably fine.
   * Are there any CI solutions for this sort of thing? I'd hate to set  up my own server just for this.
   * What other stuff do people do during a build?
 
