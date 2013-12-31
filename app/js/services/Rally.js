@@ -181,6 +181,11 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	};
 
+	// GET test sets for iteration
+	// Extract relevant data.
+	// Return promise.
+	// workspaceRef, iterationRef: comes from WPI (earlier queried workspace and iteration)
+	// NOTE: test sets are M:N to iterations; we need to query for them rather than download a 'child' list
 	service.getTestSetList = function (workspaceRef, iterationRef) {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/testset', {
 				  workspace: workspaceRef
@@ -202,6 +207,97 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 					return memo;
 				}, {})
 			};
+		});
+	}
+
+	// The number of test cases we can store in localStorage is a pivitol breaking point for this app.
+	// I would ideally like to store the honest JSON returned from Rally for each entity.
+	// Test Cases Per Test Set stats (after 3 or so years of use): 837 test sets; average of 101 TC's per TS.
+	//		  6 of them have > 1000        TC's (1482 max TC in one TS)
+	//		 14 of them have >  500 < 1000 TC's
+	//		254 of them have >  100 <  500 TC's
+	//		434 of them have >   10 <  100 TC's
+	//		160 of them have        <   10 TC's  <-- many are 0. Probably experiments or dead or dummy projects. I would discount these.
+	// Rally TC's are about 3-4KB of JSON over the wire.
+	// If we ditch a bunch of unused fields, it is around 1.5KB (a little under half)
+	// If we 'minify' it, repetetive field names bring it down to about 1KB.
+
+	var TestCaseKeys = {
+		  _ref 							: 'a'
+		, Description					: 'b'
+		, FormattedID					: 'c'
+		, Name 							: 'd'
+		, Notes							: 'e'
+		, ObjectId						: 'f'
+		, Objective						: 'g'
+		, PostConditions				: 'h'
+		, PreConditions					: 'i'
+		, TestFolderRef					: 'j'
+		, Type							: 'k'
+		, ValidationExpectedResult		: 'l'
+		, ValidationInput				: 'm'
+		, WorkProductRef				: 'n'
+		// I'm sure I'm missing some. That's fine.
+	};
+
+	// GET test cases for test set.
+	// Return promise.
+	// testSetRef: comes from test set
+	service.getTestSetDetails = function(testSetRef) {
+
+		var testSetDetails = {
+			testCases: {},
+			testFolders: {},
+			workProducts: {}
+		};
+
+		return getRallyJson(testSetRef).then(function(testSetResponse) {
+			$log.info('testSetResponse', testSetResponse);
+
+			var pageStarts = [];
+			for (var start = 1; start < testSetResponse.data.TestSet.TestCases.Count; start = start + rallyMaxPageSize) { pageStarts.push(start); }
+			return allItemPromises(pageStarts, function(start) {
+				return getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {pagesize: rallyMaxPageSize, start: start})
+					.then(function(testCaseListResponse){
+						$log.info('testCaseListResponse', testCaseListResponse);
+						_.each(testCaseListResponse.data.QueryResult.Results, function(tc) {
+							var newTc = {};
+							newTc[TestCaseKeys.Description] = tc.Description;
+							newTc[TestCaseKeys.FormattedID] = tc.FormattedID;
+							newTc[TestCaseKeys.Name] = tc.Name;
+							newTc[TestCaseKeys.Notes] = tc.Notes;
+							newTc[TestCaseKeys.ObjectId] = tc.ObjectId;
+							newTc[TestCaseKeys.Objective] = tc.Objective;
+							newTc[TestCaseKeys.PostConditions] = tc.PostConditions;
+							newTc[TestCaseKeys.PreConditions] = tc.PreConditions;
+							newTc[TestCaseKeys.Type] = tc.Type;
+							newTc[TestCaseKeys.ValidationExpectedResult] = tc.ValidationExpectedResult;
+							newTc[TestCaseKeys.ValidationInput] = tc.ValidationInput;
+							if (tc.TestFolder) {
+								if (!testSetDetails.testFolders[tc.TestFolder._ref]){
+									testSetDetails.testFolders[tc.TestFolder._ref] = {
+										_ref: tc.TestFolder._ref,
+										name: tc.TestFolder._refObjectName
+									};
+								}
+								newTc[TestCaseKeys.TestFolderRef] = tc.TestFolder._ref
+							}
+							if (tc.WorkProduct) {
+								if (!testSetDetails.workProducts[tc.WorkProduct._ref]) {
+									testSetDetails.workProducts[tc.WorkProduct._ref] = {
+										_ref: tc.WorkProduct._ref,
+										name: tc.WorkProduct._refObjectName
+									};
+								}
+								newTc[TestCaseKeys.WorkProductRef] = tc.WorkProduct._ref
+							}
+							testSetDetails.testCases[tc._ref] = newTc;
+						})
+					});
+			});
+		}).then(function() {
+			$log.debug('getTestCasesForTestSet', testSetDetails);
+			return testSetDetails;
 		});
 	}
 
@@ -305,57 +401,6 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			}
 		});
 	};
-
-	// TODO review. incomplete
-
-	service.getTestCasesForIteration = function(workspaceRef, iterationRef) {
-
-		// Expect a few hundred TC's. Average is 200-500 TC's per test set, real life maximum is 1050, max supported is 4MB (2-3000 TC's) depending on how much text is in each one.
-		// If test sets have more than this, the core concept of the app (caching in local storage) fails.
-
-		var testCases = {};
-
-		// Query for test sets in iteration
-
-		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/testset', {
-				  workspace: workspaceRef
-				, query: '(Iteration = "' + iterationRef + '")' // space to left+right of = is important (30 minutes of my life...)
-				, pagesize: rallyMaxPageSize
-		}).then(function(testSetsResponse){
-			$log.info('testSetsResponse', testSetsResponse);
-
-			// For each test set _ref, load the full test set
-
-			var tsRefs = _.map(testSetsResponse.data.QueryResult.Results, function(tsResult) { return tsResult._ref });
-			return allItemPromises(tsRefs, function(tsRef) {
-				return getRallyJson(tsRef).then(function(testSetResponse) {
-					$log.info('testSetsResponse', testSetResponse);
-
-			// Load the list of test cases for the test set.
-			// Separate request for each page.
-
-					var promises = [];
-					var pages = Math.floor( (testSetResponse.data.TestSet.TestCases.Count -1) / rallyMaxPageSize) + 1;
-					for(var page = 1; page <= pages; page++) {
-						
-						promises.push(getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {
-							  page: page
-							, pagesize: rallyMaxPageSize
-						}).then(function(testCaseListResponse){
-							$log.info('testCaseListResponse', testCaseListResponse);
-							_.each(testCaseListResponse.data.QueryResult.Results, function(testCase) {
-								testCases[testCase._ref] = testCase;
-							})
-						}));
-					}
-					return $q.all(promises);
-				});
-			});
-		}).then(function() {
-			$log.debug('getTestCasesForIteration is done');
-			return testCases;
-		});
-	}
 
 	return service;
 }]);
