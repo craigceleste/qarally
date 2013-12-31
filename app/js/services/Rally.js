@@ -322,7 +322,6 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 				, query: '(Iteration = "' + iterationRef + '")' // space to left+right of = is important (30 minutes of my life...)
 				, pagesize: rallyMaxPageSize
 		}).then(function(testSetsResponse){
-
 			$log.info('testSetsResponse', testSetsResponse);
 
 			// For each test set _ref, load the full test set
