@@ -190,7 +190,10 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			$log.info('testSetsResponse', testSetsResponse);
 
 			return {
+				// used for concurrency: to make sure wpi.iterationRef hasn't changed since this request was made.
 				iterationRef: iterationRef,
+
+				// the actual result
 				testSets: _.reduce(testSetsResponse.data.QueryResult.Results, function(memo, testSet) {
 					memo[testSet._ref] = {
 						_ref: testSet._ref,
@@ -210,7 +213,10 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		// TODO review. Single or multiple subscriptions.
 		// 		When I started this app it was intended to be used by our QA people against our Rally subscription.
 		//		It seems that our QA people work on contract for more than one client, some of whom also have Rally subscriptions.
-		//		Consider (but I'm not decided yet) to support N subscriptions. Concern: I wouldn't want to accidentally write data to the wrong subscription by accident.
+		//		Consider (but I'm not decided yet) to support N subscriptions.
+		//		Concern: I wouldn't want to accidentally write data to the wrong subscription.
+		//		The single subscription approach forces people to clear the localStorage and start over when switching accounts (or use a different browser)
+		// If I go with the N-subscription model, I'd probably refactor WPI to be SWPI and make them choose the subscription also.
 
 		var subscriptionData;
 
@@ -276,7 +282,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			expectedVersion: currentVersion,
 			upgrade: function(dataVersion, data) {
 				switch(dataVersion) {
-					// from from one upgrade into the next
+					// from one upgrade into the next
 					case 1:
 					{
 						data.test1 = '1 to 2';
@@ -291,7 +297,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 						// If you get this:
 						// cause: you incremented the version without adding an upgrade path.
 						// solution 1: add an upgrade path and redeploy. the users data will still be there.
-						// solution 2: have users clear localStorage. They will lose all there LOCAL data (no Rally data is lost).
+						// solution 2: have users clear localStorage. They will lose all their data.
 
 						throw new Error('initSubscriptionData: no upgrade path for version ' + dataVersion + '. stored version will be persisted (THIS IS A BUG).');
 				}
@@ -304,7 +310,8 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 
 	service.getTestCasesForIteration = function(workspaceRef, iterationRef) {
 
-		// Expect a few hundred TC's. 2-3000 max. If it's more, the concept of loading all TC's into localStorage and working from there won't work.
+		// Expect a few hundred TC's. Average is 200-500 TC's per test set, real life maximum is 1050, max supported is 4MB (2-3000 TC's) depending on how much text is in each one.
+		// If test sets have more than this, the core concept of the app (caching in local storage) fails.
 
 		var testCases = {};
 
@@ -314,7 +321,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 				  workspace: workspaceRef
 				, query: '(Iteration = "' + iterationRef + '")' // space to left+right of = is important (30 minutes of my life...)
 				, pagesize: rallyMaxPageSize
-			}).then(function(testSetsResponse){
+		}).then(function(testSetsResponse){
 
 			$log.info('testSetsResponse', testSetsResponse);
 
