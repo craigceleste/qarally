@@ -10,10 +10,8 @@ This is an internal tool for QA staff to perform test cases using Rally (rallyde
 TODO list
 ---------
 
-* review $watch currentWpi. this is getting called when the page loads and there is no change.
 * Store.sectionList; inject it (even if its in the same file)
 * move routes to its own file
-* review the practice of $watch'ing non-trivial objects; what is the cutoff line for too much?
 * Wpi service; generate a locally unique id
 * Error handling in window.onerror in index.html
 * review mocks in ManageWpiCtrlSpec.js

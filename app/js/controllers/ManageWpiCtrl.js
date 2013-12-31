@@ -199,15 +199,10 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 
 		}, true); // deep watch
 
-	// TODO review the practice of $watch'ing non-trivial objects.
-	//		Ideally I want to avoid having the View inform us that it made a change (onchange events, etc.)
-	//		2-way model binding should take care of that for us.
-	// 		On the other hand, I understand it's very bad, performance wise, to deep $watch objects.
-	//		The question: is an array containing 5 or 10 objects, each containing 5 or so strings too big?
-	//			10 x 5 == 50 strings x 100 bytes or so == about 5K every event? It might be, depending on how good the gc is.
-
 	$scope.$watch('wpiList',
 		function (newValue, oldValue) {
+
+			$scope.wpiBytes = angular.toJson(newValue).length; // it's not accurate, but close enough (keys and encoding contribute too)
 
 			// For some reason this is sometimes called when there are no chagnes (at page load at least). Ignore these cases.
 			if (angular.toJson(newValue) === angular.toJson(oldValue)) return;
