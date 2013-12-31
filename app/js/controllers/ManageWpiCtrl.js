@@ -200,6 +200,7 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 	$scope.$watch('wpiList',
 		function (newValue, oldValue) {
 
+$log.debug('wpiList has changed.', newValue, oldValue)
 			// TODO review. this is getting called when the page loads and there is no change.
 			// newValue and oldValue appear to be identical. Why?
 

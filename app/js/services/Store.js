@@ -291,7 +291,7 @@ if (section.isDictionary) {
 		var outerData = {};
 		outerData[versionKey] = options.version;
 		outerData[dataKey] = options.data;
-		var outerDataJson = JSON.stringify(outerData);
+		var outerDataJson = angular.toJson(outerData);
 
 		// the key and the data count to space used
 		var actualSize = options.key.length + outerDataJson.length;

@@ -243,7 +243,7 @@ describe('Store', function() {
 		// Legitimate old versions in storage should be protected.
 		// Invalid data in storage is fair game to destroy.
 
-		mockWindow.localStorage[key] = JSON.stringify({
+		mockWindow.localStorage[key] = angular.toJson({
 			// absent --> 	v:version,
 			d:'from store'
 		});
@@ -289,7 +289,7 @@ describe('Store', function() {
 		var key = 'wpiList';
 		var version = 5;
 
-		var json = JSON.stringify({
+		var json = angular.toJson({
 			v:version -1, // <-- old version
 			d:'from store'
 		});
