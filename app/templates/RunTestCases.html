@@ -21,6 +21,9 @@
 					<span>{{currentWpi.label}}</span> <b class="caret"></b>
 				</a>
 				<ul class="dropdown-menu">
+					<li>
+						<a>Select one WPI to work on.</a>
+					</li>
 					<li ng-repeat="w in wpiList | toArray | filter:wpiIsValid | orderBy:'label'">
 						<a ng-click="setCurrentWpi(w.id)" href="javascript:void(0);">
 							<span class="glyphicon" ng-class="{'glyphicon-ok': wpiCurrentId == w.id}"></span>
@@ -38,9 +41,42 @@
 			</li>
 			<li class="dropdown">
 				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
+					TS <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu ps-scroll">
+					<li>
+						<a>Select one test set to work on.</a>
+					</li>
+					<li ng-repeat="ts in currentWpi.testSets | toArray | orderBy:'name'">
+						<a ng-click="setCurrentTestSet(ts._ref)" href="javascript:void(0);">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': currentWpi.testSetRef == ts._ref}"></span>
+							{{ts.name}}
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li>
+						<a ps-noprop-click="refreshTestSets()" href="javascript:void(0);">
+							<span class="glyphicon"></span>
+							Refresh
+						</a>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<form class="navbar-form navbar-left">
+			<div class="form-group">
+				<input type="text" class="form-control" accesskey="b" placeholder="Build Number (alt-b)" ng-model="currentWpi.buildNumber">
+			</div>
+		</form>
+		<ul class="nav navbar-nav">
+			<li class="dropdown">
+				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
 					TF <b class="caret"></b>
 				</a>
 				<ul class="dropdown-menu ps-scroll">
+					<li>
+						<a>Filter by Test Folders</a>
+					</li>
 					<li>
 						<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
 							<span class="glyphicon"></span>
@@ -75,6 +111,9 @@
 				</a>
 				<ul class="dropdown-menu ps-scroll">
 					<li>
+						<a>Filter by Work Product (US's and DE's)</a>
+					</li>
+					<li>
 						<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(true)">
 							<span class="glyphicon"></span>
 							Filter All
@@ -103,11 +142,6 @@
 				</ul>
 			</li>
 		</ul>
-		<form class="navbar-form navbar-left">
-			<div class="form-group">
-				<input type="text" class="form-control" accesskey="b" placeholder="Build Number (alt-b)" ng-model="currentWpi.buildNumber">
-			</div>
-		</form>
 		<ul class="nav navbar-nav navbar-right">
 			<li class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">

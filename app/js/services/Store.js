@@ -39,9 +39,7 @@ app.factory('Store', ['$log', '$window', '$q', function($log, $window, $q) {
 		'wpiCurrentId':     { isUserData: true,  isDictionary: false, limit:         100 },
 		'wpiList':          { isUserData: true , isDictionary: false, limit:  256 * 1024 }, // 5%
 
-		'wpiStats':         { isUserData: true,  isDictionary: false, limit:         100 },
-		'testSetLists':     { isUserData: false, isDictionary: true,  limit:  500 * 1024 }, // 10%
-		'testCases':        { isUserData: false, isDictionary: true,  limit:        null }  // the rest
+		'testCase':         { isUserData: false, isDictionary: true,  limit:        null }  // the rest
 	};
 
 	// Initialize: fill and validate the sectionList

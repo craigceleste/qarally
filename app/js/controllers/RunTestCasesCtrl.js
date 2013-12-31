@@ -18,7 +18,18 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		$scope.wpiCurrentId = Wpi.getCurrentId();
 		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
 
-// TODO		$scope.refreshTestSets($scope.currentWpi ? $scope.currentWpi.iterationRef : null);
+		$log.warn('TODO refresh test cases');
+	}
+
+	$scope.refreshTestSets = function() {
+		Wpi.refreshTestSets($scope.currentWpi).then(function(){
+			$log.warn('TODO refresh test cases');
+		});
+	}
+
+	$scope.setCurrentTestSet = function(testSetRef) {
+		$scope.currentWpi.testSetRef = testSetRef;
+		$log.warn('TODO refresh test cases');
 	}
 
 	// Set up the state in the scope
@@ -41,10 +52,7 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 			Wpi.setList($scope.wpiList);
 		}, true); // deep watch
 
-	// TODO
 
-	// setCurrentTestSet(ts._ref)
-	// refreshTestSets()
 
 
 
