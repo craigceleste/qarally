@@ -116,6 +116,11 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 		return 'Projects'
 	}
 
+	$scope.getTestSetCount = function() {
+		if (!$scope.currentWpi) return 0;
+		return Object.keys($scope.currentWpi.testSets).length;
+	}
+
 	$scope.doneClick = function() {
 		if ($scope.currentWpiIsValid()) {
 			$location.url('/')
@@ -139,7 +144,7 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 		function (newValue, oldValue) {
 
 			// We're looking for changes to the currentWpi, from editing the form.
-			// Ignore changes to currentWpi related to selection of current
+			// Ignore changes to which wpi is current.
 
 			if (!newValue || !oldValue || newValue.id != oldValue.id) {
 				return;
@@ -159,16 +164,21 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 				}
 			}
 
+			var projectReset;
+			var iterationReset;
+
 			// If workspace changes, clear project
 
 			if (newValue.workspaceRef != oldValue.workspaceRef) {
 				$scope.currentWpi.projectRef = undefined;
+				projectReset = true;
 			}
 
 			// If project changes, clear iteration
 
-			if (newValue.projectRef != oldValue.projectRef) {
+			if (projectReset || newValue.projectRef != oldValue.projectRef) {
 				$scope.currentWpi.iterationRef = undefined;
+				iterationReset = true;
 
 				// Helper: default the label to match the project
 				if (!newValue.label || newValue.label === Wpi.defaultWpiLabel) {
@@ -181,11 +191,10 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 
 			// If iteration changes, clear test set and buildNumber
 
-			if (newValue.iterationRef != oldValue.iterationRef) {
-				$scope.currentWpi.testSetRef = undefined;
+			if (iterationReset || newValue.iterationRef != oldValue.iterationRef) {
 				$scope.currentWpi.buildNumber = undefined;
 
-				// TODO begin loading/caching test sets for this iteration
+				Wpi.refreshTestSets($scope.currentWpi);
 			}
 
 		}, true); // deep watch
@@ -200,50 +209,11 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 	$scope.$watch('wpiList',
 		function (newValue, oldValue) {
 
-$log.debug('wpiList has changed.', newValue, oldValue)
-			// TODO review. this is getting called when the page loads and there is no change.
-			// newValue and oldValue appear to be identical. Why?
+			// For some reason this is sometimes called when there are no chagnes (at page load at least). Ignore these cases.
+			if (angular.toJson(newValue) === angular.toJson(oldValue)) return;
 
 			Wpi.setList($scope.wpiList);
 		}, true); // deep watch
 
-/*
-TODO commented out code
-
-	$scope.refreshTestSets = function(iterationRef) {
-
-		// TODO review - proper use of $apply
-		// 	When I use this function during initialization, the asynchronous stuff is seen by model binding.
-		//	When I use it from a view (ng-click="refreshTests(...)") it is not.
-		//	Research how and when to use $apply
-
-		$scope.testSets = null;
-		if (iterationRef)
-		{
-			Rally.initTestSetsForIteration(iterationRef)
-			.then(function(testSets) {
-
-				$scope.testSets = testSets;
-
-				// refreshTestSets usually comes after setting the iteration or loading the page.
-				// If they haven't chosen one from before, choosing one by default is better than leaving it null.
-				if ($scope.currentWpi && !$scope.currentWpi.currentTestSetRef) {
-
-					var defaultTestSetRef = _.chain(testSets)
-						.sortBy(function(ts) { return ts.Name })
-						.first()
-						.value();
-
-					$scope.currentWpi.currentTestSetRef = defaultTestSetRef ? defaultTestSetRef._ref : null;
-				}
-			});
-		}
-	}
-
-	$scope.setCurrentTestSet = function(testSetRef) {
-		$scope.currentWpi.currentTestSetRef = testSetRef;
-	}
-
-*/
 }]);
 

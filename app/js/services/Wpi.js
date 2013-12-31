@@ -112,6 +112,21 @@ app.factory('Wpi', ['$log', 'Store', 'Rally', function($log, Store, Rally) {
 		});
 	}
 
+	service.refreshTestSets = function(wpi) {
+		if (!wpi) return;
+		wpi.testSets = undefined;
+		wpi.testSetRef = undefined;
+		if (wpi.iterationRef) {
+
+			Rally.getTestSetList(wpi.workspaceRef, wpi.iterationRef).then(function(testSetData) {
+
+				// Concurrency: if iterationRef changes before this is complete, just ignore this response.
+				if (testSetData.iterationRef === wpi.iterationRef) {
+					wpi.testSets = testSetData.testSets;
+				}
+			});
+		}
+	}
+
 	return service;
 }]);
-
