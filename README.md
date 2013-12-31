@@ -55,9 +55,11 @@ LocalStorage
 ------------
 window.localStorage will be used to cache rally data (and some easily recoverable user data) for faster day-to-day work.
 
-Subscription Data: recurse through all Workspaces, Projects and Iterations and cache them.
+*Subscription Data*: recurse through all Workspaces, Projects and Iterations and cache them.
 
 They change seldomly on the scale of a tester griding through a bunch of tests. They can hit Refresh when a new iteration starts.
+
+This is purely a cache. It can be recovered from Rally at any time.
 
     ['SubscriptionData'] = {
 
@@ -98,4 +100,81 @@ They change seldomly on the scale of a tester griding through a bunch of tests. 
         }
       }
     };
+
+*WPI List*: A "WPI" is a named combination of Workspace + Project + Iteration. Many QA Testers switch between a very small list of projects (2 or 3) and this navigation may be a pain (maybe it's not) but here we allow the testers to define a WPI that is stored to window.localStorage. If it's deleted, it's not a big deal. It's just their iteration choice.
+
+    ["wpiList"] = {
+
+      // Versioning scheme since localStorage will persist across software updates
+      "v":2,
+      "d":{
+
+        // A list of WPI's and the currently focused one.
+        current: "0.045425733318552375",
+        list: {
+          // An arbitrary unique ID for each one. It's just a Math.random() number :/ I don't want to pretend to be clever with the creation of unique id's
+          "0.045425733318552375":{
+            "id":"0.045425733318552375",
+
+            // A label entered by the user
+            "label":"Web Sprint 1",
+
+            // Their choice of Workspace + Project + Iteration is selected from the Subscription Data when they create the WPI.
+            "workspaceRef":"https://rally1.rallydev.com/slm/webservice/v3.0/workspace/A155e1f8-3e96-471f-ac5a-a72a7825bb9d",
+            "projectRef":"https://rally1.rallydev.com/slm/webservice/v3.0/project/06c8e783-aa04-4168-a206-f3f842a1a163",
+            "iterationRef":"https://rally1.rallydev.com/slm/webservice/v3.0/iteration/15a0b8cb-2f31-4b39-882f-961f223b5029",
+
+            // Build Number is entered through the UI. This probably changes fairly often (few times a day, maybe?) Whenever they choose to deploy a build, I guess.
+            buildNumber: "MainLine.123",
+
+            // The list of Test Sets for an Iteration is loaded and cached separately from Subscription Data.
+            // They choose this after creating the WPI
+            testSetRef":"https://rally1.rallydev.com/...some.id...",
+
+            // Shouldn't be here: It got serialized by mistake since I $watch it. Fix that.
+            "$$hashKey":"007"
+          }
+        }
+      }
+    }
+
+*Test Set*: We will store several test sets in localStorage. It consumes too much of localStorage (which has a 5MB limit) to cache all test sets for all iterations (as we do with subscription data)
+
+Load test sets for the iterations selected in the WPI and store the most recently used few, limited by size (4MB or so).
+
+   ['TestSet_' + testSetRef] = {
+
+      // Versioning scheme since localStorage will persist across software updates
+      "v":3,
+      "d":{
+
+        // Some superficial info
+        "_ref":"https://rally1.rallydev.com/...some.id...",
+        "name":"New Functional Tests",
+
+        // List of all test cases: this is expected to be the meat of local storage.
+        // The whole app revolves around a) a promise and b) historical data that indicates that test sets contain between 100 and 500 tests with the max ever having about 1050.
+        // Serialized into localStorage, the test set needs to be ideally 0.5 to 1 MB and at max about 4 MB.
+        // If a team has 3000 or more tests, or huge amounts of text in all test cases, this is not the tool for them.
+        testCases:[
+          {...},
+          {...},
+          {...}
+        ],
+
+        // Each test case reference 0..1 work product (user story or defect) and 1 test folder (and are M:N'd into test sets)
+        // The list of test cases therefore produces a list of stories and folders that the user can use for filtering.
+        // The filters are lost if switching to another Test Set causes this one to be pushed out of the cache.
+        workProductFilters: [
+          "...some id...",
+          "...some id..."
+        ],
+        testFolderFilters: [
+          "...some id...",
+          "...some id..."
+        ]
+      }
+    }
+
+
 
