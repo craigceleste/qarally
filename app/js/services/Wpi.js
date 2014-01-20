@@ -70,7 +70,7 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 	service.getList = function(ignoreCache) {
 
 		var innerData;
-		var suppressSave;
+		var resave;
 		if (!ignoreCache) {
 			var outerDataJson = $window.localStorage['wpiList'];
 			if (outerDataJson) {
@@ -85,14 +85,15 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 					case 1:
 					{
 						innerData.test1 = '1 to 2';
+						resave = true;
 					}
 					case 2:
 					{
 						innerData.test2 = '2 to 3';
+						resave = true;
 					}
 					case service.$currentListVersion:
 					{
-						suppressSave = true;
 					}
 					break;
 
@@ -104,9 +105,10 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 
 		if (!innerData) {
 			innerData = {};
+			resave = true;
 		}
 
-		if (!suppressSave) {
+		if (resave) {
 			service.setList(innerData)
 		}
 

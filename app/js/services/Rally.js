@@ -182,17 +182,13 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		});
 	}
 
-	// The number of test cases we can store in localStorage is a pivitol breaking point for this app.
-	// I would ideally like to store the honest JSON returned from Rally for each entity.
-	// Test Cases Per Test Set stats (after 3 or so years of use): 837 test sets; average of 101 TC's per TS.
-	//		  6 of them have > 1000        TC's (1482 max TC in one TS)
-	//		 14 of them have >  500 < 1000 TC's
-	//		254 of them have >  100 <  500 TC's
-	//		434 of them have >   10 <  100 TC's
-	//		160 of them have        <   10 TC's  <-- many are 0. Probably experiments or dead or dummy projects. I would discount these.
-	// Rally TC's are about 3-4KB of JSON over the wire.
-	// If we ditch a bunch of unused fields, it is around 1.5KB (a little under half)
-	// If we 'minify' it, repetetive field names bring it down to about 1KB.
+	// Here are some stats about the number of test cases per test set for our data:
+	//		  6 test cases have > 1000        TC's (1482 max TC in one TS)
+	//		 14 test cases have >  500 < 1000 TC's
+	//		254 test cases have >  100 <  500 TC's
+	//		434 test cases have >   10 <  100 TC's
+	//		160 test cases have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
+	// Rally TC's are about 3-4KB of JSON over the wire. About 1KB if we reduce  unused data and pseudo-minify it.
 
 	var TestCaseKeys = {
 		  _ref 							: 'a'
@@ -211,8 +207,63 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		, WorkProductRef				: 'n'
 	};
 
+	// expose for unit tests
+	service.$testCaseKeys = TestCaseKeys;
+
+	// It would be nice to store and use rally Test Cases in their native format.
+	// This is prohibitive when localStorage is limited to 5 MB.
+	// Here we eliminate/ignore unused properties and minify property names to 'a', 'b', etc.
+	// This takes us from about 5KB to about 1KB per test case.
+	service.transformTestCaseFromRallyToStorage  = function(testCase) {
+		var newTc = {};
+		newTc[TestCaseKeys.Description] = testCase.Description;
+		assert(typeof newTc[TestCaseKeys.Description] === 'string', 'Description is required.');
+
+		newTc[TestCaseKeys.FormattedID] = testCase.FormattedID;
+		assert(/^TC[0-9]+$/.test(newTc[TestCaseKeys.FormattedID]), 'FormattedID must match the TC### pattern.');
+
+		newTc[TestCaseKeys.Name] = testCase.Name;
+		assert(typeof newTc[TestCaseKeys.Name] === 'string', 'Name is required.');
+
+		newTc[TestCaseKeys.Notes] = testCase.Notes;
+		newTc[TestCaseKeys.ObjectId] = testCase.ObjectId;
+		newTc[TestCaseKeys.Objective] = testCase.Objective;
+		newTc[TestCaseKeys.PostConditions] = testCase.PostConditions;
+		newTc[TestCaseKeys.PreConditions] = testCase.PreConditions;
+		newTc[TestCaseKeys.Type] = testCase.Type;
+		newTc[TestCaseKeys.ValidationExpectedResult] = testCase.ValidationExpectedResult;
+		newTc[TestCaseKeys.ValidationInput] = testCase.ValidationInput;
+		if (testCase.TestFolder) {
+			newTc[TestCaseKeys.TestFolderRef] = testCase.TestFolder._ref
+		}
+		if (testCase.WorkProduct) {
+			newTc[TestCaseKeys.WorkProductRef] = testCase.WorkProduct._ref
+		}
+		return newTc;
+	}
+
+	// Transform the stored format to one that is easy to code against.
+	service.transformTestCaseFromStorageToWorking = function(testCase) {
+
+		var tc = _.reduce(TestCaseKeys, function(memo, minifiedKey, unminifiedKey){ memo[unminifiedKey] = testCase[minifiedKey]; return memo; }, {})
+
+		// Produce a string containing all the text that can be searched.
+ 		// ... looks like they only want Name. Possibly remove this and just go by name
+
+		tc._searchContent = (tc.Name||'')
+			// + ' ' + (tc.Description||'')
+			// + ' ' + (tc.Notes||'') 
+			// etc
+			.toUpperCase();
+
+		// TODO layer in test results
+
+		return tc;
+	}
+
 	service.getTestSetDetails = function(testSetRef) {
 
+		// Test Set Details is a package containing a bunch of data for a test set: primarilly the test cases.
 		var testSetDetails = {
 			testCases: {},
 			testFolders: {},
@@ -223,44 +274,28 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			$log.info('testSetResponse', testSetResponse);
 
 			var pageStarts = [];
-			for (var start = 1; start < testSetResponse.data.TestSet.TestCases.Count; start = start + rallyMaxPageSize) { pageStarts.push(start); }
+			for (var start = 1; start < testSetResponse.data.TestSet.TestCases.Count; start = start + rallyMaxPageSize) {
+				pageStarts.push(start);
+			}
 			return allItemPromises(pageStarts, function(start) {
 				return getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {pagesize: rallyMaxPageSize, start: start})
 					.then(function(testCaseListResponse){
 						$log.info('testCaseListResponse', testCaseListResponse);
 						_.each(testCaseListResponse.data.QueryResult.Results, function(tc) {
-							var newTc = {};
-							newTc[TestCaseKeys.Description] = tc.Description;
-							newTc[TestCaseKeys.FormattedID] = tc.FormattedID;
-							newTc[TestCaseKeys.Name] = tc.Name;
-							newTc[TestCaseKeys.Notes] = tc.Notes;
-							newTc[TestCaseKeys.ObjectId] = tc.ObjectId;
-							newTc[TestCaseKeys.Objective] = tc.Objective;
-							newTc[TestCaseKeys.PostConditions] = tc.PostConditions;
-							newTc[TestCaseKeys.PreConditions] = tc.PreConditions;
-							newTc[TestCaseKeys.Type] = tc.Type;
-							newTc[TestCaseKeys.ValidationExpectedResult] = tc.ValidationExpectedResult;
-							newTc[TestCaseKeys.ValidationInput] = tc.ValidationInput;
-							if (tc.TestFolder) {
-								if (!testSetDetails.testFolders[tc.TestFolder._ref]){
-									testSetDetails.testFolders[tc.TestFolder._ref] = {
-										_ref: tc.TestFolder._ref,
-										name: tc.TestFolder._refObjectName
-									};
-								}
-								newTc[TestCaseKeys.TestFolderRef] = tc.TestFolder._ref
-							}
-							if (tc.WorkProduct) {
-								if (!testSetDetails.workProducts[tc.WorkProduct._ref]) {
-									testSetDetails.workProducts[tc.WorkProduct._ref] = {
-										_ref: tc.WorkProduct._ref,
-										name: tc.WorkProduct._refObjectName
-									};
-								}
-								newTc[TestCaseKeys.WorkProductRef] = tc.WorkProduct._ref
-							}
+							var newTc = service.transformTestCaseFromRallyToStorage(tc)
 
-							// TODO assert newTc structure
+							if (testCase.TestFolder && !testSetDetails.testFolders[testCase.TestFolder._ref]){
+								testSetDetails.testFolders[testCase.TestFolder._ref] = {
+									_ref: testCase.TestFolder._ref,
+									name: testCase.TestFolder._refObjectName
+								};
+							}
+							if (testCase.WorkProduct && !testSetDetails.workProducts[testCase.WorkProduct._ref]) {
+								testSetDetails.workProducts[testCase.WorkProduct._ref] = {
+									_ref: testCase.WorkProduct._ref,
+									name: testCase.WorkProduct._refObjectName
+								};
+							}
 
 							testSetDetails.testCases[tc._ref] = newTc;
 						})
@@ -362,6 +397,104 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 
 		return deferred.promise;
 	};
+
+	service.initTestSetDetails = function(testSetRef, ignoreCache) {
+
+		var currentVersion = 1;
+		var storageKey = 'tsd_' + testSetRef;
+		var lastAccessedKey = 'tsd_lastAccessed';
+		var deferred = $q.defer();
+		var resave;
+
+		function ensureCacheSpaceFor(size) {
+
+			// The goal here is to ensure that all test set details do not exceed 4MB.
+			// NOT to guarantee that there is at least 4MB available: do not stomp other data if they exceed their limits.
+
+			var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
+			
+			if (typeof size !== 'number' || size == NaN || size <= 0 || size >= maxSizeForAllTestSetDetails) {
+				throw new Error('ensureCacheSpaceFor: size is invalid: ' + size);
+			}
+
+			var lastAccessed = {};
+			var lastAccessedJson = $window.localStorage[lastAccessedKey];
+			if (lastAccessedJson) {
+				lastAccessedOuter = JSON.parse(lastAccessedJson);
+				if (lastAccessedOuter.version == 1) {
+					lastAccessed = lastAccessedOuter.data;
+				}
+			}
+
+			var existingTestSets = {};
+			for(var key in $window.localStorage) {
+				if (key != storageKey) { // ignore the one being saved
+					if (key.indexOf('tsd_') === 0) {
+						existingTestSets[key] = {
+							size: $window.localStorage[key].length,
+							lastAccessed: lastAccessed ? lastAccessed[key] : undefined
+						};
+					}
+				}
+			}
+
+			// while the sum of existing ones > target number, find the one that was accessed longest ago and delete it
+			var targetSize = maxSizeForAllTestSetDetails - size;
+			while (_.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0) > targetSize) {
+				var victimKey = _.reduce(existingTestSets, function(bestYetKey, ts, key) {
+					if (!bestYetKey) return key;
+					var bestYet = existingTestSets[bestYetKey];
+					if (bestYet.lastAccessed && ts.lastAccessed) {
+						return bestYet.lastAccessed < ts.lastAccessed ? bestYetKey : key;
+					}
+					if (!bestYet.lastAccessed) {
+						return bestYetKey;
+					}
+					return key;
+				});
+				$log.info('test set data de-cached to make room: ' + victimKey, $window.localStorage[victimKey]);
+				$window.localStorage.removeItem(victimKey);
+				delete existingTestSets[victimKey];
+			}
+		}
+
+		function cacheIt(testSetDetails) {
+			var outerDataJson = JSON.stringify({
+				version: currentVersion,
+				data: testSetDetails
+			})
+
+			var cacheSize = outerDataJson.length;
+			ensureCacheSpaceFor(outerDataJson.length + storageKey.length + 100); // 100 is an arbitrary safety :/
+			$window.localStorage[storageKey] = outerDataJson;
+		}
+
+		var innerData;
+		if (!ignoreCache) {
+			var outerDataJson = $window.localStorage[storageKey];
+			if (outerDataJson) {
+				var outerData = JSON.parse(outerDataJson);
+				if (outerData.version === currentVersion) {
+					innerData = outerData.data;
+				}
+			}
+		}
+
+		if (innerData){
+			if (resave) {
+				cacheIt(innerData);
+			}
+			deferred.resolve(innerData);
+		}
+		else {
+			service.getTestSetDetails(testSetRef).then(function(testSetDetails) {
+				cacheIt(testSetDetails);
+				deferred.resolve(testSetDetails);
+			})
+		}
+
+		return deferred.promise;
+	}
 
 	return service;
 }]);
