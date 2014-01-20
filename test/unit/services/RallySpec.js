@@ -3,30 +3,25 @@
 describe('Rally', function() {
 
 	var rally;
-	var mockStore, $httpBackend;
-
-	// Prepare service under tests with appropriate mock inejections.
+	var mockWindow, $rootScope, $httpBackend;
 
 	beforeEach(function(){
 
 		module('qa-rally')
 
-		// Provide mocks that we create
-
-		mockStore = { get: function() {} };
+		mockWindow = {
+			localStorage: {}
+		};
 
 		module(function($provide){
-			$provide.value('Store', mockStore);
+			$provide.value('$window', mockWindow);
 		});
 
-		// Get ahold of mocks that angular-mocks created
-
-		inject(function($injector){
+		inject(function(_$rootScope_, $injector){
+			$rootScope = _$rootScope_;
 			$httpBackend = $injector.get('$httpBackend');
 			setupRallyBackend($httpBackend);
 		});
-
-		// Get the object under test
 
 		inject(function(Rally){
 			rally = Rally;
@@ -123,82 +118,60 @@ describe('Rally', function() {
 		$httpBackend.flush();
 	});
 
-	it('initSubscriptionData(happy path) will get from store', function() {
+	it('initSubscriptionData will return a cached version.', function() {
 
-		mockStore.get = function(options) {
-
-			// initSubscriptionData should pass the right options to .get()
-			expect(options.ignoreStore).toBeUndefined();
-			expect(options.key).toEqual('subscriptionData');
-			expect(options.fetch).toBeDefined();
-			expect(options.upgrade).toBeDefined();
-
-			return 'from store get';
-		};
-
-		var actual = rally.initSubscriptionData();
-
-		expect(actual).toEqual('from store get');
-	});
-
-	// I am playing with upgrade strategy.
-	it('initSubscriptionData will provide an upgrade path for a store containing version 1.', function() {
-
-		mockStore.get = function(options) {
-
-			// If store calls it's upgrade function it should work.
-			return options.upgrade(
-				1, 					// stored version
-				{test:'version1'}	// stored data
-			);
-		};
-
-		var actual = rally.initSubscriptionData();
-
-		expect(actual).toEqual({
-			test:'version1',
-			test1:'1 to 2',
-			test2:'2 to 3'
+		mockWindow.localStorage['subscriptionData'] = JSON.stringify({
+			version: 3,
+			data: 'from cache'
 		});
+
+		var subscriptionData;
+		rally.initSubscriptionData().then(function(data){
+			subscriptionData = data;
+		})
+
+		$rootScope.$apply();
+		expect(subscriptionData).toEqual('from cache');
 	});
 
-	// I am playing with upgrade strategy.
-	it('initSubscriptionData will provide an upgrade path for a store containing version 2.', function() {
+	it('initSubscriptionData will get from service and cache it.', function() {
 
-		mockStore.get = function(options) {
-
-			// If store calls it's upgrade function it should work.
-			return options.upgrade(
-				2, 					// stored version
-				{test:'version2'}	// stored data
-			);
-		};
-
-		var actual = rally.initSubscriptionData();
-
-		expect(actual).toEqual({
-			test:'version2',
-		//	test1:'1 to 2', <-- not here
-			test2:'2 to 3'
+		spyOn(rally, 'getAllSubscriptionData').andReturn({
+			then: function(thenCallback) {
+				thenCallback('from service');
+			}
 		});
+
+		var subscriptionData;
+		rally.initSubscriptionData().then(function(data){
+			subscriptionData = data;
+		})
+
+		$rootScope.$apply();
+		expect(subscriptionData).toEqual('from service');
 	});
 
-	// I am playing with upgrade strategy.
-	it('initSubscriptionData will throw if asked to upgrade an unrecognized version.', function() {
+	it('initSubscriptionData will get from service if ignoreCache is set.', function() {
 
-		mockStore.get = function(options) {
+		mockWindow.localStorage['subscriptionData'] = JSON.stringify({
+			version: 3,
+			data: 'from cache'
+		});
 
-			expect(function() {
+		spyOn(rally, 'getAllSubscriptionData').andReturn({
+			then: function(thenCallback) {
+				thenCallback('from service');
+			}
+		});
 
-				// Their upgrade callback should throw if given an unrecognized version
-				options.upgrade(
-					-1, // bad version
-					{}	// stored data
-				);
-			}).toThrow();
-		};
+		var subscriptionData;
+		rally.initSubscriptionData(true).then(function(data){ // <-- true == ignoreCache
+			subscriptionData = data;
+		})
 
-		rally.initSubscriptionData();
+		$rootScope.$apply();
+		expect(subscriptionData).toEqual('from service');
 	});
+
 
 });

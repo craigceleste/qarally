@@ -3,18 +3,20 @@
 describe('Wpi', function() {
 
 	var wpiSvc;
-	var mockRally, mockStore;
+	var mockRally, mockWindow;
 
 	beforeEach(function(){
 
 		module('qa-rally')
 
 		mockRally = {};
-		mockStore = {};
+		mockWindow = {
+			localStorage: {}
+		};
 
 		module(function($provide){
 			$provide.value('Rally', mockRally);
-			$provide.value('Store', mockStore);
+			$provide.value('$window', mockWindow);
 		});
 
 		inject(function(_Wpi_){
@@ -49,30 +51,19 @@ describe('Wpi', function() {
 
 	it('.setCurrentIndex() saves value to store.', function(){
 
-		mockStore.put = function() {};
-		spyOn(mockStore, 'put');
-
 		wpiSvc.setCurrentId('a nice id');
 
-		expect(mockStore.put).toHaveBeenCalledWith({
-			key: 'wpiCurrentId',
-			version: 1,
-			data: 'a nice id'
-		});
+		expect(mockWindow.localStorage.wpiCurrentId).toEqual(JSON.stringify('a nice id'));
 	});
 
 	it('.getCurrentIndex() gets the value from store.', function(){
 
-		mockStore.get = function(options) {
-			expect(options.key).toEqual('wpiCurrentId');
-			expect(options.fetch()).toBeUndefined(); // whether the Store needs to call it or not
-
-			return 'the current id';
-		};
+		var value = 'the current id';
+		mockWindow.localStorage.wpiCurrentId = JSON.stringify(value);
 
 		var actual = wpiSvc.getCurrentId()
 
-		expect(actual).toEqual('the current id');
+		expect(actual).toEqual(value);
 	});
 
 	// helper list used by tests below
@@ -83,72 +74,74 @@ describe('Wpi', function() {
 				};
 	}
 
-	it('.setList() puts the value to store.', function() {
+	it('.setList() puts the value to cache.', function() {
 
-		mockStore.put = function() {};
-		spyOn(mockStore, 'put');
 		var list = getSampleList();
 		
 		wpiSvc.setList(list);
 
-		expect(mockStore.put).toHaveBeenCalledWith({
-			key: 'wpiList',
+		expect(mockWindow.localStorage.wpiList).toEqual(JSON.stringify({
 			version: wpiSvc.$currentListVersion,
 			data: list
-		})
+		}));
 	});
 
-	it('.getList() gets from store.', function() {
+	it('.getList() returns default value.', function() {
 
-		var list = getSampleList();
-		mockStore.get = function(options) {
-			expect(options.key).toEqual('wpiList');
-			expect(options.expectedVersion).toEqual(wpiSvc.$currentListVersion);
-			expect(options.fetch()).toEqual({}); // whether we call it or not
+		var actual = wpiSvc.getList();
+		expect(actual).toEqual({});
+	});
 
-			return list;
-		};
+	it('.getList() returns cached version.', function() {
+
+		mockWindow.localStorage.wpiList = JSON.stringify({
+			version: wpiSvc.$currentListVersion,
+			data: getSampleList()
+		});
 
 		var actual = wpiSvc.getList();
 
-		expect(actual).toEqual(list);
+		expect(actual).toEqual(getSampleList());
+	});
+
+	it('.getList() can ignore cached version.', function() {
+
+		mockWindow.localStorage.wpiList = JSON.stringify({
+			version: wpiSvc.$currentListVersion,
+			data: getSampleList()
+		});
+
+		var actual = wpiSvc.getList(true);
+
+		expect(actual).toEqual({});
 	});
 
 	it('.getList() handles an upgrade path.', function() {
 
-		// They will call store.get...
-		mockStore.get = function(options) {
+		mockWindow.localStorage.wpiList = JSON.stringify({
+			version: 1, // <-- old version
+			data: getSampleList()
+		});
+		var upgraded = getSampleList();
+		upgraded.test1 = '1 to 2';
+		upgraded.test2 = '2 to 3';
+		expect(wpiSvc.getList()).toEqual(upgraded);
 
-			// If the store has data from an earlier schema version,
-			// it will call their upgrade and return it.
-			return options.upgrade(
-				1,					// stored version
-				{original:'bob'}	// stored data
-			);
-		};
 
-		var actual = wpiSvc.getList();
+		mockWindow.localStorage.wpiList = JSON.stringify({
+			version: 2, // <-- old version
+			data: getSampleList()
+		});
+		var upgraded = getSampleList();
+		upgraded.test2 = '2 to 3';
+		expect(wpiSvc.getList()).toEqual(upgraded);
 
-		// And their upgrade path transformed the original in the right way.
-		expect(actual).toEqual({original:'bob',test1:'1 to 2'});
-	});
 
-	it('.getList() throws on unrecognized stored version.', function() {
-
-		// expect them to call our get
-		var getWasCalled;
-		mockStore.get = function(options) {
-			getWasCalled = true;
-
-			// expect them to pass an upgrade function.
-			// If we pass in an unrecognized version, they should throw.
-			expect(function() {
-				options.upgrade( -10, 'bob');
-			}).toThrow();
-		};
-
-		wpiSvc.getList();
-		expect(getWasCalled).toEqual(true);
+		mockWindow.localStorage.wpiList = JSON.stringify({
+			version: 555, // <-- bad version
+			data: getSampleList()
+		});
+		expect(function() { wpiSvc.getList() }).toThrow();
 	});
 
 	it('.wpiIsValid() returns true if each required field is set.', function() {

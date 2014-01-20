@@ -2,10 +2,10 @@
 // Rally service
 
 //		- Stateless data access service to interact with Rally web services.
-//		- Manage caching of data in window.localStorage via Store service
-//		- Transformation of Rally data into normalized local data (discard stuff we don't need)
+//		- Manage caching of data in window.localStorage.
+//		- Transformation of Rally data into normalized local data (discard stuff we don't need).
 
-app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, Store) {
+app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http, $window) {
 	"use strict";
 
 	// An overview of Rally web services we use.
@@ -43,25 +43,12 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	var service = {};
 
 	var rallyMaxPageSize = 200;
-	var workspacesStoreVersion = 1; // increment when the schema of stored workspaces changes, in order to ignore-and-refresh store.
-
-	// JSONP overview (since it's new to me)
-	//	- you can't make XMLHttpRequest's cross-site (i.e. to Rally)
-	//  - you CAN download and execute a JavaScript file: <script src="//cross-site/file.js">
-	//  - JSONP is a technique of downloading JSON that involves wrapping the JSON in a [P]rocedure call: some_function({json:'data here'})
-	//  - Rally supports JSONP. adding &json=function_to_call to the query string, Rally will wrap the JSON in the [P]rocedure you declare
-	// AngularJS $http
-	//	- We need to use AngularJS's $http service for HTTP, in order to hook up two-way binding; otherwise we need to mess with $scope.$apply. I'm a few aha-bubbles away from understanding it
-	//	- $http.jsonp(url) will a) create a temporary global function, b) replace the constant JSON_CALLBACK in the URL with its name, c) make the JSONP request d) the JSONP response will execute, calling the method e) that method will come back to us with the data.
-	//  - So here, we are appending the JSONP callback into the URL to Rally.
 
 	function getRallyJson(url, data) {
 		var querystring = $.param(_.extend({jsonp:'JSON_CALLBACK'}, data));
 		url = url + (url.indexOf('?') >= 0 ? '&' : '?') + querystring;
 		return $http.jsonp(url);
 	};
-
-	// Helper to return a promise that fulfills when each item of a list is processed by a promise-returning callback.
 
 	function allItemPromises(listOfItems, getPromiseForItem) {
 		var promises = [];
@@ -71,9 +58,12 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		return $q.all(promises);
 	}
 
-	// GET subscription.
-	// Extract relevant data.
-	// Return promise.
+	// As an internal tool, someone not familiar with Rally, AngularJS or this tool will be assigned to fix it as Rally changes their web services (as happens regularly)
+	// I am making an effort to over-validate expectations about Rally's services with runtime assertinos
+	function assert(test, message) {
+		if (!test) throw new Error(message);
+	}
+
 	service.getSubscriptionData = function() {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/subscription').then(function(subscriptionResponse){
 			$log.info('subscriptionResponse', subscriptionResponse);
@@ -83,22 +73,18 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 				workspacesRef: subscriptionResponse.data.Subscription.Workspaces._ref
 			};
 
-			if (typeof subscriptionData._ref !== 'string') throw new Error('Expected to get subscription _ref');
-			if (typeof subscriptionData.workspacesRef !== 'string') throw new Error('Expected to get workspacesRef from subscription.');
+			assert(typeof subscriptionData._ref === 'string', 'Expected to get subscription _ref');
+			assert(typeof subscriptionData.workspacesRef === 'string', 'Expected to get workspacesRef from subscription.');
 
 			return subscriptionData;
 		})
 	};
 
-	// GET workspace list for subscription.
-	// Extract relevant data.
-	// Return promise.
-	// workspacesRef: comes from getSubscriptionData
 	service.getWorkspaceList = function (workspacesRef) {
 		return getRallyJson(workspacesRef, {pagesize: rallyMaxPageSize}).then(function(workspacesResponse){
 			$log.info('workspacesResponse', workspacesResponse);
 
-			if (workspacesResponse.data.QueryResult.TotalResultCount > workspacesResponse.data.QueryResult.PageSize) throw new Error('This app expects few workspaces (2 or 3 max) workspaces, but exceeded the page size.');
+			assert(workspacesResponse.data.QueryResult.TotalResultCount <= workspacesResponse.data.QueryResult.PageSize, 'This app expects few workspaces (2 or 3 max) workspaces, but exceeded the page size.');
 
 			var workspaceList = _.map(workspacesResponse.data.QueryResult.Results, function(workspace) {
 
@@ -108,9 +94,9 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 					projectsRef: workspace.Projects._ref
 				};
 
-				if (typeof workspaceData._ref !== 'string') throw new Error('Expected to find workspace _ref for ' + workspacesRef);
-				if (typeof workspaceData.name !== 'string') throw new Error('Expected to find workspace name for ' + workspacesRef);
-				if (typeof workspaceData.projectsRef !== 'string') throw new Error('Expected to find projectsRef for ' + workspacesRef);
+				assert(typeof workspaceData._ref === 'string', 'Expected to find workspace _ref for ' + workspacesRef);
+				assert(typeof workspaceData.name === 'string', 'Expected to find workspace name for ' + workspacesRef);
+				assert(typeof workspaceData.projectsRef === 'string', 'Expected to find projectsRef for ' + workspacesRef);
 
 				return workspaceData;
 			});
@@ -119,15 +105,11 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	};
 
-	// GET project list for workspace.
-	// Extract relevant data.
-	// Return promise.
-	// projectsRef: comes from getWorkspaceList
 	service.getProjectList = function(projectsRef) {
 		return getRallyJson(projectsRef, {pagesize: rallyMaxPageSize}).then(function(projectsResponse){
 			$log.info('projectsResponse', projectsResponse);
 
-			if (projectsResponse.data.QueryResult.TotalResultCount > projectsResponse.data.QueryResult.PageSize) throw new Error('Expect few projects (20 or so).');
+			assert(projectsResponse.data.QueryResult.TotalResultCount <= projectsResponse.data.QueryResult.PageSize, 'Expect few projects (20 or so).');
 
 			var projectList = _.map(projectsResponse.data.QueryResult.Results, function(project) {
 
@@ -137,9 +119,9 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 					iterationsRef: project.Iterations._ref
 				};
 
-				if (typeof projectData._ref !== 'string') throw new Error('Expect to find project _ref for ' + projectsRef);
-				if (typeof projectData.name !== 'string') throw new Error( 'Expect to find project name for ' + projectsRef);
-				if (typeof projectData.iterationsRef !== 'string') throw new Error('Expect to find iterationsRef for ' + projectsRef);
+				assert(typeof projectData._ref === 'string', 'Expect to find project _ref for ' + projectsRef);
+				assert(typeof projectData.name === 'string', 'Expect to find project name for ' + projectsRef);
+				assert(typeof projectData.iterationsRef === 'string', 'Expect to find iterationsRef for ' + projectsRef);
 
 				return projectData;
 			});
@@ -148,17 +130,14 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	};
 
-	// GET iteration list for project.
-	// Extract relevant data.
-	// Return promise.
-	// iterationsRef: comes from getProjectList
 	service.getIterationList = function(iterationsRef) {
 		return getRallyJson(iterationsRef, {pagesize: rallyMaxPageSize}).then(function(iterationsResponse){
 			$log.info('iterationsResponse', iterationsResponse);
 
-			// This assertion is the closest one to failure. Rather than paging, consider adjusting the query to be the most recent 200.
-			// This tool is about active testing, not reporting on older iterations.
-			if (iterationsResponse.data.QueryResult.TotalResultCount > iterationsResponse.data.QueryResult.PageSize) throw new Error('Expect few iterations (100 or so).');
+			// This assertion may fail in the next year or so.
+			// Consider order desc by date and take the first page (this tool is about active testing, not ancient iterations),
+			// or traversing all pages, but be careful not to waste too much localStorage and download time on old data that won't be used.
+			assert(iterationsResponse.data.QueryResult.TotalResultCount <= iterationsResponse.data.QueryResult.PageSize, 'Expect few iterations (100 or so).');
 
 			var iterationList = _.map(iterationsResponse.data.QueryResult.Results, function(iteration) {
 
@@ -169,10 +148,10 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 					endDate: iteration.EndDate
 				};
 
-				if (typeof iterationData._ref !== 'string') throw new Error( 'Expect to find iteration _ref for ' + iterationsRef);
-				if (typeof iterationData.name !== 'string') throw new Error( 'Expect to find iteration name for ' + iterationsRef);
-				if (typeof iterationData.startDate !== 'string') throw new Error( 'Expect to find iteration startDate for ' + iterationsRef);
-				if (typeof iterationData.endDate !== 'string') throw new Error( 'Expect to find iteration endDate for ' + iterationsRef);
+				assert(typeof iterationData._ref === 'string', 'Expect to find iteration _ref for ' + iterationsRef);
+				assert(typeof iterationData.name === 'string', 'Expect to find iteration name for ' + iterationsRef);
+				assert(typeof iterationData.startDate === 'string', 'Expect to find iteration startDate for ' + iterationsRef);
+				assert(typeof iterationData.endDate === 'string', 'Expect to find iteration endDate for ' + iterationsRef);
 
 				return iterationData;
 			});
@@ -181,11 +160,6 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	};
 
-	// GET test sets for iteration
-	// Extract relevant data.
-	// Return promise.
-	// workspaceRef, iterationRef: comes from WPI (earlier queried workspace and iteration)
-	// NOTE: test sets are M:N to iterations; we need to query for them rather than download a 'child' list
 	service.getTestSetList = function (workspaceRef, iterationRef) {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/testset', {
 				  workspace: workspaceRef
@@ -195,10 +169,8 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			$log.info('testSetsResponse', testSetsResponse);
 
 			return {
-				// used for concurrency: to make sure wpi.iterationRef hasn't changed since this request was made.
+				// echo back iterationRef with the actual result for concurrency checking.
 				iterationRef: iterationRef,
-
-				// the actual result
 				testSets: _.reduce(testSetsResponse.data.QueryResult.Results, function(memo, testSet) {
 					memo[testSet._ref] = {
 						_ref: testSet._ref,
@@ -237,12 +209,8 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		, ValidationExpectedResult		: 'l'
 		, ValidationInput				: 'm'
 		, WorkProductRef				: 'n'
-		// I'm sure I'm missing some. That's fine.
 	};
 
-	// GET test cases for test set.
-	// Return promise.
-	// testSetRef: comes from test set
 	service.getTestSetDetails = function(testSetRef) {
 
 		var testSetDetails = {
@@ -291,6 +259,9 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 								}
 								newTc[TestCaseKeys.WorkProductRef] = tc.WorkProduct._ref
 							}
+
+							// TODO assert newTc structure
+
 							testSetDetails.testCases[tc._ref] = newTc;
 						})
 					});
@@ -302,8 +273,6 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 	}
 
 	// Traverse Subscription -> Workspace -> Project -> Iteration
-	// Aggregate result of multiple queries.
-	// Return promise.
 	service.getAllSubscriptionData = function() {
 
 		// TODO review. Single or multiple subscriptions.
@@ -316,21 +285,19 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 
 		var subscriptionData;
 
-		// Gets the entry point subscription data. Begin to accumulate the response here.
+		// Entry point is subscription data.
 
 		return service.getSubscriptionData()
 			.then(function(_subscriptionData){
 				subscriptionData = _subscriptionData;
 
-		// That leads into the list of workspaces. Aggregate that into the response.
+		// That leads into the list of workspaces
 
 				return service.getWorkspaceList(subscriptionData.workspacesRef);
 			}).then(function(workspaceList){
 				subscriptionData.workspaces = _.reduce(workspaceList, function(memo, ws) { memo[ws._ref] = ws; return memo; }, {});
 
-		// It becomes harder to chain promises linearly.
-		// The query for each workspaces project list may run concurrently.
-		// This promise finishes when all of them are done (including drilling into child objects)
+		// The query for each workspaces project list may run concurrently. This promise finishes when all of them are done.
 
 				return allItemPromises(workspaceList, function(workspace) {
 					return service.getProjectList(workspace.projectsRef)
@@ -350,7 +317,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 				});
 			})
 
-		// When all the recursion has completed, return the aggregated subscriptionData at the end of the promise chain.
+		// When all the recursion has completed, return the aggregated subscriptionData.
 
 			.then(function() {
 				$log.info('getAllSubscriptionData', subscriptionData);
@@ -359,47 +326,41 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			});
 	};
 
-	// Wrap getAllSubscriptionData in a caching/versioning layer
-	service.initSubscriptionData = function(ignoreStore) {
+	// Wrap getAllSubscriptionData in a caching layer
+	service.initSubscriptionData = function(ignoreCache) {
 
+		// increment currentVersion if the schema if cached data is changed.
 		var currentVersion = 3;
+		var storageKey = 'subscriptionData'
+		var deferred = $q.defer();
 
-		return Store.get({
-
-			// Simple get
-
-			ignoreStore: ignoreStore,
-			key: 'subscriptionData',
-			usePromise: true,
-			fetch: service.getAllSubscriptionData,
-
-			// Upgrade strategy
-
-			expectedVersion: currentVersion,
-			upgrade: function(dataVersion, data) {
-				switch(dataVersion) {
-					// from one upgrade into the next
-					case 1:
-					{
-						data.test1 = '1 to 2';
-					}
-					case 2:
-					{
-						data.test2 = '2 to 3';
-					}
-					break; // break after last upgrade case
-					default:
-
-						// If you get this:
-						// cause: you incremented the version without adding an upgrade path.
-						// solution 1: add an upgrade path and redeploy. the users data will still be there.
-						// solution 2: have users clear localStorage. They will lose all their data.
-
-						throw new Error('initSubscriptionData: no upgrade path for version ' + dataVersion + '. stored version will be persisted (THIS IS A BUG).');
+		var innerData;
+		if (!ignoreCache) {
+			var outerDataJson = $window.localStorage[storageKey];
+			if (outerDataJson) {
+				var outerData = JSON.parse(outerDataJson);
+				// no upgrade path provided for this data. It is a pure cache; no user data is here.
+				if (outerData.version === currentVersion) {
+					innerData = outerData.data;
 				}
-				return data;
 			}
-		});
+		}
+
+		if (innerData) {
+			deferred.resolve(innerData);
+		}
+		else {
+			service.getAllSubscriptionData().then(function(subscriptionData){
+				$window.localStorage[storageKey] = {
+					version: currentVersion,
+					data: subscriptionData
+				};
+				deferred.resolve(subscriptionData)
+			});
+
+		}
+
+		return deferred.promise;
 	};
 
 	return service;
