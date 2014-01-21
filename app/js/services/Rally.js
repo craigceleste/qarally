@@ -8,38 +8,6 @@
 app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http, $window) {
 	"use strict";
 
-	// An overview of Rally web services we use.
-
-	// Entry point (hard coded url)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/subscription
-
-	// Workspaces list (get this from inside Subscription)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/Subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a/Workspaces
-
-	// Workspace (get this from Workspaces list)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/workspace/286f4675-fc38-4a87-89b9-eec25d199cab
-
-	// Projects list (get this from workspace)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects?pagesize=200
-
-	// Project (get this from projects list)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/project/d0e34bc7-55c0-4757-857d-6be2604a6c6c
-
-	// Iterations list (get this from project)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations?pagesize=200
-
-	// Sprint 82 iteration (get this from iteration list)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/iteration/a2f5bfa9-23b3-4dd3-be80-a999e5e54041
-
-	// Test Sets Per Iteration is not navigated to from another request, but queried manually.
-	// https://rally1.rallydev.com/slm/webservice/v3.0/testset
-	//		?workspace=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fworkspace%2F286f4675-fc38-4a87-89b9-eec25d199cab
-	//		&project=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fproject%2Fd0e34bc7-55c0-4757-857d-6be2604a6c6c
-	//		&query=%28Iteration%20=%20%22https://rally1.rallydev.com/slm/webservice/v3.0/iteration/a2f5bfa9-23b3-4dd3-be80-a999e5e54041%22%29
-
-	// Test Cases Per Test Set (get this from test set)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
-
 	var service = {};
 
 	var rallyMaxPageSize = 200;
@@ -60,9 +28,13 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 
 	// As an internal tool, someone not familiar with Rally, AngularJS or this tool will be assigned to fix it as Rally changes their web services (as happens regularly)
 	// I am making an effort to over-validate expectations about Rally's services with runtime assertinos
+
 	function assert(test, message) {
 		if (!test) throw new Error(message);
 	}
+
+	// Entry point (hard coded url)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/subscription
 
 	service.getSubscriptionData = function() {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/subscription').then(function(subscriptionResponse){
@@ -79,6 +51,9 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			return subscriptionData;
 		})
 	};
+
+	// Workspaces list (get this from inside Subscription)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/Subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a/Workspaces
 
 	service.getWorkspaceList = function (workspacesRef) {
 		return getRallyJson(workspacesRef, {pagesize: rallyMaxPageSize}).then(function(workspacesResponse){
@@ -105,6 +80,9 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		});
 	};
 
+	// Projects list (get this from workspace)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects?pagesize=200
+
 	service.getProjectList = function(projectsRef) {
 		return getRallyJson(projectsRef, {pagesize: rallyMaxPageSize}).then(function(projectsResponse){
 			$log.info('projectsResponse', projectsResponse);
@@ -129,6 +107,9 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			return projectList;
 		});
 	};
+
+	// Iterations list (get this from project)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations?pagesize=200
 
 	service.getIterationList = function(iterationsRef) {
 		return getRallyJson(iterationsRef, {pagesize: rallyMaxPageSize}).then(function(iterationsResponse){
@@ -160,6 +141,11 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		});
 	};
 
+	// Test Sets Per Iteration is not navigated to from another request, but queried manually.
+	// https://rally1.rallydev.com/slm/webservice/v3.0/testset
+	//		?workspace=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fworkspace%2F286f4675-fc38-4a87-89b9-eec25d199cab
+	//		&query=%28Iteration%20=%20%22https://rally1.rallydev.com/slm/webservice/v3.0/iteration/a2f5bfa9-23b3-4dd3-be80-a999e5e54041%22%29
+
 	service.getTestSetList = function (workspaceRef, iterationRef) {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/testset', {
 				  workspace: workspaceRef
@@ -182,128 +168,43 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		});
 	}
 
-	// Here are some stats about the number of test cases per test set for our data:
-	//		  6 test cases have > 1000        TC's (1482 max TC in one TS)
-	//		 14 test cases have >  500 < 1000 TC's
-	//		254 test cases have >  100 <  500 TC's
-	//		434 test cases have >   10 <  100 TC's
-	//		160 test cases have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
-	// Rally TC's are about 3-4KB of JSON over the wire. About 1KB if we reduce  unused data and pseudo-minify it.
+	// "Test Set Details" is going to be an aggregate structure, with the test cases list as the central piece.
+	// Test Cases Per Test Set (get this from test set)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a
+	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
 
-	var TestCaseKeys = {
-		  _ref 							: 'a'
-		, Description					: 'b'
-		, FormattedID					: 'c'
-		, Name 							: 'd'
-		, Notes							: 'e'
-		, ObjectId						: 'f'
-		, Objective						: 'g'
-		, PostConditions				: 'h'
-		, PreConditions					: 'i'
-		, TestFolderRef					: 'j'
-		, Type							: 'k'
-		, ValidationExpectedResult		: 'l'
-		, ValidationInput				: 'm'
-		, WorkProductRef				: 'n'
-	};
-
-	// expose for unit tests
-	service.$testCaseKeys = TestCaseKeys;
-
-	// It would be nice to store and use rally Test Cases in their native format.
-	// This is prohibitive when localStorage is limited to 5 MB.
-	// Here we eliminate/ignore unused properties and minify property names to 'a', 'b', etc.
-	// This takes us from about 5KB to about 1KB per test case.
-	service.transformTestCaseFromRallyToStorage  = function(testCase) {
-		var newTc = {};
-		newTc[TestCaseKeys.Description] = testCase.Description;
-		assert(typeof newTc[TestCaseKeys.Description] === 'string', 'Description is required.');
-
-		newTc[TestCaseKeys.FormattedID] = testCase.FormattedID;
-		assert(/^TC[0-9]+$/.test(newTc[TestCaseKeys.FormattedID]), 'FormattedID must match the TC### pattern.');
-
-		newTc[TestCaseKeys.Name] = testCase.Name;
-		assert(typeof newTc[TestCaseKeys.Name] === 'string', 'Name is required.');
-
-		newTc[TestCaseKeys.Notes] = testCase.Notes;
-		newTc[TestCaseKeys.ObjectId] = testCase.ObjectId;
-		newTc[TestCaseKeys.Objective] = testCase.Objective;
-		newTc[TestCaseKeys.PostConditions] = testCase.PostConditions;
-		newTc[TestCaseKeys.PreConditions] = testCase.PreConditions;
-		newTc[TestCaseKeys.Type] = testCase.Type;
-		newTc[TestCaseKeys.ValidationExpectedResult] = testCase.ValidationExpectedResult;
-		newTc[TestCaseKeys.ValidationInput] = testCase.ValidationInput;
-		if (testCase.TestFolder) {
-			newTc[TestCaseKeys.TestFolderRef] = testCase.TestFolder._ref
-		}
-		if (testCase.WorkProduct) {
-			newTc[TestCaseKeys.WorkProductRef] = testCase.WorkProduct._ref
-		}
-		return newTc;
-	}
-
-	// Transform the stored format to one that is easy to code against.
-	service.transformTestCaseFromStorageToWorking = function(testCase) {
-
-		var tc = _.reduce(TestCaseKeys, function(memo, minifiedKey, unminifiedKey){ memo[unminifiedKey] = testCase[minifiedKey]; return memo; }, {})
-
-		// Produce a string containing all the text that can be searched.
- 		// ... looks like they only want Name. Possibly remove this and just go by name
-
-		tc._searchContent = (tc.Name||'')
-			// + ' ' + (tc.Description||'')
-			// + ' ' + (tc.Notes||'') 
-			// etc
-			.toUpperCase();
-
-		// TODO layer in test results
-
-		return tc;
-	}
-
-	service.getTestSetDetails = function(testSetRef) {
+	service.getTestCaseList = function(testSetRef) {
 
 		// Test Set Details is a package containing a bunch of data for a test set: primarilly the test cases.
-		var testSetDetails = {
-			testCases: {},
-			testFolders: {},
-			workProducts: {}
-		};
+		var testCases = {};
 
 		return getRallyJson(testSetRef).then(function(testSetResponse) {
 			$log.info('testSetResponse', testSetResponse);
 
+			// Make an array with the first TC on each page (1, 200, 400, etc). It makes the allItemPromises easier.
 			var pageStarts = [];
 			for (var start = 1; start < testSetResponse.data.TestSet.TestCases.Count; start = start + rallyMaxPageSize) {
 				pageStarts.push(start);
 			}
+
+			// separate request for each page of test cases
 			return allItemPromises(pageStarts, function(start) {
 				return getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {pagesize: rallyMaxPageSize, start: start})
 					.then(function(testCaseListResponse){
+
 						$log.info('testCaseListResponse', testCaseListResponse);
 						_.each(testCaseListResponse.data.QueryResult.Results, function(tc) {
-							var newTc = service.transformTestCaseFromRallyToStorage(tc)
+							testCases[tc._ref] = tc;
 
-							if (testCase.TestFolder && !testSetDetails.testFolders[testCase.TestFolder._ref]){
-								testSetDetails.testFolders[testCase.TestFolder._ref] = {
-									_ref: testCase.TestFolder._ref,
-									name: testCase.TestFolder._refObjectName
-								};
-							}
-							if (testCase.WorkProduct && !testSetDetails.workProducts[testCase.WorkProduct._ref]) {
-								testSetDetails.workProducts[testCase.WorkProduct._ref] = {
-									_ref: testCase.WorkProduct._ref,
-									name: testCase.WorkProduct._refObjectName
-								};
-							}
-
-							testSetDetails.testCases[tc._ref] = newTc;
+							assert(typeof testCases[tc._ref].Description === 'string', 'Description is required.');
+							assert(/^TC[0-9]+$/.test(testCases[tc._ref].FormattedID), 'FormattedID must match the TC### pattern.');
+							assert(typeof testCases[tc._ref].Name === 'string', 'Name is required.');
 						})
 					});
 			});
 		}).then(function() {
-			$log.debug('getTestCasesForTestSet', testSetDetails);
-			return testSetDetails;
+			$log.debug('getTestCasesList', testCases);
+			return testCases;
 		});
 	}
 
@@ -398,6 +299,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		return deferred.promise;
 	};
 
+	// TODO old version
 	service.initTestSetDetails = function(testSetRef, ignoreCache) {
 
 		var currentVersion = 1;
@@ -489,6 +391,177 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		else {
 			service.getTestSetDetails(testSetRef).then(function(testSetDetails) {
 				cacheIt(testSetDetails);
+				deferred.resolve(testSetDetails);
+			})
+		}
+
+		return deferred.promise;
+	}
+
+	service.initTestSetDetails = function(testSetRef, ignoreCache) {
+
+		// Here are some stats about the number of test cases per test set for our data:
+		//		  6 test cases have > 1000        TC's (1482 max TC in one TS)
+		//		 14 test cases have >  500 < 1000 TC's
+		//		254 test cases have >  100 <  500 TC's
+		//		434 test cases have >   10 <  100 TC's
+		//		160 test cases have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
+
+		// This is one of the more complicated bits. But central to the app's concept of "cache it locally and work from there"
+		// In order to store large numbers of test cases in localStorage, they need to be heavily transformed between 3 states: Rally's native state, a minimized state for storage and the unminified working in memory copy.
+		// Rally TC's are about 3-4KB of JSON over the wire. About 1KB if we reduce  unused data and pseudo-minify it.
+
+		var storageVersion = 1;
+		var storageKey = 'tsd_' + testSetRef;
+		var lastAccessedKey = 'tsd_lastAccessed';
+
+		var MinificationKeys = {
+			  _ref 							: 'a'
+			, Description					: 'b'
+			, FormattedID					: 'c'
+			, Name 							: 'd'
+			, Notes							: 'e'
+			, ObjectId						: 'f'
+			, Objective						: 'g'
+			, PostConditions				: 'h'
+			, PreConditions					: 'i'
+			, TestFolderRef					: 'j'
+			, Type							: 'k'
+			, ValidationExpectedResult		: 'l'
+			, ValidationInput				: 'm'
+			, WorkProductRef				: 'n'
+		};
+
+		// It would be nice to store and use rally Test Cases in their native format. The 5MB limit to localStorage prohibits this.
+		// Here we eliminate/ignore unused properties and minify property names to 'a', 'b', etc.
+		function minifyTestCase(testCase) {
+			var minifiedTc = {};
+			minifiedTc[MinificationKeys.Description] = testCase.Description;
+			minifiedTc[MinificationKeys.FormattedID] = testCase.FormattedID;
+			minifiedTc[MinificationKeys.Name] = testCase.Name;
+			minifiedTc[MinificationKeys.Notes] = testCase.Notes;
+			minifiedTc[MinificationKeys.ObjectId] = testCase.ObjectId;
+			minifiedTc[MinificationKeys.Objective] = testCase.Objective;
+			minifiedTc[MinificationKeys.PostConditions] = testCase.PostConditions;
+			minifiedTc[MinificationKeys.PreConditions] = testCase.PreConditions;
+			minifiedTc[MinificationKeys.Type] = testCase.Type;
+			minifiedTc[MinificationKeys.ValidationExpectedResult] = testCase.ValidationExpectedResult;
+			minifiedTc[MinificationKeys.ValidationInput] = testCase.ValidationInput;
+			if (testCase.TestFolder) {
+				minifiedTc[MinificationKeys.TestFolderRef] = testCase.TestFolder._ref
+			}
+			if (testCase.WorkProduct) {
+				minifiedTc[MinificationKeys.WorkProductRef] = testCase.WorkProduct._ref
+			}
+			return minifiedTc;
+		}
+
+		// Transform the stored format to one that is easy to code against; it is not the original Rally state but a 3rd working state.
+		function unminifyTestCase(testCase) {
+
+			var tc = _.reduce(MinificationKeys, function(memo, minifiedKey, unminifiedKey){
+				memo[unminifiedKey] = testCase[minifiedKey]; return memo;
+			}, {})
+
+			// Produce a string containing all the text that can be searched.
+	 		// ... looks like they only want Name. Possibly remove this and just go by name
+
+			tc._searchContent = (tc.Name||'')
+				// + ' ' + (tc.Description||'')
+				// + ' ' + (tc.Notes||'') 
+				// etc
+				.toUpperCase();
+
+			// TODO layer in test results or other in-memory helpers
+
+			return tc;
+		}
+
+		function ensureCacheSpaceFor(size) {
+
+			// The goal here is to ensure that all test set details do not exceed 4MB.
+			// NOT to guarantee that there is at least 4MB available: do not stomp other data if they exceed their limits.
+
+			var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
+			
+			if (typeof size !== 'number' || size == NaN || size <= 0 || size >= maxSizeForAllTestSetDetails) {
+				throw new Error('ensureCacheSpaceFor: size is invalid: ' + size);
+			}
+
+			var lastAccessed = {};
+			var lastAccessedJson = $window.localStorage[lastAccessedKey];
+			if (lastAccessedJson) {
+				lastAccessedOuter = JSON.parse(lastAccessedJson);
+				if (lastAccessedOuter.version == 1) {
+					lastAccessed = lastAccessedOuter.data;
+				}
+			}
+
+			var existingTestSets = {};
+			for(var key in $window.localStorage) {
+				if (key != storageKey) { // ignore the one being saved
+					if (key.indexOf('tsd_') === 0) {
+						existingTestSets[key] = {
+							size: $window.localStorage[key].length,
+							lastAccessed: lastAccessed ? lastAccessed[key] : undefined
+						};
+					}
+				}
+			}
+
+			// while the sum of existing ones > target number, find the one that was accessed longest ago and delete it
+			var targetSize = maxSizeForAllTestSetDetails - size;
+			while (_.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0) > targetSize) {
+				var victimKey = _.reduce(existingTestSets, function(bestYetKey, ts, key) {
+					if (!bestYetKey) return key;
+					var bestYet = existingTestSets[bestYetKey];
+					if (bestYet.lastAccessed && ts.lastAccessed) {
+						return bestYet.lastAccessed < ts.lastAccessed ? bestYetKey : key;
+					}
+					if (!bestYet.lastAccessed) {
+						return bestYetKey;
+					}
+					return key;
+				});
+				$log.info('test set data de-cached to make room: ' + victimKey, $window.localStorage[victimKey]);
+				$window.localStorage.removeItem(victimKey);
+				delete existingTestSets[victimKey];
+			}
+		}
+
+		function cacheIt(testSetDetails) {
+			var outerDataJson = JSON.stringify({
+				version: currentVersion,
+				data: testSetDetails
+			})
+
+			var cacheSize = outerDataJson.length;
+			ensureCacheSpaceFor(outerDataJson.length + storageKey.length + 100); // 100 is an arbitrary safety :/
+			$window.localStorage[storageKey] = outerDataJson;
+		}
+
+		var deferred = $q.defer();
+
+		var testSetDetails;
+		if (!ignoreCache) {
+			var outerDataJson = $window.localStorage[storageKey];
+			if (outerDataJson) {
+				var outerData = JSON.parse(outerDataJson);
+				if (outerData.version === storageVersion) {
+					var innerData = outerData.data;
+					// TODO var testSetDetails = de-minify innerData
+				}
+			}
+		}
+
+		if (testSetDetails){
+			deferred.resolve(testSetDetails);
+		}
+		else {
+			service.getTestCaseList(testSetRef).then(function(testCaseList) {
+				// TODO var storedTestSetDetails = minify testCaseList
+				cacheIt(storedTestSetDetails);
+				// TODO var testSetDetails = de-minify storedTestSetDetails
 				deferred.resolve(testSetDetails);
 			})
 		}
