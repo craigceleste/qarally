@@ -18,18 +18,18 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		$scope.wpiCurrentId = Wpi.getCurrentId();
 		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
 
-		$log.warn('TODO refresh test cases');
+		$log.warn('TODO refresh test cases', $scope.currentWpi.testSetRef);
 	}
 
 	$scope.refreshTestSets = function() {
 		Wpi.refreshTestSets($scope.currentWpi).then(function(){
-			$log.warn('TODO refresh test cases');
+			$log.warn('TODO refresh test cases', $scope.currentWpi.testSetRef);
 		});
 	}
 
 	$scope.setCurrentTestSet = function(testSetRef) {
 		$scope.currentWpi.testSetRef = testSetRef;
-		$log.warn('TODO refresh test cases');
+		$log.warn('TODO refresh test cases', $scope.currentWpi.testSetRef);
 	}
 
 	// Set up the state in the scope
@@ -69,35 +69,6 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 
 	$scope.testFolders = {};
 	$scope.workProducts = {};
-
-	// --------------
-	// Transform from Rally native format to Storage format.
-	//		Problem: localStorage is very limited.
-	//		As much as it would be nice, we can't store the entire TC in its native format.
-	//			1. Eliminate properties we don't want to save.
-	//			2. Flatten associated objects into 1 or more properties that we care about.
-	//			3. Pseudo-minify the JSON: 2000 test cases * 200 characters of field labels each = 400000 = 5% of localStorage...
-	//			4. reduce ref URI's to the relevant id (guid or int?) -- this goes against REST but will save a ton of space
-
-	var tcKeys = {
-		  _ref 							: 'a'
-		, Description					: 'b'
-		, FormattedID					: 'c'
-		, Name 							: 'd'
-		, Notes							: 'e'
-		, ObjectId						: 'f'
-		, Objective						: 'g'
-		, PostConditions				: 'h'
-		, PreConditions					: 'i'
-		, TestFolderRef					: 'j'
-		, TestFolderName				: 'k'
-		, Type							: 'l'
-		, ValidationExpectedResult		: 'm'
-		, ValidationInput				: 'n'
-		, WorkProductRef				: 'o'
-		, WorkProductName				: 'p'
-		// I'm sure I'm missing some. That's fine.
-	};
 
 	var testCasesFromStore = _.chain(window.fake_test_cases || [])
 		.map(function(tc) {

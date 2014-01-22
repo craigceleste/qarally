@@ -3,30 +3,25 @@
 describe('Rally', function() {
 
 	var rally;
-	var mockStore, $httpBackend;
-
-	// Prepare service under tests with appropriate mock inejections.
+	var mockWindow, $rootScope, $httpBackend;
 
 	beforeEach(function(){
 
 		module('qa-rally')
 
-		// Provide mocks that we create
-
-		mockStore = { get: function() {} };
+		mockWindow = {
+			localStorage: {}
+		};
 
 		module(function($provide){
-			$provide.value('Store', mockStore);
+			$provide.value('$window', mockWindow);
 		});
 
-		// Get ahold of mocks that angular-mocks created
-
-		inject(function($injector){
+		inject(function(_$rootScope_, $injector){
+			$rootScope = _$rootScope_;
 			$httpBackend = $injector.get('$httpBackend');
 			setupRallyBackend($httpBackend);
 		});
-
-		// Get the object under test
 
 		inject(function(Rally){
 			rally = Rally;
@@ -123,82 +118,90 @@ describe('Rally', function() {
 		$httpBackend.flush();
 	});
 
-	it('initSubscriptionData(happy path) will get from store', function() {
+	it('initSubscriptionData will return a cached version.', function() {
 
-		mockStore.get = function(options) {
-
-			// initSubscriptionData should pass the right options to .get()
-			expect(options.ignoreStore).toBeUndefined();
-			expect(options.key).toEqual('subscriptionData');
-			expect(options.fetch).toBeDefined();
-			expect(options.upgrade).toBeDefined();
-
-			return 'from store get';
-		};
-
-		var actual = rally.initSubscriptionData();
-
-		expect(actual).toEqual('from store get');
-	});
-
-	// I am playing with upgrade strategy.
-	it('initSubscriptionData will provide an upgrade path for a store containing version 1.', function() {
-
-		mockStore.get = function(options) {
-
-			// If store calls it's upgrade function it should work.
-			return options.upgrade(
-				1, 					// stored version
-				{test:'version1'}	// stored data
-			);
-		};
-
-		var actual = rally.initSubscriptionData();
-
-		expect(actual).toEqual({
-			test:'version1',
-			test1:'1 to 2',
-			test2:'2 to 3'
+		mockWindow.localStorage['subscriptionData'] = JSON.stringify({
+			version: 3,
+			data: 'from cache'
 		});
+
+		var subscriptionData;
+		rally.initSubscriptionData().then(function(data){
+			subscriptionData = data;
+		})
+
+		$rootScope.$apply();
+		expect(subscriptionData).toEqual('from cache');
 	});
 
-	// I am playing with upgrade strategy.
-	it('initSubscriptionData will provide an upgrade path for a store containing version 2.', function() {
+	it('initSubscriptionData will get from service and cache it.', function() {
 
-		mockStore.get = function(options) {
-
-			// If store calls it's upgrade function it should work.
-			return options.upgrade(
-				2, 					// stored version
-				{test:'version2'}	// stored data
-			);
-		};
-
-		var actual = rally.initSubscriptionData();
-
-		expect(actual).toEqual({
-			test:'version2',
-		//	test1:'1 to 2', <-- not here
-			test2:'2 to 3'
+		spyOn(rally, 'getAllSubscriptionData').andReturn({
+			then: function(thenCallback) {
+				thenCallback('from service');
+			}
 		});
+
+		var subscriptionData;
+		rally.initSubscriptionData().then(function(data){
+			subscriptionData = data;
+		})
+
+		$rootScope.$apply();
+		expect(subscriptionData).toEqual('from service');
 	});
 
-	// I am playing with upgrade strategy.
-	it('initSubscriptionData will throw if asked to upgrade an unrecognized version.', function() {
+	it('initSubscriptionData will get from service if ignoreCache is set.', function() {
 
-		mockStore.get = function(options) {
+		mockWindow.localStorage['subscriptionData'] = JSON.stringify({
+			version: 3,
+			data: 'from cache'
+		});
 
-			expect(function() {
+		spyOn(rally, 'getAllSubscriptionData').andReturn({
+			then: function(thenCallback) {
+				thenCallback('from service');
+			}
+		});
 
-				// Their upgrade callback should throw if given an unrecognized version
-				options.upgrade(
-					-1, // bad version
-					{}	// stored data
-				);
-			}).toThrow();
-		};
+		var subscriptionData;
+		rally.initSubscriptionData(true).then(function(data){ // <-- true == ignoreCache
+			subscriptionData = data;
+		})
 
-		rally.initSubscriptionData();
+		$rootScope.$apply();
+		expect(subscriptionData).toEqual('from service');
 	});
 
+	it('transforms test cases from rally format to storage format and from there to working format.', function() {
+
+		// Test Set as it's returned from Rally
+		var rallyTestSetJson = '{"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testcase/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_objectVersion": "256", "_refObjectName": "Duplicate Filter from Filter List Menu", "CreationDate": "2011-03-04T19:30:45.855Z", "_CreatedAt": "Mar 4, 2011", "ObjectID": "11112222-3333-4444-5555-666677778888", "Subscription": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/subscription/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_refObjectName": "MyCo", "_type": "Subscription"}, "Workspace": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/workspace/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_refObjectName": "MyCo Software", "_type": "Workspace"}, "Changesets": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/11112222-3333-4444-5555-666677778888/Changesets", "_type": "Changeset", "Count": 0}, "Description": "To duplicate a random filter from the filter list menu", "Discussion": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/11112222-3333-4444-5555-666677778888/Discussion", "_type": "ConversationPost", "Count": 0}, "DisplayColor": null, "FormattedID": "TC2046", "LastUpdateDate": "2014-01-20T15:07:14.159Z", "LatestDiscussionAgeInMinutes": null, "Name": "Duplicate Filter from Filter List Menu", "Notes": "", "Owner": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/user/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_refObjectName": "John Q", "_type": "User"}, "Project": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/project/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_refObjectName": "MyWeb", "_type": "Project"}, "Ready": false, "RevisionHistory": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/revisionhistory/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_type": "RevisionHistory"}, "Tags": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/11112222-3333-4444-5555-666677778888/Tags", "_type": "Tag", "_tagsNameArray": [], "Count": 0}, "Attachments": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/11112222-3333-4444-5555-666677778888/Attachments", "_type": "Attachment", "Count": 0}, "DefectStatus": "NONE", "DragAndDropRank": "-!!!!!5{q5qq!]I]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", "LastBuild": "MainLine.2342", "LastRun": "2014-01-13T16:39:00.176Z", "LastVerdict": "Pass", "Method": "Manual", "Objective": "", "Package": null, "PostConditions": "", "PreConditions": "1) Random company created and opened<BR>2) Random queries created", "Priority": "Important", "Recycled": false, "Results": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/11112222-3333-4444-5555-666677778888/Results", "_type": "TestCaseResult", "Count": 95}, "Risk": "Low", "Steps": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/11112222-3333-4444-5555-666677778888/Steps", "_type": "TestCaseStep", "Count": 0}, "TestFolder": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testfolder/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_refObjectName": "Filters", "_type": "TestFolder"}, "Type": "Smoke", "ValidationExpectedResult": "Filter is duplicated and appears in the Filter List", "ValidationInput": "1) Open the Filters List by clicking the \'Setup\' Link on the company toolbar, then the Filters Submenu<BR>2) Highlight a random filter<BR>3) Click \'Duplicate\' link on the Filter list menu", "WorkProduct": {"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testfolder/11112222-3333-4444-5555-666677778888", "_refObjectUUID": "11112222-3333-4444-5555-666677778888", "_refObjectName": "WP1", "_type": "WorkProduct"}, "c_Category": null, "c_Inputs": "", "c_ItestcaseTemplateId": "552", "c_NewDesign": false, "c_obsoleteCategory": "", "c_obsoleteCategory2": null, "c_obsoleteProgramArea": "", "c_oldProgramArea": null, "c_ProgramArea": null, "c_Section": null, "c_SubProgramArea": "Duplicate  Filter", "c_TimeToConduct": 1, "c_Weight": 60, "_type": "TestCase"}';
+		var rallyTestSet = JSON.parse(rallyTestSetJson);
+
+		var toStorage = rally.transformTestCaseFromRallyToStorage(rallyTestSet);
+		var toStorageJson = JSON.stringify(toStorage);
+
+		expect(toStorageJson.length).toBeGreaterThan(0);
+		expect(toStorageJson.length).toBeLessThan(rallyTestSetJson.length);
+
+		var toWorking = rally.transformTestCaseFromStorageToWorking(toStorage);
+
+		expect(toWorking._ref).toEqual(toStorage._ref)
+
+		expect(toWorking.Description).toEqual(rallyTestSet.Description)
+		expect(toWorking.Name).toEqual(rallyTestSet.Name)
+		expect(toWorking.Notes).toEqual(rallyTestSet.Notes)
+		expect(toWorking.ObjectId).toEqual(rallyTestSet.ObjectId)
+		expect(toWorking.Objective).toEqual(rallyTestSet.Objective)
+		expect(toWorking.PostConditions).toEqual(rallyTestSet.PostConditions)
+		expect(toWorking.PreConditions).toEqual(rallyTestSet.PreConditions)
+		expect(toWorking.Type).toEqual(rallyTestSet.Type)
+		expect(toWorking.ValidationExpectedResult).toEqual(rallyTestSet.ValidationExpectedResult)
+		expect(toWorking.ValidationInput).toEqual(rallyTestSet.ValidationInput)
+
+		expect(toWorking.TestFolderRef).toEqual(rallyTestSet.TestFolder._ref)
+		expect(toWorking.WorkProductRef).toEqual(rallyTestSet.WorkProduct._ref)
+
+	});
 });

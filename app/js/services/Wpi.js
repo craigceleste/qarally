@@ -1,7 +1,7 @@
 
 // WPI = named combination of {Workspace + Project + Iteration} for easier access to commonly used iterations.
 
-app.factory('Wpi', ['$log', 'Store', 'Rally', function($log, Store, Rally) {
+app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window, Rally) {
 	"use strict";
 
 	var service = {};
@@ -42,74 +42,77 @@ app.factory('Wpi', ['$log', 'Store', 'Rally', function($log, Store, Rally) {
 	};
 
 	service.setCurrentId = function(id) {
-
-		Store.put({
-			key: 'wpiCurrentId',
-			version: 1, // no upgrade path but required. it's just an int
-			data: id
-		});
+		$window.localStorage['wpiCurrentId'] = JSON.stringify(id);
 	}
 
 	service.getCurrentId = function() {
-		// mainly guard on save. If it's in the store, trust it.
-		return Store.get({
-			key: 'wpiCurrentId',
-			expectedVersion: 1, // no upgrade path. it's just an int.
-			fetch: function() { return undefined; },
-		});
+
+		var json = $window.localStorage['wpiCurrentId'];
+		if (json) {
+			return JSON.parse(json);
+		}
+		return undefined;
 	}
 
 	// exposed for unit tests
-	service.$currentListVersion = 2;
+	service.$currentListVersion = 3;
 
 	service.setList = function(list) {
-		Store.put({
-			key: 'wpiList',
+
+		// TODO consider validating list. Is it worth it?
+
+		$window.localStorage['wpiList'] = JSON.stringify({
 			version: service.$currentListVersion,
 			data: list
 		});
 	}
 
-	service.getList = function(ignoreStore) {
+	service.getList = function(ignoreCache) {
 
-		return Store.get({
+		var innerData;
+		var resave;
+		if (!ignoreCache) {
+			var outerDataJson = $window.localStorage['wpiList'];
+			if (outerDataJson) {
+				var outerData = JSON.parse(outerDataJson);
+				var innerData = outerData.data;
+				switch(outerData.version) {
+					
+					// Upgrade code: if wpiList schema changes
+					// 1. increment service.$currentListVersion
+					// 2. provide an upgrade case here (note there are no breaks between upgrades. each flows into the next. break at the end.)
 
-			// Normal get
-
-			ignoreStore: ignoreStore,
-			key: 'wpiList',
-			fetch: function() { return {}; },
-
-			// Upgrade path
-
-			expectedVersion: service.$currentListVersion,
-			upgrade: function(dataVersion, data) {
-
-				// I want the upgrade path roughed out and unit tested,
-				// so this code contains a fake version 1 and version 2 is the real first one.
-				switch(dataVersion) {
 					case 1:
 					{
-						data.test1 = '1 to 2';
-						// no break. flow into case 2.
+						innerData.test1 = '1 to 2';
+						resave = true;
 					}
-					/*
 					case 2:
 					{
-						// upgrade 2 to 3. etc
+						innerData.test2 = '2 to 3';
+						resave = true;
 					}
-					*/
-
-					// break after last upgrade case
+					case service.$currentListVersion:
+					{
+					}
 					break;
 
 					default:
-						// No upgrade path is a bug
 						throw new Error('wpi.getList: unsupported upgrade path.');
 				}
-				return data;
 			}
-		});
+		}
+
+		if (!innerData) {
+			innerData = {};
+			resave = true;
+		}
+
+		if (resave) {
+			service.setList(innerData)
+		}
+
+		return innerData;
 	}
 
 	service.refreshTestSets = function(wpi) {

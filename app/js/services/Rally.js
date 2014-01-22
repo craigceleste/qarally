@@ -2,66 +2,21 @@
 // Rally service
 
 //		- Stateless data access service to interact with Rally web services.
-//		- Manage caching of data in window.localStorage via Store service
-//		- Transformation of Rally data into normalized local data (discard stuff we don't need)
+//		- Manage caching of data in window.localStorage.
+//		- Transformation of Rally data into normalized local data (discard stuff we don't need).
 
-app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, Store) {
+app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http, $window) {
 	"use strict";
-
-	// An overview of Rally web services we use.
-
-	// Entry point (hard coded url)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/subscription
-
-	// Workspaces list (get this from inside Subscription)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/Subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a/Workspaces
-
-	// Workspace (get this from Workspaces list)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/workspace/286f4675-fc38-4a87-89b9-eec25d199cab
-
-	// Projects list (get this from workspace)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects?pagesize=200
-
-	// Project (get this from projects list)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/project/d0e34bc7-55c0-4757-857d-6be2604a6c6c
-
-	// Iterations list (get this from project)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations?pagesize=200
-
-	// Sprint 82 iteration (get this from iteration list)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/iteration/a2f5bfa9-23b3-4dd3-be80-a999e5e54041
-
-	// Test Sets Per Iteration is not navigated to from another request, but queried manually.
-	// https://rally1.rallydev.com/slm/webservice/v3.0/testset
-	//		?workspace=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fworkspace%2F286f4675-fc38-4a87-89b9-eec25d199cab
-	//		&project=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fproject%2Fd0e34bc7-55c0-4757-857d-6be2604a6c6c
-	//		&query=%28Iteration%20=%20%22https://rally1.rallydev.com/slm/webservice/v3.0/iteration/a2f5bfa9-23b3-4dd3-be80-a999e5e54041%22%29
-
-	// Test Cases Per Test Set (get this from test set)
-	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
 
 	var service = {};
 
 	var rallyMaxPageSize = 200;
-	var workspacesStoreVersion = 1; // increment when the schema of stored workspaces changes, in order to ignore-and-refresh store.
-
-	// JSONP overview (since it's new to me)
-	//	- you can't make XMLHttpRequest's cross-site (i.e. to Rally)
-	//  - you CAN download and execute a JavaScript file: <script src="//cross-site/file.js">
-	//  - JSONP is a technique of downloading JSON that involves wrapping the JSON in a [P]rocedure call: some_function({json:'data here'})
-	//  - Rally supports JSONP. adding &json=function_to_call to the query string, Rally will wrap the JSON in the [P]rocedure you declare
-	// AngularJS $http
-	//	- We need to use AngularJS's $http service for HTTP, in order to hook up two-way binding; otherwise we need to mess with $scope.$apply. I'm a few aha-bubbles away from understanding it
-	//	- $http.jsonp(url) will a) create a temporary global function, b) replace the constant JSON_CALLBACK in the URL with its name, c) make the JSONP request d) the JSONP response will execute, calling the method e) that method will come back to us with the data.
-	//  - So here, we are appending the JSONP callback into the URL to Rally.
 
 	function getRallyJson(url, data) {
 		var querystring = $.param(_.extend({jsonp:'JSON_CALLBACK'}, data));
 		url = url + (url.indexOf('?') >= 0 ? '&' : '?') + querystring;
 		return $http.jsonp(url);
 	};
-
-	// Helper to return a promise that fulfills when each item of a list is processed by a promise-returning callback.
 
 	function allItemPromises(listOfItems, getPromiseForItem) {
 		var promises = [];
@@ -71,9 +26,16 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		return $q.all(promises);
 	}
 
-	// GET subscription.
-	// Extract relevant data.
-	// Return promise.
+	// As an internal tool, someone not familiar with Rally, AngularJS or this tool will be assigned to fix it as Rally changes their web services (as happens regularly)
+	// I am making an effort to over-validate expectations about Rally's services with runtime assertinos
+
+	function assert(test, message) {
+		if (!test) throw new Error(message);
+	}
+
+	// Entry point (hard coded url)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/subscription
+
 	service.getSubscriptionData = function() {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/subscription').then(function(subscriptionResponse){
 			$log.info('subscriptionResponse', subscriptionResponse);
@@ -83,22 +45,21 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 				workspacesRef: subscriptionResponse.data.Subscription.Workspaces._ref
 			};
 
-			if (typeof subscriptionData._ref !== 'string') throw new Error('Expected to get subscription _ref');
-			if (typeof subscriptionData.workspacesRef !== 'string') throw new Error('Expected to get workspacesRef from subscription.');
+			assert(typeof subscriptionData._ref === 'string', 'Expected to get subscription _ref');
+			assert(typeof subscriptionData.workspacesRef === 'string', 'Expected to get workspacesRef from subscription.');
 
 			return subscriptionData;
 		})
 	};
 
-	// GET workspace list for subscription.
-	// Extract relevant data.
-	// Return promise.
-	// workspacesRef: comes from getSubscriptionData
+	// Workspaces list (get this from inside Subscription)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/Subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a/Workspaces
+
 	service.getWorkspaceList = function (workspacesRef) {
 		return getRallyJson(workspacesRef, {pagesize: rallyMaxPageSize}).then(function(workspacesResponse){
 			$log.info('workspacesResponse', workspacesResponse);
 
-			if (workspacesResponse.data.QueryResult.TotalResultCount > workspacesResponse.data.QueryResult.PageSize) throw new Error('This app expects few workspaces (2 or 3 max) workspaces, but exceeded the page size.');
+			assert(workspacesResponse.data.QueryResult.TotalResultCount <= workspacesResponse.data.QueryResult.PageSize, 'This app expects few workspaces (2 or 3 max) workspaces, but exceeded the page size.');
 
 			var workspaceList = _.map(workspacesResponse.data.QueryResult.Results, function(workspace) {
 
@@ -108,9 +69,9 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 					projectsRef: workspace.Projects._ref
 				};
 
-				if (typeof workspaceData._ref !== 'string') throw new Error('Expected to find workspace _ref for ' + workspacesRef);
-				if (typeof workspaceData.name !== 'string') throw new Error('Expected to find workspace name for ' + workspacesRef);
-				if (typeof workspaceData.projectsRef !== 'string') throw new Error('Expected to find projectsRef for ' + workspacesRef);
+				assert(typeof workspaceData._ref === 'string', 'Expected to find workspace _ref for ' + workspacesRef);
+				assert(typeof workspaceData.name === 'string', 'Expected to find workspace name for ' + workspacesRef);
+				assert(typeof workspaceData.projectsRef === 'string', 'Expected to find projectsRef for ' + workspacesRef);
 
 				return workspaceData;
 			});
@@ -119,15 +80,14 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	};
 
-	// GET project list for workspace.
-	// Extract relevant data.
-	// Return promise.
-	// projectsRef: comes from getWorkspaceList
+	// Projects list (get this from workspace)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects?pagesize=200
+
 	service.getProjectList = function(projectsRef) {
 		return getRallyJson(projectsRef, {pagesize: rallyMaxPageSize}).then(function(projectsResponse){
 			$log.info('projectsResponse', projectsResponse);
 
-			if (projectsResponse.data.QueryResult.TotalResultCount > projectsResponse.data.QueryResult.PageSize) throw new Error('Expect few projects (20 or so).');
+			assert(projectsResponse.data.QueryResult.TotalResultCount <= projectsResponse.data.QueryResult.PageSize, 'Expect few projects (20 or so).');
 
 			var projectList = _.map(projectsResponse.data.QueryResult.Results, function(project) {
 
@@ -137,9 +97,9 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 					iterationsRef: project.Iterations._ref
 				};
 
-				if (typeof projectData._ref !== 'string') throw new Error('Expect to find project _ref for ' + projectsRef);
-				if (typeof projectData.name !== 'string') throw new Error( 'Expect to find project name for ' + projectsRef);
-				if (typeof projectData.iterationsRef !== 'string') throw new Error('Expect to find iterationsRef for ' + projectsRef);
+				assert(typeof projectData._ref === 'string', 'Expect to find project _ref for ' + projectsRef);
+				assert(typeof projectData.name === 'string', 'Expect to find project name for ' + projectsRef);
+				assert(typeof projectData.iterationsRef === 'string', 'Expect to find iterationsRef for ' + projectsRef);
 
 				return projectData;
 			});
@@ -148,17 +108,17 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	};
 
-	// GET iteration list for project.
-	// Extract relevant data.
-	// Return promise.
-	// iterationsRef: comes from getProjectList
+	// Iterations list (get this from project)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations?pagesize=200
+
 	service.getIterationList = function(iterationsRef) {
 		return getRallyJson(iterationsRef, {pagesize: rallyMaxPageSize}).then(function(iterationsResponse){
 			$log.info('iterationsResponse', iterationsResponse);
 
-			// This assertion is the closest one to failure. Rather than paging, consider adjusting the query to be the most recent 200.
-			// This tool is about active testing, not reporting on older iterations.
-			if (iterationsResponse.data.QueryResult.TotalResultCount > iterationsResponse.data.QueryResult.PageSize) throw new Error('Expect few iterations (100 or so).');
+			// This assertion may fail in the next year or so.
+			// Consider order desc by date and take the first page (this tool is about active testing, not ancient iterations),
+			// or traversing all pages, but be careful not to waste too much localStorage and download time on old data that won't be used.
+			assert(iterationsResponse.data.QueryResult.TotalResultCount <= iterationsResponse.data.QueryResult.PageSize, 'Expect few iterations (100 or so).');
 
 			var iterationList = _.map(iterationsResponse.data.QueryResult.Results, function(iteration) {
 
@@ -169,10 +129,10 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 					endDate: iteration.EndDate
 				};
 
-				if (typeof iterationData._ref !== 'string') throw new Error( 'Expect to find iteration _ref for ' + iterationsRef);
-				if (typeof iterationData.name !== 'string') throw new Error( 'Expect to find iteration name for ' + iterationsRef);
-				if (typeof iterationData.startDate !== 'string') throw new Error( 'Expect to find iteration startDate for ' + iterationsRef);
-				if (typeof iterationData.endDate !== 'string') throw new Error( 'Expect to find iteration endDate for ' + iterationsRef);
+				assert(typeof iterationData._ref === 'string', 'Expect to find iteration _ref for ' + iterationsRef);
+				assert(typeof iterationData.name === 'string', 'Expect to find iteration name for ' + iterationsRef);
+				assert(typeof iterationData.startDate === 'string', 'Expect to find iteration startDate for ' + iterationsRef);
+				assert(typeof iterationData.endDate === 'string', 'Expect to find iteration endDate for ' + iterationsRef);
 
 				return iterationData;
 			});
@@ -181,11 +141,11 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	};
 
-	// GET test sets for iteration
-	// Extract relevant data.
-	// Return promise.
-	// workspaceRef, iterationRef: comes from WPI (earlier queried workspace and iteration)
-	// NOTE: test sets are M:N to iterations; we need to query for them rather than download a 'child' list
+	// Test Sets Per Iteration is not navigated to from another request, but queried manually.
+	// https://rally1.rallydev.com/slm/webservice/v3.0/testset
+	//		?workspace=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fworkspace%2F286f4675-fc38-4a87-89b9-eec25d199cab
+	//		&query=%28Iteration%20=%20%22https://rally1.rallydev.com/slm/webservice/v3.0/iteration/a2f5bfa9-23b3-4dd3-be80-a999e5e54041%22%29
+
 	service.getTestSetList = function (workspaceRef, iterationRef) {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/testset', {
 				  workspace: workspaceRef
@@ -195,10 +155,8 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			$log.info('testSetsResponse', testSetsResponse);
 
 			return {
-				// used for concurrency: to make sure wpi.iterationRef hasn't changed since this request was made.
+				// echo back iterationRef with the actual result for concurrency checking.
 				iterationRef: iterationRef,
-
-				// the actual result
 				testSets: _.reduce(testSetsResponse.data.QueryResult.Results, function(memo, testSet) {
 					memo[testSet._ref] = {
 						_ref: testSet._ref,
@@ -210,100 +168,47 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 		});
 	}
 
-	// The number of test cases we can store in localStorage is a pivitol breaking point for this app.
-	// I would ideally like to store the honest JSON returned from Rally for each entity.
-	// Test Cases Per Test Set stats (after 3 or so years of use): 837 test sets; average of 101 TC's per TS.
-	//		  6 of them have > 1000        TC's (1482 max TC in one TS)
-	//		 14 of them have >  500 < 1000 TC's
-	//		254 of them have >  100 <  500 TC's
-	//		434 of them have >   10 <  100 TC's
-	//		160 of them have        <   10 TC's  <-- many are 0. Probably experiments or dead or dummy projects. I would discount these.
-	// Rally TC's are about 3-4KB of JSON over the wire.
-	// If we ditch a bunch of unused fields, it is around 1.5KB (a little under half)
-	// If we 'minify' it, repetetive field names bring it down to about 1KB.
+	// "Test Set Details" is going to be an aggregate structure, with the test cases list as the central piece.
+	// Test Cases Per Test Set (get this from test set)
+	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a
+	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
 
-	var TestCaseKeys = {
-		  _ref 							: 'a'
-		, Description					: 'b'
-		, FormattedID					: 'c'
-		, Name 							: 'd'
-		, Notes							: 'e'
-		, ObjectId						: 'f'
-		, Objective						: 'g'
-		, PostConditions				: 'h'
-		, PreConditions					: 'i'
-		, TestFolderRef					: 'j'
-		, Type							: 'k'
-		, ValidationExpectedResult		: 'l'
-		, ValidationInput				: 'm'
-		, WorkProductRef				: 'n'
-		// I'm sure I'm missing some. That's fine.
-	};
+	service.getTestCaseList = function(testSetRef) {
 
-	// GET test cases for test set.
-	// Return promise.
-	// testSetRef: comes from test set
-	service.getTestSetDetails = function(testSetRef) {
-
-		var testSetDetails = {
-			testCases: {},
-			testFolders: {},
-			workProducts: {}
-		};
+		// Test Set Details is a package containing a bunch of data for a test set: primarilly the test cases.
+		var testCases = {};
 
 		return getRallyJson(testSetRef).then(function(testSetResponse) {
 			$log.info('testSetResponse', testSetResponse);
 
+			// Make an array with the first TC on each page (1, 200, 400, etc). It makes the allItemPromises easier.
 			var pageStarts = [];
-			for (var start = 1; start < testSetResponse.data.TestSet.TestCases.Count; start = start + rallyMaxPageSize) { pageStarts.push(start); }
+			for (var start = 1; start < testSetResponse.data.TestSet.TestCases.Count; start = start + rallyMaxPageSize) {
+				pageStarts.push(start);
+			}
+
+			// separate request for each page of test cases
 			return allItemPromises(pageStarts, function(start) {
 				return getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {pagesize: rallyMaxPageSize, start: start})
 					.then(function(testCaseListResponse){
+
 						$log.info('testCaseListResponse', testCaseListResponse);
 						_.each(testCaseListResponse.data.QueryResult.Results, function(tc) {
-							var newTc = {};
-							newTc[TestCaseKeys.Description] = tc.Description;
-							newTc[TestCaseKeys.FormattedID] = tc.FormattedID;
-							newTc[TestCaseKeys.Name] = tc.Name;
-							newTc[TestCaseKeys.Notes] = tc.Notes;
-							newTc[TestCaseKeys.ObjectId] = tc.ObjectId;
-							newTc[TestCaseKeys.Objective] = tc.Objective;
-							newTc[TestCaseKeys.PostConditions] = tc.PostConditions;
-							newTc[TestCaseKeys.PreConditions] = tc.PreConditions;
-							newTc[TestCaseKeys.Type] = tc.Type;
-							newTc[TestCaseKeys.ValidationExpectedResult] = tc.ValidationExpectedResult;
-							newTc[TestCaseKeys.ValidationInput] = tc.ValidationInput;
-							if (tc.TestFolder) {
-								if (!testSetDetails.testFolders[tc.TestFolder._ref]){
-									testSetDetails.testFolders[tc.TestFolder._ref] = {
-										_ref: tc.TestFolder._ref,
-										name: tc.TestFolder._refObjectName
-									};
-								}
-								newTc[TestCaseKeys.TestFolderRef] = tc.TestFolder._ref
-							}
-							if (tc.WorkProduct) {
-								if (!testSetDetails.workProducts[tc.WorkProduct._ref]) {
-									testSetDetails.workProducts[tc.WorkProduct._ref] = {
-										_ref: tc.WorkProduct._ref,
-										name: tc.WorkProduct._refObjectName
-									};
-								}
-								newTc[TestCaseKeys.WorkProductRef] = tc.WorkProduct._ref
-							}
-							testSetDetails.testCases[tc._ref] = newTc;
+							testCases[tc._ref] = tc;
+
+							assert(typeof testCases[tc._ref].Description === 'string', 'Description is required.');
+							assert(/^TC[0-9]+$/.test(testCases[tc._ref].FormattedID), 'FormattedID must match the TC### pattern.');
+							assert(typeof testCases[tc._ref].Name === 'string', 'Name is required.');
 						})
 					});
 			});
 		}).then(function() {
-			$log.debug('getTestCasesForTestSet', testSetDetails);
-			return testSetDetails;
+			$log.debug('getTestCasesList', testCases);
+			return testCases;
 		});
 	}
 
 	// Traverse Subscription -> Workspace -> Project -> Iteration
-	// Aggregate result of multiple queries.
-	// Return promise.
 	service.getAllSubscriptionData = function() {
 
 		// TODO review. Single or multiple subscriptions.
@@ -316,21 +221,19 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 
 		var subscriptionData;
 
-		// Gets the entry point subscription data. Begin to accumulate the response here.
+		// Entry point is subscription data.
 
 		return service.getSubscriptionData()
 			.then(function(_subscriptionData){
 				subscriptionData = _subscriptionData;
 
-		// That leads into the list of workspaces. Aggregate that into the response.
+		// That leads into the list of workspaces
 
 				return service.getWorkspaceList(subscriptionData.workspacesRef);
 			}).then(function(workspaceList){
 				subscriptionData.workspaces = _.reduce(workspaceList, function(memo, ws) { memo[ws._ref] = ws; return memo; }, {});
 
-		// It becomes harder to chain promises linearly.
-		// The query for each workspaces project list may run concurrently.
-		// This promise finishes when all of them are done (including drilling into child objects)
+		// The query for each workspaces project list may run concurrently. This promise finishes when all of them are done.
 
 				return allItemPromises(workspaceList, function(workspace) {
 					return service.getProjectList(workspace.projectsRef)
@@ -350,7 +253,7 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 				});
 			})
 
-		// When all the recursion has completed, return the aggregated subscriptionData at the end of the promise chain.
+		// When all the recursion has completed, return the aggregated subscriptionData.
 
 			.then(function() {
 				$log.info('getAllSubscriptionData', subscriptionData);
@@ -359,48 +262,312 @@ app.factory('Rally', ['$log', '$q', '$http', 'Store', function($log, $q, $http, 
 			});
 	};
 
-	// Wrap getAllSubscriptionData in a caching/versioning layer
-	service.initSubscriptionData = function(ignoreStore) {
+	// Wrap getAllSubscriptionData in a caching layer
+	service.initSubscriptionData = function(ignoreCache) {
 
+		// increment currentVersion if the schema if cached data is changed.
 		var currentVersion = 3;
+		var storageKey = 'subscriptionData'
+		var deferred = $q.defer();
 
-		return Store.get({
-
-			// Simple get
-
-			ignoreStore: ignoreStore,
-			key: 'subscriptionData',
-			usePromise: true,
-			fetch: service.getAllSubscriptionData,
-
-			// Upgrade strategy
-
-			expectedVersion: currentVersion,
-			upgrade: function(dataVersion, data) {
-				switch(dataVersion) {
-					// from one upgrade into the next
-					case 1:
-					{
-						data.test1 = '1 to 2';
-					}
-					case 2:
-					{
-						data.test2 = '2 to 3';
-					}
-					break; // break after last upgrade case
-					default:
-
-						// If you get this:
-						// cause: you incremented the version without adding an upgrade path.
-						// solution 1: add an upgrade path and redeploy. the users data will still be there.
-						// solution 2: have users clear localStorage. They will lose all their data.
-
-						throw new Error('initSubscriptionData: no upgrade path for version ' + dataVersion + '. stored version will be persisted (THIS IS A BUG).');
+		var innerData;
+		if (!ignoreCache) {
+			var outerDataJson = $window.localStorage[storageKey];
+			if (outerDataJson) {
+				var outerData = JSON.parse(outerDataJson);
+				// no upgrade path provided for this data. It is a pure cache; no user data is here.
+				if (outerData.version === currentVersion) {
+					innerData = outerData.data;
 				}
-				return data;
 			}
-		});
+		}
+
+		if (innerData) {
+			deferred.resolve(innerData);
+		}
+		else {
+			service.getAllSubscriptionData().then(function(subscriptionData){
+				$window.localStorage[storageKey] = {
+					version: currentVersion,
+					data: subscriptionData
+				};
+				deferred.resolve(subscriptionData)
+			});
+
+		}
+
+		return deferred.promise;
 	};
+
+	// TODO old version
+	service.initTestSetDetails = function(testSetRef, ignoreCache) {
+
+		var currentVersion = 1;
+		var storageKey = 'tsd_' + testSetRef;
+		var lastAccessedKey = 'tsd_lastAccessed';
+		var deferred = $q.defer();
+		var resave;
+
+		function ensureCacheSpaceFor(size) {
+
+			// The goal here is to ensure that all test set details do not exceed 4MB.
+			// NOT to guarantee that there is at least 4MB available: do not stomp other data if they exceed their limits.
+
+			var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
+			
+			if (typeof size !== 'number' || size == NaN || size <= 0 || size >= maxSizeForAllTestSetDetails) {
+				throw new Error('ensureCacheSpaceFor: size is invalid: ' + size);
+			}
+
+			var lastAccessed = {};
+			var lastAccessedJson = $window.localStorage[lastAccessedKey];
+			if (lastAccessedJson) {
+				lastAccessedOuter = JSON.parse(lastAccessedJson);
+				if (lastAccessedOuter.version == 1) {
+					lastAccessed = lastAccessedOuter.data;
+				}
+			}
+
+			var existingTestSets = {};
+			for(var key in $window.localStorage) {
+				if (key != storageKey) { // ignore the one being saved
+					if (key.indexOf('tsd_') === 0) {
+						existingTestSets[key] = {
+							size: $window.localStorage[key].length,
+							lastAccessed: lastAccessed ? lastAccessed[key] : undefined
+						};
+					}
+				}
+			}
+
+			// while the sum of existing ones > target number, find the one that was accessed longest ago and delete it
+			var targetSize = maxSizeForAllTestSetDetails - size;
+			while (_.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0) > targetSize) {
+				var victimKey = _.reduce(existingTestSets, function(bestYetKey, ts, key) {
+					if (!bestYetKey) return key;
+					var bestYet = existingTestSets[bestYetKey];
+					if (bestYet.lastAccessed && ts.lastAccessed) {
+						return bestYet.lastAccessed < ts.lastAccessed ? bestYetKey : key;
+					}
+					if (!bestYet.lastAccessed) {
+						return bestYetKey;
+					}
+					return key;
+				});
+				$log.info('test set data de-cached to make room: ' + victimKey, $window.localStorage[victimKey]);
+				$window.localStorage.removeItem(victimKey);
+				delete existingTestSets[victimKey];
+			}
+		}
+
+		function cacheIt(testSetDetails) {
+			var outerDataJson = JSON.stringify({
+				version: currentVersion,
+				data: testSetDetails
+			})
+
+			var cacheSize = outerDataJson.length;
+			ensureCacheSpaceFor(outerDataJson.length + storageKey.length + 100); // 100 is an arbitrary safety :/
+			$window.localStorage[storageKey] = outerDataJson;
+		}
+
+		var innerData;
+		if (!ignoreCache) {
+			var outerDataJson = $window.localStorage[storageKey];
+			if (outerDataJson) {
+				var outerData = JSON.parse(outerDataJson);
+				if (outerData.version === currentVersion) {
+					innerData = outerData.data;
+				}
+			}
+		}
+
+		if (innerData){
+			if (resave) {
+				cacheIt(innerData);
+			}
+			deferred.resolve(innerData);
+		}
+		else {
+			service.getTestSetDetails(testSetRef).then(function(testSetDetails) {
+				cacheIt(testSetDetails);
+				deferred.resolve(testSetDetails);
+			})
+		}
+
+		return deferred.promise;
+	}
+
+	service.initTestSetDetails = function(testSetRef, ignoreCache) {
+
+		// Here are some stats about the number of test cases per test set for our data:
+		//		  6 test cases have > 1000        TC's (1482 max TC in one TS)
+		//		 14 test cases have >  500 < 1000 TC's
+		//		254 test cases have >  100 <  500 TC's
+		//		434 test cases have >   10 <  100 TC's
+		//		160 test cases have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
+
+		// This is one of the more complicated bits. But central to the app's concept of "cache it locally and work from there"
+		// In order to store large numbers of test cases in localStorage, they need to be heavily transformed between 3 states: Rally's native state, a minimized state for storage and the unminified working in memory copy.
+		// Rally TC's are about 3-4KB of JSON over the wire. About 1KB if we reduce  unused data and pseudo-minify it.
+
+		var storageVersion = 1;
+		var storageKey = 'tsd_' + testSetRef;
+		var lastAccessedKey = 'tsd_lastAccessed';
+
+		var MinificationKeys = {
+			  _ref 							: 'a'
+			, Description					: 'b'
+			, FormattedID					: 'c'
+			, Name 							: 'd'
+			, Notes							: 'e'
+			, ObjectId						: 'f'
+			, Objective						: 'g'
+			, PostConditions				: 'h'
+			, PreConditions					: 'i'
+			, TestFolderRef					: 'j'
+			, Type							: 'k'
+			, ValidationExpectedResult		: 'l'
+			, ValidationInput				: 'm'
+			, WorkProductRef				: 'n'
+		};
+
+		// It would be nice to store and use rally Test Cases in their native format. The 5MB limit to localStorage prohibits this.
+		// Here we eliminate/ignore unused properties and minify property names to 'a', 'b', etc.
+		function minifyTestCase(testCase) {
+			var minifiedTc = {};
+			minifiedTc[MinificationKeys.Description] = testCase.Description;
+			minifiedTc[MinificationKeys.FormattedID] = testCase.FormattedID;
+			minifiedTc[MinificationKeys.Name] = testCase.Name;
+			minifiedTc[MinificationKeys.Notes] = testCase.Notes;
+			minifiedTc[MinificationKeys.ObjectId] = testCase.ObjectId;
+			minifiedTc[MinificationKeys.Objective] = testCase.Objective;
+			minifiedTc[MinificationKeys.PostConditions] = testCase.PostConditions;
+			minifiedTc[MinificationKeys.PreConditions] = testCase.PreConditions;
+			minifiedTc[MinificationKeys.Type] = testCase.Type;
+			minifiedTc[MinificationKeys.ValidationExpectedResult] = testCase.ValidationExpectedResult;
+			minifiedTc[MinificationKeys.ValidationInput] = testCase.ValidationInput;
+			if (testCase.TestFolder) {
+				minifiedTc[MinificationKeys.TestFolderRef] = testCase.TestFolder._ref
+			}
+			if (testCase.WorkProduct) {
+				minifiedTc[MinificationKeys.WorkProductRef] = testCase.WorkProduct._ref
+			}
+			return minifiedTc;
+		}
+
+		// Transform the stored format to one that is easy to code against; it is not the original Rally state but a 3rd working state.
+		function unminifyTestCase(testCase) {
+
+			var tc = _.reduce(MinificationKeys, function(memo, minifiedKey, unminifiedKey){
+				memo[unminifiedKey] = testCase[minifiedKey]; return memo;
+			}, {})
+
+			// Produce a string containing all the text that can be searched.
+	 		// ... looks like they only want Name. Possibly remove this and just go by name
+
+			tc._searchContent = (tc.Name||'')
+				// + ' ' + (tc.Description||'')
+				// + ' ' + (tc.Notes||'') 
+				// etc
+				.toUpperCase();
+
+			// TODO layer in test results or other in-memory helpers
+
+			return tc;
+		}
+
+		function ensureCacheSpaceFor(size) {
+
+			// The goal here is to ensure that all test set details do not exceed 4MB.
+			// NOT to guarantee that there is at least 4MB available: do not stomp other data if they exceed their limits.
+
+			var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
+			
+			if (typeof size !== 'number' || size == NaN || size <= 0 || size >= maxSizeForAllTestSetDetails) {
+				throw new Error('ensureCacheSpaceFor: size is invalid: ' + size);
+			}
+
+			var lastAccessed = {};
+			var lastAccessedJson = $window.localStorage[lastAccessedKey];
+			if (lastAccessedJson) {
+				lastAccessedOuter = JSON.parse(lastAccessedJson);
+				if (lastAccessedOuter.version == 1) {
+					lastAccessed = lastAccessedOuter.data;
+				}
+			}
+
+			var existingTestSets = {};
+			for(var key in $window.localStorage) {
+				if (key != storageKey) { // ignore the one being saved
+					if (key.indexOf('tsd_') === 0) {
+						existingTestSets[key] = {
+							size: $window.localStorage[key].length,
+							lastAccessed: lastAccessed ? lastAccessed[key] : undefined
+						};
+					}
+				}
+			}
+
+			// while the sum of existing ones > target number, find the one that was accessed longest ago and delete it
+			var targetSize = maxSizeForAllTestSetDetails - size;
+			while (_.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0) > targetSize) {
+				var victimKey = _.reduce(existingTestSets, function(bestYetKey, ts, key) {
+					if (!bestYetKey) return key;
+					var bestYet = existingTestSets[bestYetKey];
+					if (bestYet.lastAccessed && ts.lastAccessed) {
+						return bestYet.lastAccessed < ts.lastAccessed ? bestYetKey : key;
+					}
+					if (!bestYet.lastAccessed) {
+						return bestYetKey;
+					}
+					return key;
+				});
+				$log.info('test set data de-cached to make room: ' + victimKey, $window.localStorage[victimKey]);
+				$window.localStorage.removeItem(victimKey);
+				delete existingTestSets[victimKey];
+			}
+		}
+
+		function cacheIt(testSetDetails) {
+			var outerDataJson = JSON.stringify({
+				version: currentVersion,
+				data: testSetDetails
+			})
+
+			var cacheSize = outerDataJson.length;
+			ensureCacheSpaceFor(outerDataJson.length + storageKey.length + 100); // 100 is an arbitrary safety :/
+			$window.localStorage[storageKey] = outerDataJson;
+		}
+
+		var deferred = $q.defer();
+
+		var testSetDetails;
+		if (!ignoreCache) {
+			var outerDataJson = $window.localStorage[storageKey];
+			if (outerDataJson) {
+				var outerData = JSON.parse(outerDataJson);
+				if (outerData.version === storageVersion) {
+					var innerData = outerData.data;
+					// TODO var testSetDetails = de-minify innerData
+				}
+			}
+		}
+
+		if (testSetDetails){
+			deferred.resolve(testSetDetails);
+		}
+		else {
+			service.getTestCaseList(testSetRef).then(function(testCaseList) {
+				// TODO var storedTestSetDetails = minify testCaseList
+				cacheIt(storedTestSetDetails);
+				// TODO var testSetDetails = de-minify storedTestSetDetails
+				deferred.resolve(testSetDetails);
+			})
+		}
+
+		return deferred.promise;
+	}
 
 	return service;
 }]);
