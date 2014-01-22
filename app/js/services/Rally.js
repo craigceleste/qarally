@@ -287,10 +287,10 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		}
 		else {
 			service.getAllSubscriptionData().then(function(subscriptionData){
-				$window.localStorage[storageKey] = {
+				$window.localStorage[storageKey] = JSON.stringify({
 					version: currentVersion,
 					data: subscriptionData
-				};
+				});
 				deferred.resolve(subscriptionData)
 			});
 
@@ -401,13 +401,13 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	service.initTestSetDetails = function(testSetRef, ignoreCache) {
 
 		// Here are some stats about the number of test cases per test set for our data:
-		//		  6 test cases have > 1000        TC's (1482 max TC in one TS)
+		//		  6 test cases have > 1000        TC's (1482 max)
 		//		 14 test cases have >  500 < 1000 TC's
-		//		254 test cases have >  100 <  500 TC's
-		//		434 test cases have >   10 <  100 TC's
+		//		254 test cases have >  100 <  500 TC's (most closer to 100)
+		//		434 test cases have >   10 <  100 TC's (most closer to 100)
 		//		160 test cases have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
 
-		// This is one of the more complicated bits. But central to the app's concept of "cache it locally and work from there"
+		// This function is one of the more complicated bits parts of the app, but central to the app's concept of "cache it locally and work from there"
 		// In order to store large numbers of test cases in localStorage, they need to be heavily transformed between 3 states: Rally's native state, a minimized state for storage and the unminified working in memory copy.
 		// Rally TC's are about 3-4KB of JSON over the wire. About 1KB if we reduce  unused data and pseudo-minify it.
 
@@ -415,56 +415,77 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		var storageKey = 'tsd_' + testSetRef;
 		var lastAccessedKey = 'tsd_lastAccessed';
 
-		var MinificationKeys = {
-			  _ref 							: 'a'
-			, Description					: 'b'
-			, FormattedID					: 'c'
-			, Name 							: 'd'
-			, Notes							: 'e'
-			, ObjectId						: 'f'
-			, Objective						: 'g'
-			, PostConditions				: 'h'
-			, PreConditions					: 'i'
-			, TestFolderRef					: 'j'
-			, Type							: 'k'
-			, ValidationExpectedResult		: 'l'
-			, ValidationInput				: 'm'
-			, WorkProductRef				: 'n'
+		var minificationKeys = {
+			  _ref                          : '_'
+			, Description					: 'a'
+			, FormattedID					: 'b'
+			, Name 							: 'c'
+			, Notes							: 'd'
+			, ObjectId						: 'e'
+			, Objective						: 'f'
+			, PostConditions				: 'g'
+			, PreConditions					: 'h'
+			, TestFolderRef					: 'i'
+			, Type							: 'j'
+			, ValidationExpectedResult		: 'k'
+			, ValidationInput				: 'l'
+			, WorkProductRef				: 'm'
 		};
 
-		// It would be nice to store and use rally Test Cases in their native format. The 5MB limit to localStorage prohibits this.
-		// Here we eliminate/ignore unused properties and minify property names to 'a', 'b', etc.
+		// transform from Rally format to a minified state for storage: ignore/remove unused data and replace key names with a short form.
 		function minifyTestCase(testCase) {
 			var minifiedTc = {};
-			minifiedTc[MinificationKeys.Description] = testCase.Description;
-			minifiedTc[MinificationKeys.FormattedID] = testCase.FormattedID;
-			minifiedTc[MinificationKeys.Name] = testCase.Name;
-			minifiedTc[MinificationKeys.Notes] = testCase.Notes;
-			minifiedTc[MinificationKeys.ObjectId] = testCase.ObjectId;
-			minifiedTc[MinificationKeys.Objective] = testCase.Objective;
-			minifiedTc[MinificationKeys.PostConditions] = testCase.PostConditions;
-			minifiedTc[MinificationKeys.PreConditions] = testCase.PreConditions;
-			minifiedTc[MinificationKeys.Type] = testCase.Type;
-			minifiedTc[MinificationKeys.ValidationExpectedResult] = testCase.ValidationExpectedResult;
-			minifiedTc[MinificationKeys.ValidationInput] = testCase.ValidationInput;
+			minifiedTc[minificationKeys._ref] = testCase._ref;
+			minifiedTc[minificationKeys.Description] = testCase.Description;
+			minifiedTc[minificationKeys.FormattedID] = testCase.FormattedID;
+			minifiedTc[minificationKeys.Name] = testCase.Name;
+			minifiedTc[minificationKeys.Notes] = testCase.Notes;
+			minifiedTc[minificationKeys.ObjectId] = testCase.ObjectId;
+			minifiedTc[minificationKeys.Objective] = testCase.Objective;
+			minifiedTc[minificationKeys.PostConditions] = testCase.PostConditions;
+			minifiedTc[minificationKeys.PreConditions] = testCase.PreConditions;
+			minifiedTc[minificationKeys.Type] = testCase.Type;
+			minifiedTc[minificationKeys.ValidationExpectedResult] = testCase.ValidationExpectedResult;
+			minifiedTc[minificationKeys.ValidationInput] = testCase.ValidationInput;
 			if (testCase.TestFolder) {
-				minifiedTc[MinificationKeys.TestFolderRef] = testCase.TestFolder._ref
+				minifiedTc[minificationKeys.TestFolderRef] = testCase.TestFolder._ref
 			}
 			if (testCase.WorkProduct) {
-				minifiedTc[MinificationKeys.WorkProductRef] = testCase.WorkProduct._ref
+				minifiedTc[minificationKeys.WorkProductRef] = testCase.WorkProduct._ref
 			}
+			// TODO there are probably more properties we need.
 			return minifiedTc;
 		}
 
-		// Transform the stored format to one that is easy to code against; it is not the original Rally state but a 3rd working state.
-		function unminifyTestCase(testCase) {
+		// Expect the result of getTestCaseList (a dictionary of test cases in rally's format)
+		function minifyTestSetDetails(testCaseList) {
 
-			var tc = _.reduce(MinificationKeys, function(memo, minifiedKey, unminifiedKey){
-				memo[unminifiedKey] = testCase[minifiedKey]; return memo;
+			// produce an aggregate package containing details about the test set, mostly inferred from the test cases
+			var storedTestSetDetails = {
+				testCases: [],
+				testFolders: {},
+				workProducts: {}
+			}
+			_.chain(testCaseList)
+				.sortBy(function(tc) { return parseInt(tc.FormattedID.substring(2)); })
+				.each(function(tc){
+					storedTestSetDetails.testCases.push(minifyTestCase(tc));
+					if (tc.TestFolder && !storedTestSetDetails.testFolders[tc.TestFolder._ref]) {
+						storedTestSetDetails.testFolders[tc.TestFolder._ref] = tc.TestFolder._refObjectName;
+					}
+					if (tc.WorkProduct && !storedTestSetDetails.workProducts[tc.WorkProduct._ref]) {
+						storedTestSetDetails.workProducts[tc.WorkProduct._ref] = tc.WorkProduct._refObjectName;
+					}
+			});
+			return storedTestSetDetails;
+		}
+
+		// Transform the minified storage format to the working format; restore minified property names. eliminated properties remain gone.
+		function deminifyTestCase(testCase) {
+
+			var tc = _.reduce(minificationKeys, function(tc, minifiedKey, unminifiedKey){
+				tc[unminifiedKey] = testCase[minifiedKey]; return tc;
 			}, {})
-
-			// Produce a string containing all the text that can be searched.
-	 		// ... looks like they only want Name. Possibly remove this and just go by name
 
 			tc._searchContent = (tc.Name||'')
 				// + ' ' + (tc.Description||'')
@@ -477,13 +498,42 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			return tc;
 		}
 
-		function ensureCacheSpaceFor(size) {
+		// Deminify the stored format into the working format
+		function deminifyTestSetDetails(storedTestSetDetails) {
 
-			// The goal here is to ensure that all test set details do not exceed 4MB.
-			// NOT to guarantee that there is at least 4MB available: do not stomp other data if they exceed their limits.
+			var workingTestSetDetails = {
+				testCases: [], // array (I don't want to sort repeatedly in the view)
+				testFolders: {},
+				workProducts: {}
+			}
+
+			_.each(storedTestSetDetails.testFolders, function(name, _ref) {
+				workingTestSetDetails.testFolders[_ref] = {
+					_ref: _ref,
+					Name: name
+				};
+			});
+
+			_.each(storedTestSetDetails.workProducts, function(name, _ref) {
+				workingTestSetDetails.workProducts[_ref] = {
+					_ref: _ref,
+					Name: name
+				};
+			});
+
+			_.each(storedTestSetDetails.testCases, function(tc) {
+				workingTestSetDetails.testCases.push(deminifyTestCase(tc))
+			});
+
+			return workingTestSetDetails;
+		}
+
+		// Ensure that all test set details do not exceed 4MB.
+		// Do NOT guarantee that there is at least 4MB available. Only guarantee that existing test sets do not use more than this much. It is up to other people not to go over their bucket sizes
+		function ensureExistingTestSetsDoNotExceedSize(size) {
 
 			var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
-			
+
 			if (typeof size !== 'number' || size == NaN || size <= 0 || size >= maxSizeForAllTestSetDetails) {
 				throw new Error('ensureCacheSpaceFor: size is invalid: ' + size);
 			}
@@ -509,9 +559,11 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 				}
 			}
 
-			// while the sum of existing ones > target number, find the one that was accessed longest ago and delete it
+			// eliminate existing ones until the size is lower than the target number
 			var targetSize = maxSizeForAllTestSetDetails - size;
-			while (_.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0) > targetSize) {
+			assert(targetSize > 0, 'it should not be possible for targetSize to be <= 0 as this could result in an infinite loop.')
+			while (_.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0) // sum of sizes for existing ones
+				> targetSize) {
 				var victimKey = _.reduce(existingTestSets, function(bestYetKey, ts, key) {
 					if (!bestYetKey) return key;
 					var bestYet = existingTestSets[bestYetKey];
@@ -523,20 +575,18 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 					}
 					return key;
 				});
-				$log.info('test set data de-cached to make room: ' + victimKey, $window.localStorage[victimKey]);
+				$log.info('test set data de-cached to make room: ' + victimKey, existingTestSets[victimKey].size, $window.localStorage[victimKey]);
 				$window.localStorage.removeItem(victimKey);
 				delete existingTestSets[victimKey];
 			}
 		}
 
-		function cacheIt(testSetDetails) {
+		function cacheIt(storedTestSetDetails) {
 			var outerDataJson = JSON.stringify({
-				version: currentVersion,
-				data: testSetDetails
+				version: storageVersion,
+				data: storedTestSetDetails
 			})
-
-			var cacheSize = outerDataJson.length;
-			ensureCacheSpaceFor(outerDataJson.length + storageKey.length + 100); // 100 is an arbitrary safety :/
+			ensureExistingTestSetsDoNotExceedSize(outerDataJson.length + storageKey.length);
 			$window.localStorage[storageKey] = outerDataJson;
 		}
 
@@ -548,8 +598,8 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			if (outerDataJson) {
 				var outerData = JSON.parse(outerDataJson);
 				if (outerData.version === storageVersion) {
-					var innerData = outerData.data;
-					// TODO var testSetDetails = de-minify innerData
+					var storedTestSetDetails = outerData.data;
+					var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
 				}
 			}
 		}
@@ -559,9 +609,9 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		}
 		else {
 			service.getTestCaseList(testSetRef).then(function(testCaseList) {
-				// TODO var storedTestSetDetails = minify testCaseList
+				var storedTestSetDetails = minifyTestSetDetails(testCaseList)
 				cacheIt(storedTestSetDetails);
-				// TODO var testSetDetails = de-minify storedTestSetDetails
+				var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
 				deferred.resolve(testSetDetails);
 			})
 		}
