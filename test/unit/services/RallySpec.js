@@ -20,7 +20,7 @@ describe('Rally', function() {
 		inject(function(_$rootScope_, $injector){
 			$rootScope = _$rootScope_;
 			$httpBackend = $injector.get('$httpBackend');
-			setupRallyBackend($httpBackend);
+			window.fakeBackend.setup($httpBackend);
 		});
 
 		inject(function(Rally){
