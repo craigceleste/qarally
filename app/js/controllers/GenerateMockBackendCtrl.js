@@ -28,17 +28,20 @@ app.controller('GenerateMockBackendCtrl', ['$log', '$scope', '$q', '$http',  fun
 
 	var guids = {};
 	var nextGuidNum = 1;
-	var requests = [];
+	var requestsToScript = [];
 	var subscriptionRef = 'https://rally1.rallydev.com/slm/webservice/v3.0/subscription';
-	var subscriptionUrl;
 	var workspacesRef;
-	var workspacesUrl;
-	var projectsRefs = {}; // keyed on workspaceRef
+	var projectsRef;
+	var iterationsRef;
+	var testSetsRef;
+	var didDrillDownHitBottom = false;
 
 	// Helper functions
 
 	function assert(condition, message) {
-		if (!condition) throw new Error(message);
+		if (!condition) {
+			throw new Error(message);
+		}
 	}
 
 	function getUrl(url, data) {
@@ -54,8 +57,21 @@ app.controller('GenerateMockBackendCtrl', ['$log', '$scope', '$q', '$http',  fun
 
 	function sanitize(data) {
 
+		if (data === undefined) return data;
 		var result = JSON.parse(JSON.stringify(data)); // poor mans deep copy. I realize there are better ways.
 		if (!result) return result;
+
+		function cleanGuidsFromString(value) {
+			_.each(value.match(/[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/g), function(originalGuid) {
+				var keyGuid = originalGuid.replace('-', '');
+				var replacementGuid = guids[keyGuid];
+				if (!replacementGuid) {
+					replacementGuid = guids[keyGuid] = '00000000-0000-0000-0000-' + pad(nextGuidNum++, 12, '0');
+				}
+				value = value.replace(originalGuid, originalGuid.length == 36 ? replacementGuid : replacementGuid.replace('-', ''))
+			})
+			return value;
+		}
 
 		function process(value, key) {
 			if (typeof value === 'boolean') {
@@ -71,15 +87,69 @@ app.controller('GenerateMockBackendCtrl', ['$log', '$scope', '$q', '$http',  fun
 				return value;
 			}
 
-			// replace any guids in the string; keep a dictionary so guids in all future strings get the same new value
-			_.each(value.match(/[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/g), function(originalGuid) {
-				var keyGuid = originalGuid.replace('-', '');
-				var replacementGuid = guids[keyGuid];
-				if (!replacementGuid) {
-					replacementGuid = guids[keyGuid] = '00000000-0000-0000-0000-' + pad(nextGuidNum++, 12, '0');
+			// for sanitizing primitive objects, just clean guids and call it a day
+			if (key === undefined) {
+				value = cleanGuidsFromString(value);
+			}
+			else {
+
+				// For cleaning Rally JSON objects, there is a short list of properties they have and the rules are different for each
+				switch(key) {
+					
+					// TODO review. Ones I'm not 100% sure about.
+					case 'State':
+					case 'Theme':
+						break;
+
+					// contain info about our subscription. Our app doesn't care so just do this.
+					case 'Modules':
+					case 'StoryHierarchyType':
+					case 'SubscriptionType':
+					case 'Style':
+						value = 'sanitized';
+						break;
+
+					// I don't think we need to clean these
+					case '_objectVersion':
+					case 'CreationDate':
+					case '_CreatedAt':
+					case '_type':
+					case 'EndDate':
+					case 'StartDate':
+						break;
+
+					// ID's and such
+					case '_ref':
+					case 'workspaceRef':
+					case 'projectRef':
+					case 'iterationRef':
+					case '_refObjectUUID':
+					case 'ObjectID':
+					case 'SchemaVersion': // maybe don't need to clean this one. I don't care atm
+						value = cleanGuidsFromString(value);
+						break;
+
+					// Special case
+					case '_refObjectName':
+					case 'Name':
+						// TODO we need to be careful about replacing with a dummy value but ensuring the Name value also has the same value
+						// consider passing in a scope object, or like guids have a lookup dictionary, but keyed on some kind of scope like the object that the property is on
+						// Also find out whether _refObjectName always corresponds to Name (and not some other property for certain kinds of objects)
+						break;
+
+					// Descriptive strings with no side effects
+					case 'Description':
+					case 'Notes':
+						// TODO give each instance a unique value of (key + number) like "Description 1"
+						value = 'TODO ' + key;
+						break;
+
+					default:
+					{
+						throw new Error('Fail to sanitize [' + key + ']: ' + value)
+					}
 				}
-				value = value.replace(originalGuid, originalGuid.length == 36 ? replacementGuid : replacementGuid.replace('-', ''))
-			})
+			}
 
 			// TODO identify any "user text" fields (fields that have user entered text values like Name and Description)
 			//		Dates, Ref's, UUID's, should be fine
@@ -122,138 +192,212 @@ app.controller('GenerateMockBackendCtrl', ['$log', '$scope', '$q', '$http',  fun
 		return result;
 	}
 
-	// Subscription
+	function getSubscriotion() {
+		$log.info('Querying Subscription');
+		var subscriptionUrl = getUrl(subscriptionRef)
+		return $http.jsonp(subscriptionUrl).then(function(subscriptionResponse){
+			$log.info('subscriptionResponse', subscriptionResponse)
 
-	$log.info('Querying Subscription');
-	subscriptionUrl = getUrl(subscriptionRef)
-	$http.jsonp(subscriptionUrl)
-	.then(function(subscriptionReponse) {
-		$log.info('subscriptionReponse', subscriptionReponse)
+			assert(typeof subscriptionResponse.data.Subscription.Workspaces._ref === 'string', 'Expect subscriptionResponse to contain a _ref to get the list of workspaces.');
 
-		requests.push({
-			url: subscriptionUrl,
-			data: subscriptionReponse.data
-		})
+			requestsToScript.push({
+				url: subscriptionUrl,
+				data: subscriptionResponse.data
+			})
 
-	// Workspaces
-
-		workspacesRef = subscriptionReponse.data.Subscription.Workspaces._ref;
-		assert(workspacesRef, 'workspacesRef expected');
-
-		$log.info('Querying workspaces list');
-		workspacesUrl = getUrl(workspacesRef, {pagesize:200});
-		return $http.jsonp(workspacesUrl);
-	}).then(function(workspacesResponse){
-		$log.info('workspacesResponse', workspacesResponse)
-
-		requests.push({
-			url: workspacesUrl,
-			data: workspacesResponse.data
-		})
-
-
-
-// TODO recursion idea
-// track 1 workspaceRef, 1 projectRef, 1 iterationRef, etc
-// begin drilling in
-// if it doesn't reach the bottom, fall out of those promises and begin again
-// only end when we have reached the bottom and have 1 of each request type to be scripted.
-// use the recursive function technique used below (queryNextProjectList)
-// nest the recursive functions inside each other.
-
-	function drillIntoWorkspace() {
-		function drillIntoProject() {
-			function drillIntoIteration() {
-				function drillIntoTestSets() {
-					function drillIntoTestSetDetails() {
-					}
-				}
-			}
-		}
+			workspacesRef = subscriptionResponse.data.Subscription.Workspaces._ref;
+			assert(workspacesRef, 'workspacesRef expected');
+			return getWorkspaceList(workspacesRef);
+		});
 	}
 
+	function getWorkspaceList(workspacesRef) {
+		$log.info('Querying Workspace list');
+		var workspacesUrl = getUrl(workspacesRef, {pagesize:200});
+		return $http.jsonp(workspacesUrl).then(function(workspacesResponse){
+			$log.info('workspacesResponse', workspacesResponse)
 
+			assert(Object.prototype.toString.call( workspacesResponse.data.QueryResult.Results ) === '[object Array]', 'Expect QueryResults.Results to be an array.');
+			assert(workspacesResponse.data.QueryResult.Results.length, 'Expect at least one workspace.');
 
+			requestsToScript.push({
+				url: workspacesUrl,
+				data: workspacesResponse.data
+			})
 
+			var stackOfProjectListRefs = _.reduce(workspacesResponse.data.QueryResult.Results, function(memo, workspace) {
+				memo.push(workspace.Projects._ref);
+				return memo;
+			}, []);
+			return getBestProjectList(stackOfProjectListRefs);
+		});
+	}
 
+	function getBestProjectList(stackOfProjectListRefs) {
+		
+		// Use a recursive promise technique to attempt one request after the other until one succeeds
+		//		(as opposed to making many concurrent requests and $q.all(...) them together)
 
+		var deferred = $q.defer();
 
-	// Projects - this is a recursive promise; it will load one project and then the next when that is done, and then the next, until done.
-	// 		note that it will drill all the way into Project->Iteration->TestSet, etc before going to the second Project
-	//		I could do them concurrently but I kind of want to stop once I have accumulated enough data and I don't know which projects go deep enough until I check.
-
-		var queuedProjectRequests = _.reduce(workspacesResponse.data.QueryResult.Results, function(memo, workspace) {
-			memo.push({
-				workspaceRef: workspace._ref,
-				projectsRef: workspace.Projects._ref
-			});
-			return memo;
-		}, []);
-
-		var workspaceDeferred = $q.defer();
-
-		function queryNextProjectList() {
-			var projectRequest = queuedProjectRequests.shift();
-			projectsRefs[projectRequest.workspaceRef] = projectRequest.projectsRef
-
-			$log.info('Querying projects for workspace ' + projectRequest.workspaceRef);
-			var projectsUrl = getUrl(projectRequest.projectsRef, {pagesize:200});
+		function getNextProjectList() {
+			// pop a project off of the stack and drill into it...
+			var nextProjectsRef = stackOfProjectListRefs.pop();
+			$log.info('Querying Project list');
+			var projectsUrl = getUrl(nextProjectsRef, {pagesize:200});
 			$http.jsonp(projectsUrl).then(function(projectsResponse){
 				$log.info('projectsResponse', projectsResponse)
 
-				requests.push({
-					url: projectsUrl,
-					data: projectsResponse.data
+				getBestIterationList(_.reduce(projectsResponse.data.QueryResult.Results, function(memo, project) {
+					memo.push(project.Iterations._ref);
+					return memo;
+				}, [])).then(function(){
+
+					// ...if the drill-down process mades it through Project -> Iteration -> Test Set -> Test Cases -> Test Results
+					// then resolve. Otherwise recurse to try the next project.
+					if (didDrillDownHitBottom) {
+						projectsRef = nextProjectsRef;
+						requestsToScript.push({
+							url: projectsUrl,
+							data: projectsResponse.data
+						});
+						deferred.resolve();
+					}
+					else if (stackOfProjectListRefs.length > 0 ) {
+						getNextProjectList(); // recurse
+					}
+					else {
+						$log.error('No projects hit bottom.')
+						deferred.resolve(); // fail to hit bottom. no more to try
+					}
 				});
 
-	// TODO 
-	// Iterations
-	// Test Sets
-	// Test Cases
-	// ...
-
-
-	// Project promise recursion:
-	//		don't drill into another Project until we are done with this one.
-	//		end the outer deferred until we're done iterating.
-
-				if (queuedProjectRequests.length > 0) { // TODO ... and previous iterations have not drilled all the way down to represent all data
-					queryNextProjectList(); // recurse
-				}
-				else {
-					workspaceDeferred.resolve();
-				}
 			});
 		}
+		getNextProjectList();
 
-		assert(queuedProjectRequests.length > 0, 'we should have some projects or this will never resolve.')
-		queryNextProjectList();
+		return deferred.promise;
+	}
 
-		return workspaceDeferred.promise;
+	function getBestIterationList(stackOfIterationRefs) {
+		
+		var deferred = $q.defer();
 
-// ... I just want to push the final processing into a next promise, even if could happen here...
-	}).then(function() {
-		function getRefProperties() {
-			return ""
-				+ "        subscriptionRef: '" + sanitize(subscriptionRef) + "',\n"
-				+ "        workspacesRef: '" + sanitize(workspacesRef) + "',\n"
-				+ "        projectsRefs: " + JSON.stringify(sanitize(projectsRefs)).replace('{','{\n            ').replace(',',',\n            ').replace('}', '\n        }') + ",\n"
+		function getNextIterationList() {
+
+			var nextIterationRef = stackOfIterationRefs.pop();
+			$log.info('Querying Iteration list');
+			var iterationsUrl = getUrl(nextIterationRef, {pagesize:200});
+			$http.jsonp(iterationsUrl).then(function(iterationsResponse){
+				$log.info('iterationsResponse', iterationsResponse)
+
+				getBestTestSetList(_.reduce(iterationsResponse.data.QueryResult.Results, function(memo, iteration) {
+					memo.push({
+						workspaceRef: iteration.Workspace._ref,
+						iterationRef: iteration._ref
+					});
+					return memo;
+				}, [])).then(function(){
+
+					if (didDrillDownHitBottom) {
+						iterationsRef = nextIterationRef;
+						requestsToScript.push({
+							url: iterationsUrl,
+							data: iterationsResponse.data
+						});
+						deferred.resolve();
+					}
+					else if (stackOfIterationRefs.length > 0 ) {
+						getNextIterationList(); // recurse
+					}
+					else {
+						deferred.resolve(); // fail to hit bottom. no more to try
+					}
+				});
+
+			});
 		}
-		function getBackendCalls() {
-			var code = "";
-			for(var i = 0; i < requests.length; i++) {
-				code += "            $httpBackend\n"
-				code += "                .whenJSONP('" + sanitize(requests[i].url) + "')\n"
-				code += "                .respond(" + JSON.stringify(sanitize(requests[i].data)) + ");\n"
-			}
-			return code;
+		getNextIterationList();
+
+		return deferred.promise;
+	}
+
+	function getBestTestSetList(stackOfWorkspacePlusIterationRefs) {
+
+		var deferred = $q.defer();
+
+		function getNextTestSetList() {
+
+			var nextWorkspacePlusIterationRef = stackOfWorkspacePlusIterationRefs.pop();
+			$log.info('Querying Test Set list');
+			var testSetsUrl = getUrl('https://rally1.rallydev.com/slm/webservice/v3.0/testset', {
+				  workspace: nextWorkspacePlusIterationRef.workspaceRef
+				, query: '(Iteration = "' + nextWorkspacePlusIterationRef.iterationRef + '")' // space to left+right of = is important (30 minutes of my life...)
+				, pagesize: 200
+			});
+			$http.jsonp(testSetsUrl).then(function(testSetsResponse){
+				$log.info('testSetsResponse', testSetsResponse)
+
+				getBestTestSetDetail(_.reduce(testSetsResponse.data.QueryResult.Results, function(memo, testSet) {
+					memo.push(testSet._ref);
+					return memo;
+				}, [])).then(function(){
+
+					if (didDrillDownHitBottom) {
+						testSetsRef = nextWorkspacePlusIterationRef; // it is a composite key
+						requestsToScript.push({
+							url: testSetsUrl,
+							data: testSetsResponse.data
+						});
+						deferred.resolve();
+					}
+					else if (stackOfWorkspacePlusIterationRefs.length > 0 ) {
+						getNextTestSetList(); // recurse
+					}
+					else {
+						deferred.resolve(); // fail to hit bottom. no more to try
+					}
+				});
+
+			});
 		}
+		getNextTestSetList();
+
+		return deferred.promise;
+	}
+
+	function getBestTestSetDetail() {
+		didDrillDownHitBottom = true;
+		return $q.when('foo')
+	}
+
+	// Do the stuff
+
+	getSubscriotion().then(function() {
+
+		if (!didDrillDownHitBottom) {
+			$scope.code = 'Unable to recurse through Rally data. See console.';
+			return;
+		}
+
 		$scope.code = "// This code is generated by GenerateMockBackendCtrl.js\n"
 			+ "window.fakeBackend = (function(){\n"
 			+ "    return {\n"
-			+ getRefProperties()
+			+ "        subscriptionRef: " + JSON.stringify(sanitize(subscriptionRef)) + ",\n"
+			+ "        workspacesRef: " + JSON.stringify(sanitize(workspacesRef)) + ",\n"
+			+ "        projectsRef: " + JSON.stringify(sanitize(projectsRef)) + ",\n"
+			+ "        iterationsRef: " + JSON.stringify(sanitize(iterationsRef)) + ",\n"
+			+ "        testSetList: " + JSON.stringify(sanitize(testSetsRef)) + ",\n"
 			+ "        setup: function() {\n"
-			+ getBackendCalls()
+			+ (function getBackendCalls() {
+				var code = "";
+				for(var i = 0; i < requestsToScript.length; i++) {
+					code += "            $httpBackend\n"
+					code += "                .whenJSONP('" + sanitize(requestsToScript[i].url) + "')\n"
+					code += "                .respond(" + JSON.stringify(sanitize(requestsToScript[i].data)) + ");\n"
+				}
+				return code;
+			}())
 			+ "        }\n"
 			+ "    };\n"
 			+ "}());"
