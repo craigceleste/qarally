@@ -1,3 +1,4 @@
+'use strict';
 
 // When the responses from web requests are several KB of JSON, it's impractical to create them for each test.
 // I am trying to kill several birds with one stone here.
@@ -16,7 +17,6 @@
 // It's also a bit of a JavaScript exercise for fun.
 
 app.controller('GenerateMockBackendCtrl', ['$log', '$scope', '$q', '$http',  function($log, $scope, $q, $http) {
-	"use strict";
 	$log.debug('Creating GenerateMockBackendCtrl')
 
 	// We'll write the generated code to the scope, which appears in the page, which may be saved.

@@ -1,3 +1,4 @@
+'use strict';
 
 // Problem: in a conventional web app, if I want to focus an input, I can do it in a couple lines of code.
 // How do I do it in angularjs? This seems exceedingly complicated and untuitive. Am I missing something?

@@ -1,8 +1,8 @@
+'use strict';
 
 // WPI = named combination of {Workspace + Project + Iteration} for easier access to commonly used iterations.
 
 app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window, Rally) {
-	"use strict";
 
 	var service = {};
 

@@ -1,8 +1,8 @@
+'use strict';
 
 // Manage WPI form
 
 app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Rally',  function($log, $scope, $location, $q, Wpi, Rally) {
-	"use strict";
 	$log.debug('Creating ManageWpiCtrl')
 
 	$scope.refreshSubscriptionData = function(ignoreCache) {
@@ -89,7 +89,13 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 		return $scope.currentWpi.label === Wpi.defaultWpiLabel
 	}
 
-	$scope.groupByProjectIterations = function(project) {
+	$scope.orderByProjectIterations = function(project) {
+
+		// Group projects into 3 buckets:
+		//		1. those with no iterations at all
+		//		2. those with old iterations
+		//		3. those with recent iterations (presumably active projects)
+
 		var mostRecentStartDate;
 		if (project && project.iterations) {
 			_.each(project.iterations, function(iteration){
@@ -101,19 +107,25 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 			})
 		}
 
-		// I am cheating on the group labels and making them alphabetical in the order I want them to appear :)
-
 		if (!mostRecentStartDate) {
-			return '...with no iterations';
+			return 2;
 		}
 
 		// Arbitrary threshold
 		var oldDateThreshold = new Date().setMonth(new Date().getMonth() - 4);
 		if (mostRecentStartDate < oldDateThreshold) {
-			return '...with dated iterations';
+			return 1;
 		}
 
-		return 'Projects'
+		return 0;
+	}
+
+	$scope.groupByProjectIterations = function(project) {
+		switch($scope.orderByProjectIterations(project)) {
+			case 0: return 'Projects';
+			case 1: return '...with dated iterations';
+			default: return '...with no iterations';
+		}
 	}
 
 	$scope.getTestSetCount = function() {

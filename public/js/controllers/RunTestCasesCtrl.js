@@ -1,6 +1,6 @@
+'use strict';
 
 app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', 'Wpi', 'Rally', function($log, $scope, $location, $timeout, Wpi, Rally) {
-	'use strict';
 	$log.debug('Creating RunTestCasesCtrl')
 
 	$scope.openManageWpiForm = function() {

@@ -1,3 +1,4 @@
+'use strict';
 
 // Meant to work like ng-click, but to stopPropagation first.
 

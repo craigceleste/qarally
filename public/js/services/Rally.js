@@ -1,3 +1,4 @@
+'use strict';
 
 // Rally service
 
@@ -6,7 +7,6 @@
 //		- Transformation of Rally data into normalized local data (discard stuff we don't need).
 
 app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http, $window) {
-	"use strict";
 
 	var service = {};
 

@@ -1,3 +1,4 @@
+'use strict';
 
 // angularjs's orderBy filter does not work on objects (only arrays).
 // This filter converts an object to an array, to be chained with orderBy.

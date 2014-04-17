@@ -1,3 +1,4 @@
+'use strict';
 
 app.filter("filterTestCase", function(){
 	return function(obj) {
