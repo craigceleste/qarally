@@ -15,14 +15,14 @@ module.exports = function(config) {
 		// list of files / patterns to load in the browser
 		files: [
 			// third party libraries
-			'app/lib/underscore/underscore-min.js',
-			'app/lib/jquery/jquery.min.js',
-			'app/lib/bootstrap/bootstrap.min.js',
-			'app/lib/angular/angular.min.js',
-			'app/lib/angular/angular-route.min.js',
+			'public/lib/underscore/underscore-min.js',
+			'public/lib/jquery/jquery.min.js',
+			'public/lib/bootstrap/bootstrap.min.js',
+			'public/lib/angular/angular.min.js',
+			'public/lib/angular/angular-route.min.js',
 
 			// code under test
-			'app/js/**/*.js',
+			'public/js/**/*.js',
 
 			// testing tools
 			'test/lib/angular/angular-mocks.js',
@@ -38,7 +38,7 @@ module.exports = function(config) {
 		],
 
 		preprocessors: {
-			'**/app/js/**/*.js': 'coverage'
+			'**/public/js/**/*.js': 'coverage'
 		},
 
 		// test results reporter to use
