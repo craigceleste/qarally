@@ -1,0 +1,226 @@
+
+<!--
+	TOP NAVBAR
+-->
+
+<nav class="nav navbar-default navbar-fixed-top" role="navigation">
+
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#header-collapse">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="/">QARally</a>
+	</div>
+
+	<div class="collapse navbar-collapse" id="header-collapse">
+		<ul class="nav navbar-nav">
+			<li class="dropdown">
+				<a id="wpi-drop-down-label" href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+					<span>{{currentWpi.label}}</span> <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu">
+					<li>
+						<a>Select one WPI to work on.</a>
+					</li>
+					<li ng-repeat="w in wpiList | toArray | filter:wpiIsValid | orderBy:'label'">
+						<a ng-click="setCurrentWpi(w.id)" href="javascript:void(0);">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': wpiCurrentId == w.id}"></span>
+							{{w.label}}
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li>
+						<a ng-click="openManageWpiForm()" href="javascript:void(0);">
+							<span class="glyphicon"></span>
+							Manage...
+						</a>
+					</li>
+				</ul>
+			</li>
+			<li class="dropdown">
+				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
+					TS <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu ps-scroll">
+					<li>
+						<a>Select one test set to work on.</a>
+					</li>
+					<li ng-repeat="ts in currentWpi.testSets | toArray | orderBy:'name'">
+						<a ng-click="setCurrentTestSet(ts._ref)" href="javascript:void(0);">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': currentWpi.testSetRef == ts._ref}"></span>
+							{{ts.name}}
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li>
+						<a ps-noprop-click="refreshTestSets()" href="javascript:void(0);">
+							<span class="glyphicon"></span>
+							Refresh
+						</a>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<form class="navbar-form navbar-left">
+			<div class="form-group">
+				<input type="text" class="form-control" accesskey="b" placeholder="Build Number (alt-b)" ng-model="currentWpi.buildNumber">
+			</div>
+		</form>
+		<ul class="nav navbar-nav">
+			<li class="dropdown">
+				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
+					TF <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu ps-scroll">
+					<li>
+						<a>Filter by Test Folders</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
+							<span class="glyphicon"></span>
+							Filter All
+						</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
+							<span class="glyphicon"></span>
+							Filter None
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
+							<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutTestFolder}"></span>
+							Include items not in a Test Folder
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li ng-repeat="tf in testFolders | toArray | orderBy:'name'">
+						<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf)">
+							<span class="glyphicon" ng-class="{'glyphicon-remove': testFolderFilters[tf._ref]}"></span>
+							{{tf.name}}
+						</a>
+					</li>
+				</ul>
+			</li>
+			<li class="dropdown">
+				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
+					WP <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu ps-scroll">
+					<li>
+						<a>Filter by Work Product (US's and DE's)</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(true)">
+							<span class="glyphicon"></span>
+							Filter All
+						</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(false)">
+							<span class="glyphicon"></span>
+							Filter None
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutWorkProduct()">
+							<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutWorkProduct}"></span>
+							Include items without a Work Product
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li ng-repeat="wp in workProducts | toArray | orderBy:'name'">
+						<a href="javascript:void(0);" ps-noprop-click="toggleWorkProductFilter(wp)">
+							<span class="glyphicon" ng-class="{'glyphicon-remove': workProductFilters[wp._ref]}"></span>
+							{{wp.name}}
+						</a>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<ul class="nav navbar-nav navbar-right">
+			<li class="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+					<span class="glyphicon glyphicon-cog"></span> <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu">
+					<li><a href="javascript:void(0);">Options will go here</a></li>
+				</ul>
+			</li>
+			<li>
+		</ul>
+	</div>
+</nav>
+<div class="nav-spacer"></div>
+
+<!--
+	FILTERING AND NAVIGATION
+-->
+
+<div id="tc-sidebar">
+	<div class="well">
+		<form class="form">
+			<input type="search" class="form-control" accesskey="s" placeholder="Search (alt-s)" ng-model="search">
+		</form>
+		<h5 id="testCasesLabel">Test Cases</h5>
+		<div id="tc-list" class="button-list small">
+			<div class="tc-button"
+				ng-repeat="tc in allTestCases"
+				ng-class="{
+					'sad': tc._isSad,
+					'happy': tc._isHappy,
+					'hide': tc._isTestFolderFiltered || tc._isWorkProductFiltered || (search && tc._searchContent.indexOf(search.toUpperCase()) === -1)
+				}"
+				hover-hint="{'#testCasesLabel': tc.FormattedID + ':' + tc.Name}">
+				<div>
+					{{tc.FormattedID}}
+					{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : '&#9675;'}}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!--
+	DETAIL AREA
+-->
+
+<div id="tc-content">
+
+	<p>
+		This area is very rough. I'm just tossing a few fields in (unescaped, no behaviors, etc), to give a flavor of what might be here. No formatting has been done.
+	</p>
+
+	<div class=""
+		ng-repeat="tc in allTestCases"
+		ng-class="{
+			'hide': tc._isTestFolderFiltered || tc._isWorkProductFiltered || (search && tc._searchContent.indexOf(search.toUpperCase()) === -1)
+		}">
+		<h3>
+			{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : ''}}
+			{{tc.FormattedID}}
+			{{tc.Name}}
+		</h3>
+		<p>{{tc.Description}}</p>
+		<div class="container">
+			<div class="row">
+				<div class="col-sm-6">{{tc.Notes}}</div>
+				<div class="col-sm-6">{{tc.Objective}}</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6">{{tc.PreConditions}}</div>
+				<div class="col-sm-6">{{PostConditions}}</div>
+			</div>
+			<div class="row">
+				<div class="col-sm-6">{{tc.ValidationInput}}</div>
+				<div class="col-sm-6">{{tc.ValidationExpectedResult}}</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
