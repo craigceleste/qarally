@@ -7,9 +7,9 @@ This is an internal tool for QA staff to perform test cases using Rally (rallyde
 
 ** It is probably over engineered! I don't spend a lot of time on heavy client-side apps and I'm kind of stepping past the boundaries of too much to figure out where the line is.
 
-Dev Setup
----------
-This app is likely to be maintained by devs familiar with light-client ASP.NET MVC, who may not have the tooling to work on it out of the box.
+Dev Advice
+----------
+This app is likely to be maintained by devs familiar with light-client ASP.NET MVC, who may not have spent a lot of time with JavaScript, let alone Angular JS. These notes are for them.
 
 TODO: add concise instructions for setting up an environment.
 
@@ -20,6 +20,12 @@ TODO: add concise instructions for setting up an environment.
 1. Node.js - http://nodejs.org
 1. Karma - http://karma-runner.github.io/0.12/index.html
 1. Jasmine - https://github.com/karma-runner/karma-jasmine
+
+Tips for debugging local storage.
+
+1. In Chrome, come to Dev Tools > Resources > Local Storage > your domain.
+2. Double-click the Value for one of the stored data and copy the value to the clipboard.
+3. Paste into your text editor of choice and prettify (in Sublime, I use this plugin: http://www.yellowduck.be/geek-stuff/2013/3/9/formatting-json-and-xml-with-sublime-text)
 
 LocalStorage
 ------------

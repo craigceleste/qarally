@@ -211,12 +211,16 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 
 		}, true); // deep watch
 
+	// Watch the WPI List and save changes as they are made.
+	// Arguably this is expensive, but mitigated by the fact that the WPI list is not too huge.
+
 	$scope.$watch('wpiList',
 		function (newValue, oldValue) {
 
-			$scope.wpiBytes = angular.toJson(newValue).length; // it's not accurate, but close enough (keys and encoding contribute too)
+			// An alert will show up in the UI if they use too much of local storage for WPI's
+			$scope.wpiBytes = angular.toJson(newValue).length;
 
-			// For some reason this is sometimes called when there are no chagnes (at page load at least). Ignore these cases.
+			// Ignore false positive calls to this watch (happens on page load)
 			if (angular.toJson(newValue) === angular.toJson(oldValue)) return;
 
 			Wpi.setList($scope.wpiList);
