@@ -10,16 +10,14 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 
 	service.createWpi = function(list) {
 
-		// TODO find a more reliable way to create a locally unique id.
-		// Consider making the list contain metadata like an auto incrementing key seed.
-		// For now I am not pretending it is robust
+		// I am intentionally being not-clever about generating a locally unique (or very high cardinality) id.
 		var newId = Math.random().toString();
 
 		var wpi = {
 			label: service.defaultWpiLabel,
 			id: newId,
 
-			// redundant, but documents my expectation of future fields
+			// redundant, but documents my expectation
 			workspaceRef: undefined,
 			projectRef: undefined,
 			iterationRef: undefined,

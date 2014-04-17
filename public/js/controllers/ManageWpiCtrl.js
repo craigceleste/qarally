@@ -25,10 +25,9 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 		$scope.wpiCurrentId = Wpi.getCurrentId();
 		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
 
-		// I have a directive watching this property and whenever it changes, it will focus the control in the form. Seems over complicated just to focus a control.
+		// I have a directive watching this property.
+		// Whenever it changes, it will focus the control in the form. Seems over complicated just to focus a control.
 		$scope.focusCurrentWpiHack = ($scope.focusCurrentWpiHack || 0) + 1;
-
-// TODO		$scope.refreshTestSets($scope.currentWpi ? $scope.currentWpi.iterationRef : null);
 	}
 
 	$scope.removeCurrentWpi = function() {
