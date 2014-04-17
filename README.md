@@ -13,13 +13,13 @@ This app is likely to be maintained by devs familiar with light-client ASP.NET M
 
 TODO: add concise instructions for setting up an environment.
 
-  1 Mac OS - but theoretically should run on windows
-  1 Sublime - http://www.sublimetext.com (or text editor of choice)
-  1 Git
-  1 Pow - http://pow.cx (may or may not have a Windows equivalent)
-  1 Node.js - http://nodejs.org
-  1 Karma - http://karma-runner.github.io/0.12/index.html
-  1 Jasmine - https://github.com/karma-runner/karma-jasmine
+    1 Mac OS - but theoretically should run on windows
+    1 Sublime - http://www.sublimetext.com (or text editor of choice)
+    1 Git
+    1 Pow - http://pow.cx (may or may not have a Windows equivalent)
+    1 Node.js - http://nodejs.org
+    1 Karma - http://karma-runner.github.io/0.12/index.html
+    1 Jasmine - https://github.com/karma-runner/karma-jasmine
 
 LocalStorage
 ------------
