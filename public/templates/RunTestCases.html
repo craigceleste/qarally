@@ -62,9 +62,6 @@
 					</li>
 				</ul>
 			</li>
-
-
-
 			<li class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
 					<span class="glyphicon glyphicon-filter"></span> <b class="caret"></b>
@@ -145,23 +142,6 @@
 					</li>
 				</ul>
 			</li>
-
-<script>
-	// TODO move to a script file.
-	// This snippet (for dropdown submenus) complements Bootstrap JS, so I'm not trying to roll it into Angular filters/behaviors.
-	$(function(){
-		$('.dropdown-submenu > .dropdown-toggle').click(function(e) {
-			var submenu = $('> .dropdown-menu', $(this).parent());
-			$('.dropdown-submenu > .dropdown-menu').not(submenu).hide(); // hide other submenus
-			submenu.toggle(); // toggle this one
-			e.stopPropagation(); // don't close the parent menu
-		})
-		$('> .dropdown-toggle', $('.dropdown-submenu').closest('.dropdown')).click(function() {
-			$('.dropdown-submenu > .dropdown-menu', $(this).parent()).hide() // hide dropdown when parent menu is opened or closed
-		});
-	});
-</script>
-
 		</ul>
 		<form class="navbar-form navbar-left">
 			<div class="form-group">
