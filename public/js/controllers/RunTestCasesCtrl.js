@@ -11,17 +11,21 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		return Wpi.wpiIsValid(wpi);
 	}
 
+	function updateCurrentWpi(id) {
+		$scope.wpiCurrentId = Wpi.getCurrentId();
+		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
+		$scope.testSetDetails = undefined;
+		if ($scope.currentWpi) {
+			Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
+				$scope.testSetDetails = testSetDetails;
+			});
+		}
+	}
+
 	$scope.setCurrentWpi = function(id)
 	{
 		Wpi.setCurrentId(id);
-
-		$scope.wpiCurrentId = Wpi.getCurrentId();
-		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
-
-		$scope.testSetDetails = undefined;
-		Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
-			$scope.testSetDetails = testSetDetails;
-		});
+		updateCurrentWpi(id);
 	}
 
 	$scope.refreshTestSets = function() {
@@ -43,11 +47,8 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 
 	// Set up the state in the scope
 
-	// TODO combine similar code to this initialization and setCurrentWpi
 	$scope.wpiList = Wpi.getList()
-	$scope.wpiCurrentId = Wpi.getCurrentId();
-	$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
-	$scope.testSetDetails = undefined;
+	updateCurrentWpi();
 
 	// If there isn't a focused/current wpi redirect to the manage
 
@@ -55,10 +56,6 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		$scope.openManageWpiForm();
 		return;
 	}
-
-	Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
-		$scope.testSetDetails = testSetDetails;
-	});
 
 	// We're mainly watching for changes to buildNumber and selected testSetRef
 

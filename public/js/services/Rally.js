@@ -386,8 +386,6 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		//		434 test sets have >   10 <  100 TC's (most closer to 100)
 		//		160 test sets have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
 
-		if (!testSetRef) return;
-
 		var storageVersion = 1;
 		var storageKey = 'tsd_' + testSetRef;
 		var lastAccessedKey = 'tsd_lastAccessed';
@@ -509,37 +507,43 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		}
 
 		var deferred = $q.defer();
-
-		var testSetDetails;
-		if (!ignoreCache) {
-			var outerDataJson = $window.localStorage[storageKey];
-			if (outerDataJson) {
-				var outerData = JSON.parse(outerDataJson);
-				// no upgrade path for purely cached data. Refetch on stale.
-				if (outerData.version === storageVersion) {
-					var storedTestSetDetails = outerData.data;
-					var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
-				}
-			}
-		}
-
-		if (testSetDetails){
-
-			// TODO update last accessed date
-			
-			deferred.resolve(testSetDetails);
+		
+		if (!testSetRef) {
+			deferred.resolve(undefined);
 		}
 		else {
-			getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
-				cacheIt(storedTestSetDetails);
+
+			var testSetDetails;
+			if (!ignoreCache) {
+				var outerDataJson = $window.localStorage[storageKey];
+				if (outerDataJson) {
+					var outerData = JSON.parse(outerDataJson);
+					// no upgrade path for purely cached data. Refetch on stale.
+					if (outerData.version === storageVersion) {
+						var storedTestSetDetails = outerData.data;
+						var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
+					}
+				}
+			}
+
+			if (testSetDetails){
 
 				// TODO update last accessed date
-
-				var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
+				
 				deferred.resolve(testSetDetails);
-			})
-		}
+			}
+			else {
+				getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
+					cacheIt(storedTestSetDetails);
 
+					// TODO update last accessed date
+
+					var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
+					deferred.resolve(testSetDetails);
+				})
+			}
+		}
+		
 		return deferred.promise;
 	}
 

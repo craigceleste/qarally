@@ -155,9 +155,6 @@
 				</ul>
 			</li>
 		</ul>
-		<p class="navbar-text">
-			Summary here
-		</p>
 		<ul class="nav navbar-nav navbar-right">
 			<li class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
@@ -184,7 +181,7 @@
 		<h5 id="testCasesLabel">Test Cases</h5>
 		<div id="tc-list" class="button-list small">
 			<div class="tc-button"
-				ng-repeat="tc in allTestCases"
+				ng-repeat="tc in testSetDetails.testCases"
 				ng-class="{
 					'sad': tc._isSad,
 					'happy': tc._isHappy,
@@ -211,7 +208,7 @@
 	</p>
 
 	<div class=""
-		ng-repeat="tc in allTestCases"
+		ng-repeat="tc in testSetDetails.testCases"
 		ng-class="{
 			'hide': tc._isTestFolderFiltered || tc._isWorkProductFiltered || (search && tc._searchContent.indexOf(search.toUpperCase()) === -1)
 		}">
