@@ -58,6 +58,7 @@ Bootstrap 3 doesn't support the submenu.
 This solution: http://firdaus.grandexa.com/2013/09/twitter-bootstrap-3-multilevel-dropdown-menu/
 ...is not cross-browser perfect, especially at lower screen resolutions.
 But it gets the job done for the normal use case.
+TODO consider what media queries I need for it to work in responsive small-screen modes.
 */
 .dropdown-submenu { position:relative; }
 .dropdown-submenu > .dropdown-menu { top:0; left:100%; margin-top:-6px; margin-left:-1px; -webkit-border-radius:0 6px 6px 6px; -moz-border-radius:0 6px 6px 6px; border-radius:0 6px 6px 6px; }
@@ -67,63 +68,49 @@ But it gets the job done for the normal use case.
 .dropdown-submenu.pull-left > .dropdown-menu { left:-100%;margin-left:10px;-webkit-border-radius:6px 0 6px 6px;-moz-border-radius:6px 0 6px 6px;border-radius:6px 0 6px 6px;}
 
 /*
-Test Case sidebar navigation
-TODO I am expressing the full nesting with the expectation that this will get ported to less eventually.
+The TC sideboard is the grid of TC numbers.
+Note:
+- passed tests are the normal (not exceptional) state. They should fade into the background as light/dull gray. Avoid green.
+- untested tests should pop once many tests have been passed. They are darker neutral gray.
+- failed or blocked tests should pop all the time.
 */
-#tc-sidebar { position: fixed; top: 60px; left: 10px; bottom: 10px; width: 350px; }
-#tc-sidebar .well { height: 100%; }
-#tc-sidebar .well .form { margin-bottom: 10px; }
-#tc-sidebar .well .button-list { margin-bottom: 10px; }
-#tc-sidebar .well .button-list:after { content:''; display:block; clear: both; } /* use bootstrap mixin for clearfloat */
-#tc-sidebar .well .button-list .tc-button { float:left; width: 93px; text-align: center; white-space: nowrap; text-decoration: none; cursor: pointer; padding: 0 3px 2px 0; }
-
-/*
-Note that I am intentionally making the space between buttons INSIDE the click/hover area of the button.
-Meaning: the button border is actually a few pixels inside the button.
-I found it really annoying when the cursor and hover changed for the 2px or so between buttons.
-This is a much smoother experience while looking at the hover hint label.
-*/
-#tc-sidebar .well .button-list .tc-button > div { border: 1px solid silver; }
-#tc-sidebar .well .button-list .tc-button:hover > div { background-color: #eee; }
-
-/*
-	TC style by verdict
-	Note: "passed" is an expected, not exceptional state. It should fade into the background.
-	When the whole board is mostly untested, it should not look noisy. It's just a matrix of numbers.
-	When the whole board is mostly passed, the untested ones should pop out.
-	Failed ones should pop out all the time. The whole board should never be all failed. If everything is undelivered and offline, delay testing. Don't just fail everything.
-*/
-#tc-sidebar .button-list a             { color: #333; }
-#tc-sidebar .button-list .happy        { color: #ada; }
-#tc-sidebar .button-list .happy:hover  { color: #8c8; }
-#tc-sidebar .button-list .sad          { color: #d00;  }
-
-/*
-The TC label acts as both the "Test Cases" label, but also the hint-on-hover.
-Give it an ellipsis style because of that.
-*/
-#testCasesLabel {
-	display:block;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+@media(max-width:991px) {
+	#tc-sidebar { display: none; }
 }
+@media(min-width:992px) {
+	#tc-sidebar { position: fixed; top: 60px; left: 10px; bottom: 10px; width: 250px; }
+	#tc-sidebar .well { height: 100%; }
+	#tc-sidebar .well .form { margin-bottom: 10px; }
+	#tc-sidebar .well .button-list { margin-bottom: 10px; }
+	#tc-sidebar .well .button-list:after { content:''; display:block; clear: both; } /* use bootstrap mixin for clearfloat */
+	#tc-sidebar .well .button-list .tc-button { float:left; width: 93px; text-align: center; white-space: nowrap; text-decoration: none; cursor: pointer; padding: 0 3px 2px 0; }
+	#tc-sidebar .well .button-list .tc-button > div { border: 1px solid silver; }
+	#tc-sidebar .well .button-list .tc-button:hover > div { background-color: #eee; }
+	#tc-sidebar .button-list a             { color: #333; }
+	#tc-sidebar .button-list .happy        { color: #ada; }
+	#tc-sidebar .button-list .happy:hover  { color: #8c8; }
+	#tc-sidebar .button-list .sad          { color: #d00;  }
 
-/*
-Test Cases scrollable area.
-TODO review hack (maybe its not a hack)
-For #tc-list, 100% height makes its height equal to the INNER height (inside padding) of the parent .well.
-Except the parent well also has the "Test Cases" label and Search form in it, pushing the div below the bottom.
-Compensate by giving the .well artificial padding-bottom equal to the height of the search box, Test Cases label and related margins.
-*/
-#tc-list             { height: 100%; overflow:hidden; overflow-y: auto; }
-#tc-sidebar .well    { padding-bottom: 80px; }
+	#testCasesLabel { display:block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+	/*
+	CSS Trickery:
+	- making #tc-list height:100% makes it the same height as its container, EVEN THOUGH it has content above it.
+	- giving #tc-sidebar .well padding equal to the height of the Search textbox + label compensates.
+	*/
+	#tc-list { height: 100%; overflow:hidden; overflow-y: auto;	}
+	#tc-sidebar .well { padding-bottom: 80px; }
+}
+@media(min-width: 1200px){
+	#tc-sidebar { width: 345px; }
+}
 
 /*
 The Test Case Content area
 */
 #tc-content {
-	margin-left: 370px;
 	padding: 0 10px;
 }
+@media(min-width: 992px) { #tc-content { margin-left: 270px; } }
+@media(min-width: 1200px) { #tc-content { margin-left: 365px; } }
 
