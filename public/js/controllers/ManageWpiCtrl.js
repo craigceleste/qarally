@@ -173,6 +173,7 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 						}
 					}
 				}
+				return undefined;
 			}
 
 			var projectReset;
@@ -191,7 +192,7 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 				$scope.currentWpi.iterationRef = undefined;
 				iterationReset = true;
 
-				// Helper: default the label to match the project
+				// UX helper: actively try to default the label so everyone doesn't have "New WPI" or so as their WPI label
 				if (!newValue.label || newValue.label === Wpi.defaultWpiLabel) {
 					var projectName = safeGetProjectName(newValue.workspaceRef, newValue.projectRef);
 					if (projectName) {
@@ -205,7 +206,13 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 			if (iterationReset || newValue.iterationRef != oldValue.iterationRef) {
 				$scope.currentWpi.buildNumber = undefined;
 
-				Wpi.refreshTestSets($scope.currentWpi);
+				// TODO: continue defaulting WPI .label
+				// If it is "FA Web", call it "FA Web 90" where 90 is the trailing number of iteration name (in the format "Sprint 90"). If it is off convention, leave the .label unchanged
+
+				// TODO review: sometimes I use Rally service and sometimes WPI service. Is it right? or badly designed?
+				Wpi.refreshTestSets($scope.currentWpi).then(function(wpi){
+					Rally.initTestSetDetails(wpi.testSetRef);
+				});
 			}
 
 		}, true); // deep watch

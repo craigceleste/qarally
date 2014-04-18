@@ -130,10 +130,11 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 						var first = _.chain(wpi.testSets).sortBy(function(ts){ return (ts.name || '').toUpperCase()}).first().value();
 						wpi.testSetRef = first ? first._ref : undefined;
 					}
+					return wpi;
 				});
 			}
 		}
-		return $q.when(undefined);
+		return $q.when(wpi);
 	}
 
 	return service;

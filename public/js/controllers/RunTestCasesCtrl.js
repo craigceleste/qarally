@@ -18,25 +18,36 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		$scope.wpiCurrentId = Wpi.getCurrentId();
 		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
 
-		$log.warn('TODO refresh test cases', $scope.currentWpi.testSetRef);
+		$scope.testSetDetails = undefined;
+		Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
+			$scope.testSetDetails = testSetDetails;
+		});
 	}
 
 	$scope.refreshTestSets = function() {
+		$scope.testSetDetails = undefined;
 		Wpi.refreshTestSets($scope.currentWpi).then(function(){
-			$log.warn('TODO refresh test cases', $scope.currentWpi.testSetRef);
+			Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
+				$scope.testSetDetails = testSetDetails;
+			});
 		});
 	}
 
 	$scope.setCurrentTestSet = function(testSetRef) {
 		$scope.currentWpi.testSetRef = testSetRef;
-		$log.warn('TODO refresh test cases', $scope.currentWpi.testSetRef);
+		$scope.testSetDetails = undefined;
+		Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
+			$scope.testSetDetails = testSetDetails;
+		});
 	}
 
 	// Set up the state in the scope
 
+	// TODO combine similar code to this initialization and setCurrentWpi
 	$scope.wpiList = Wpi.getList()
 	$scope.wpiCurrentId = Wpi.getCurrentId();
 	$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
+	$scope.testSetDetails = undefined;
 
 	// If there isn't a focused/current wpi redirect to the manage
 
@@ -45,7 +56,11 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		return;
 	}
 
-	// We're mainly watching for changes to buildNumber, and later on selected testSetRef
+	Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
+		$scope.testSetDetails = testSetDetails;
+	});
+
+	// We're mainly watching for changes to buildNumber and selected testSetRef
 
 	$scope.$watch('wpiList',
 		function (newValue, oldValue) {
@@ -60,91 +75,9 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 
 
 
-
+/*
 
 	// ---------------
-	// TODO the below code is experimenting/prototyping (moreso than the whole project)
-
-	// Have the list of testFolders and workProducts in play for the set of TC's being tested.
-
-	$scope.testFolders = {};
-	$scope.workProducts = {};
-
-	var testCasesFromStore = _.chain(window.fake_test_cases || [])
-		.map(function(tc) {
-			var newTc = {};
-			newTc[tcKeys._ref] = tc._ref; // TODO may be reduced to just the id or eliminated and use tc.ObjectId
-			newTc[tcKeys.Description] = tc.Description;
-			newTc[tcKeys.FormattedID] = tc.FormattedID;
-			newTc[tcKeys.Name] = tc.Name;
-			newTc[tcKeys.Notes] = tc.Notes;
-			newTc[tcKeys.ObjectId] = tc.ObjectId;
-			newTc[tcKeys.Objective] = tc.Objective;
-			newTc[tcKeys.PostConditions] = tc.PostConditions;
-			newTc[tcKeys.PreConditions] = tc.PreConditions;
-			newTc[tcKeys.TestFolderRef] = tc.TestFolder ? tc.TestFolder._ref : undefined;
-			newTc[tcKeys.TestFolderName] = tc.TestFolder ? tc.TestFolder._refObjectName : undefined;		// TODO too much repetition
-			newTc[tcKeys.Type] = tc.Type;
-			newTc[tcKeys.ValidationExpectedResult] = tc.ValidationExpectedResult;
-			newTc[tcKeys.ValidationInput] = tc.ValidationInput;
-			newTc[tcKeys.WorkProductRef] = tc.WorkProduct ? tc.WorkProduct._ref : undefined;
-			newTc[tcKeys.WorkProductName] = tc.WorkProduct ? tc.WorkProduct._refObjectName : undefined;		// TODO too much repetition
-			return newTc;
-		})
-		.sortBy(function(tc) {
-			// Pre-sort the list. We never sort on anything other than FormattedID.
-			return parseInt(tc[tcKeys.FormattedID].substring(2));
-		})
-		.value()
-
-	// delete or add shallow copies of the tcs to get more fake data for performance testing
-
-	testCasesFromStore = _.reduce(testCasesFromStore, function(memo, tc, index){
-
-		// skip original ones to reduce test data
-		if (index % 3 == 0) memo.push(tc);
-
-		// double the set a number of times to increase test data
-		for (var i = 0; i < 0; i++) memo.push(angular.extend({}, tc));
-		return memo;
-	}, []);
-	$log.debug('testCasesFromStore.length:', testCasesFromStore.length)
-
-	// --------------
-	// Transform Storage format into Working Format (in memory format)
-	// 1. un-minify for more natural coding against it (properties we ditched are still gone, obviously)
-	// 2. add helper pre-calculated values used for sorting, filtering, etc.
-
-	$scope.allTestCases = _.map(testCasesFromStore, function(tc) {
-
-		// unminify the stored version
-		tc = _.reduce(tcKeys, function(memo, minifiedKey, unminifiedKey){ memo[unminifiedKey] = tc[minifiedKey]; return memo; }, {})
-
-		// I'm not sure how I'll represent the verdicts and test results yet. For now have an _isHappy and _isSad
-		if (Math.random() < 0.2) {
-			tc._isSad = true;				// failed, blocked, etc. an aggregate of "bad" cases that need to be flagged red.
-		} else if (Math.random() < 0.2) {
-			tc._isHappy = true;				// passed or otherwise "good" end states.
-		}
-
-		// Produce a string containing all the text that can be searched.
-
-		tc._searchContent = (tc.Name||'')  // ... looks like they only want Name. Possibly remove this and just go by name
-			// + ' ' + (tc.Description||'')
-			// + ' ' + (tc.Notes||'')
-			.toUpperCase();
-
-		// Produce the set of Test Folders and Work Products in play from the given TC's.
-
-		if (!$scope.testFolders [tc.TestFolderRef ]) { $scope.testFolders [tc.TestFolderRef ] = { _ref: tc.TestFolderRef , name: tc.TestFolderName  }; }
-		if (!$scope.workProducts[tc.WorkProductRef]) { $scope.workProducts[tc.WorkProductRef] = { _ref: tc.WorkProductRef, name: tc.WorkProductName }; }
-
-		return tc;
-	});
-
-	// Fake some filters.
-	// 		I am expecting that the WPI will get a testSets collection with a list of test set refs.
-	//		These filters will probably be persisted there, associated with the test set.
 
 	$scope.testFolderFilters  = {};
 	$scope.workProductFilters = {};
@@ -247,28 +180,7 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 	}
 	$timeout(simulateUpdates, 3000);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*/
 
 }]);
 

@@ -272,23 +272,23 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 
 	function minifyTestCase(tc) {
 		var minifiedTc = {};
-		minifiedTc[minificationKeys._ref] = tc._ref;
-		minifiedTc[minificationKeys.Description] = tc.Description;
-		minifiedTc[minificationKeys.FormattedID] = tc.FormattedID;
-		minifiedTc[minificationKeys.Name] = tc.Name;
-		minifiedTc[minificationKeys.Notes] = tc.Notes;
-		minifiedTc[minificationKeys.ObjectId] = tc.ObjectId;
-		minifiedTc[minificationKeys.Objective] = tc.Objective;
-		minifiedTc[minificationKeys.PostConditions] = tc.PostConditions;
-		minifiedTc[minificationKeys.PreConditions] = tc.PreConditions;
-		minifiedTc[minificationKeys.Type] = tc.Type;
-		minifiedTc[minificationKeys.ValidationExpectedResult] = tc.ValidationExpectedResult;
-		minifiedTc[minificationKeys.ValidationInput] = tc.ValidationInput;
+		minifiedTc[tcMinificationKeys._ref] = tc._ref;
+		minifiedTc[tcMinificationKeys.Description] = tc.Description;
+		minifiedTc[tcMinificationKeys.FormattedID] = tc.FormattedID;
+		minifiedTc[tcMinificationKeys.Name] = tc.Name;
+		minifiedTc[tcMinificationKeys.Notes] = tc.Notes;
+		minifiedTc[tcMinificationKeys.ObjectId] = tc.ObjectId;
+		minifiedTc[tcMinificationKeys.Objective] = tc.Objective;
+		minifiedTc[tcMinificationKeys.PostConditions] = tc.PostConditions;
+		minifiedTc[tcMinificationKeys.PreConditions] = tc.PreConditions;
+		minifiedTc[tcMinificationKeys.Type] = tc.Type;
+		minifiedTc[tcMinificationKeys.ValidationExpectedResult] = tc.ValidationExpectedResult;
+		minifiedTc[tcMinificationKeys.ValidationInput] = tc.ValidationInput;
 		if (tc.TestFolder && tc.TestFolder._ref) {
-			minifiedTc[minificationKeys.TestFolderRef] = tc.TestFolder._ref;
+			minifiedTc[tcMinificationKeys.TestFolderRef] = tc.TestFolder._ref;
 		}
 		if (tc.WorkProduct && tc.WorkProduct._ref) {
-			minifiedTc[minificationKeys.WorkProductRef] = tc.WorkProduct._ref;
+			minifiedTc[tcMinificationKeys.WorkProductRef] = tc.WorkProduct._ref;
 		}
 		return minifiedTc;
 	}
@@ -312,6 +312,9 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 
 		return getRallyJson(testSetRef).then(function(testSetResponse) {
 			$log.info('testSetResponse', testSetResponse);
+
+			assert(testSetResponse.data.TestSet.Name, "Test Set name is expected to be set.");
+			testSetDetails.name = testSetResponse.data.TestSet.Name;
 
 			// make an array containing the first index on each page
 			var pageStarts = [];
@@ -361,14 +364,15 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 					});
 			});
 		}).then(function() {
-			$log.debug('getTestCasesList', testSetDetails);
+			$log.debug('getTestSetDetails', testSetDetails);
 
 			testSetDetails.testCases = _.sortBy(testSetDetails.testCases, function(tc) {
-				assert(tc.length > 2 && tc.substr(0,2) === "TC", "FormattedID expected in the TC123 format.");
-				return parseInt(tc.FormattedID.substr(2));
+				assert(tc[tcMinificationKeys.FormattedID].length > 2 && tc[tcMinificationKeys.FormattedID].substr(0,2) === "TC", "FormattedID expected in the TC123 format.");
+				return parseInt(tc[tcMinificationKeys.FormattedID].substr(2));
 			});
 
-			return testCases;
+			$log.debug('getTestSetDetails', testSetDetails);
+			return testSetDetails;
 		});
 	}
 
@@ -382,7 +386,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		//		434 test sets have >   10 <  100 TC's (most closer to 100)
 		//		160 test sets have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
 
-		assert(typeof testSetRef === 'string', 'testSetRef must be a string');
+		if (!testSetRef) return;
 
 		var storageVersion = 1;
 		var storageKey = 'tsd_' + testSetRef;
@@ -391,7 +395,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		// Transform the minified storage format to the working format
 		function deminifyTestCase(testCase) {
 
-			var tc = _.reduce(minificationKeys, function(tc, minifiedKey, unminifiedKey){
+			var tc = _.reduce(tcMinificationKeys, function(tc, minifiedKey, unminifiedKey){
 				tc[unminifiedKey] = testCase[minifiedKey]; return tc;
 			}, {})
 
@@ -472,10 +476,11 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			// Eliminate test sets until there is room for the new one.
 
 			var sanity = 1000;
-			while (targetSize > _.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0)) { // sum of sizes for existing ones
+
+			while (targetSize < _.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0)) { // sum of sizes for existing ones
 				
 				assert(sanity-- > 0, 'ensureFreeStorageToSize: invinite loop guard.');
-				
+
 				var victimKey = _.reduce(existingTestSets, function(bestYetKey, ts, key) {
 					if (!bestYetKey) return key;
 					var bestYet = existingTestSets[bestYetKey];
@@ -486,7 +491,8 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 						return bestYetKey;
 					}
 					return key;
-				});
+				}, null);
+
 				$log.info('test set data de-cached to make room: ' + victimKey, existingTestSets[victimKey].size, $window.localStorage[victimKey]);
 				delete $window.localStorage[victimKey];
 				delete existingTestSets[victimKey];
@@ -524,7 +530,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			deferred.resolve(testSetDetails);
 		}
 		else {
-			service.getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
+			getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
 				cacheIt(storedTestSetDetails);
 
 				// TODO update last accessed date
