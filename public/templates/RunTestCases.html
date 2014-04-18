@@ -97,7 +97,7 @@
 							<li>
 								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutWorkProduct()">
 									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.withoutWorkProduct}"></span>
-									Include items without a Work Product
+									Filter items without a Work Product
 								</a>
 							</li>
 							<li class="divider"></li>
@@ -128,7 +128,7 @@
 							<li>
 								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
 									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.withoutTestFolder }"></span>
-									Include items not in a Test Folder
+									Filter items not in a Test Folder
 								</a>
 							</li>
 							<li class="divider"></li>
@@ -178,7 +178,7 @@
 				ng-class="{
 					'sad': tc._isSad,
 					'happy': tc._isHappy,
-					'hide': tc._isTestFolderFiltered || tc._isWorkProductFiltered || (search && tc._searchContent.indexOf(search.toUpperCase()) === -1)
+					'hide': tc._isFiltered
 				}"
 				hover-hint="{'#testCasesLabel': tc.FormattedID + ':' + tc.Name}">
 				<div>
@@ -216,7 +216,7 @@
 	<div class=""
 		ng-repeat="tc in testSetDetails.testCases"
 		ng-class="{
-			'hide': tc._isTestFolderFiltered || tc._isWorkProductFiltered || (search && tc._searchContent.indexOf(search.toUpperCase()) === -1)
+			'hide': tc._isFiltered
 		}">
 		<h3>
 			{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : ''}}

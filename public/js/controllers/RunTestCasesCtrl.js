@@ -17,8 +17,30 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 			if ($scope.currentWpi.testSetRef) {
 				Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
 					$scope.testSetDetails = testSetDetails
+					updateFilters();
 				});
 			}
+		}
+	}
+
+	function updateFilters() {
+		// We cache (to localStorage) the TestSetDetails as a semi immutable thing. If we find it's stale, we'll refetch the whole thing from Rally.
+		// But while in memory, we'll layer on additional helper info, which is NOT persisted.
+
+		// NOTE filtering is NOT done with Angular JS. It is MUCH MUCH faster to render all data to the DOM and then show/hide it (rather than add/remove elements from the DOM as you filter.)
+
+		if ($scope.currentWpi && $scope.currentWpi.filter && $scope.testSetDetails) {
+
+			_.each($scope.testSetDetails.testCases, function(tc) {
+
+				tc._isFiltered = (
+					   (!tc.WorkProductRef && $scope.currentWpi.filter.withoutWorkProduct)
+					|| ( tc.WorkProductRef && $scope.currentWpi.filter.workProducts[tc.WorkProductRef])
+   					|| (!tc.TestFolderRef  && $scope.currentWpi.filter.withoutTestFolder)
+					|| ( tc.TestFolderRef  && $scope.currentWpi.filter.testFolders[tc.TestFolderRef])
+					|| ($scope.currentWpi.filter.nameContains && (tc.Name || '').toUpperCase().indexOf($scope.currentWpi.filter.nameContains.toUpperCase()) < 0)
+					) ? true : false;
+			});
 		}
 	}
 
@@ -70,19 +92,15 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 	$scope.wpiList = Wpi.getList()
 	updateScope();
 
-	// IMPORTANT: Filtering and Sorting
-	// 		1. (sorting) We pre-sort the TC's by FormattedID, into an array in the TestSetDetails structure. It is NOT done by Angular on the fly (which is slow).
-	// 		2. (filtering) We render ALL TC's into the DOM. Then toggle CSS classes to show/hide them. This is MUCH MUCH faster than deleting and creating DOM elements on the fly as we filter.
-
 	$scope.toggleTestFolderFilter = function(testFolderRef) {
 		if ($scope.currentWpi && $scope.currentWpi.filter) {
 			if ($scope.currentWpi.filter.testFolders[testFolderRef]) {
 				delete $scope.currentWpi.filter.testFolders[testFolderRef];
-				// TODO update TC's
+				updateFilters();
 			}
 			else {
 				$scope.currentWpi.filter.testFolders[testFolderRef] = true;
-				// TODO update TC's
+				updateFilters();
 			}
 		}
 	}
@@ -92,11 +110,11 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 			if (isFiltered) {
 				$scope.currentWpi.filter.testFolders = _.reduce($scope.testSetDetails.testFolders , function(memo, tf) { memo[tf._ref] = true; return memo; }, {});
 				$scope.currentWpi.filter.withoutTestFolder = true;
-				// TODO update TC's
+				updateFilters();
 			} else {
 				$scope.currentWpi.filter.testFolders = {}; // remove all filters
 				$scope.currentWpi.filter.withoutTestFolder = false;
-				// TODO update TC's
+				updateFilters();
 			}
 		}
 	}
@@ -104,7 +122,7 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 	$scope.toggleFilterTestCasesWithoutTestFolder = function() {
 		if ($scope.currentWpi && $scope.currentWpi.filter) {
 			$scope.currentWpi.filter.withoutTestFolder = $scope.currentWpi.filter.withoutTestFolder ? false : true;
-			// TODO update TC's
+			updateFilters();
 		}
 	}
 
@@ -112,11 +130,11 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		if ($scope.currentWpi && $scope.currentWpi.filter) {
 			if ($scope.currentWpi.filter.workProducts[workProductRef]) {
 				delete $scope.currentWpi.filter.workProducts[workProductRef];
-				// TODO update TC's
+				updateFilters();
 			}
 			else {
 				$scope.currentWpi.filter.workProducts[workProductRef] = true;
-				// TODO update TC's
+				updateFilters();
 			}
 		}
 	}
@@ -126,11 +144,11 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 			if (isFiltered) {
 				$scope.currentWpi.filter.workProducts = _.reduce($scope.testSetDetails.workProducts , function(memo, tf) { memo[tf._ref] = true; return memo; }, {});
 				$scope.currentWpi.filter.withoutWorkProduct = true;
-				// TODO update TC's
+				updateFilters();
 			} else {
 				$scope.currentWpi.filter.workProducts = {}; // remove all filters
 				$scope.currentWpi.filter.withoutWorkProduct = false;
-				// TODO update TC's
+				updateFilters();
 			}
 		}
 	}
@@ -138,9 +156,14 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 	$scope.toggleFilterTestCasesWithoutWorkProduct = function() {
 		if ($scope.currentWpi && $scope.currentWpi.filter) {
 			$scope.currentWpi.filter.withoutWorkProduct = $scope.currentWpi.filter.withoutWorkProduct ? false : true;
-			// TODO update TC's
+			updateFilters();
 		}
 	}
+
+	$scope.$watch('currentWpi.filter.nameContains', function(newValue, oldValue) {
+		updateFilters();
+	});
+
 
 }]);
 
