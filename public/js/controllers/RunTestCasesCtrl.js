@@ -3,6 +3,25 @@
 app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', 'Wpi', 'Rally', function($log, $scope, $location, $timeout, Wpi, Rally) {
 	$log.debug('Creating RunTestCasesCtrl')
 
+	function updateScope() {
+		$scope.wpiCurrentId = Wpi.getCurrentId();
+		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
+		$scope.testSetDetails = undefined;
+
+		if (!Wpi.wpiIsValid($scope.currentWpi)) {
+			$scope.openManageWpiForm();
+			return;
+		}
+
+		if ($scope.currentWpi) {
+			if ($scope.currentWpi.testSetRef) {
+				Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
+					$scope.testSetDetails = testSetDetails
+				});
+			}
+		}
+	}
+
 	$scope.openManageWpiForm = function() {
 		$location.url('/manage-wpi')
 	}
@@ -11,173 +30,117 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		return Wpi.wpiIsValid(wpi);
 	}
 
-	function updateCurrentWpi(id) {
-		$scope.wpiCurrentId = Wpi.getCurrentId();
-		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
-		$scope.testSetDetails = undefined;
+	$scope.setCurrentWpi = function(id)
+	{
+		Wpi.setCurrentId(id);
+		updateScope();
+	}
+
+	$scope.refreshTestSets = function() {
 		if ($scope.currentWpi) {
-			Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
-				$scope.testSetDetails = testSetDetails;
+			$scope.currentWpi.testSetRef = undefined;
+			updateScope();
+			Wpi.refreshTestSets($scope.currentWpi).then(function(wpi) {
+				updateScope();
 			});
 		}
 	}
 
-	$scope.setCurrentWpi = function(id)
-	{
-		Wpi.setCurrentId(id);
-		updateCurrentWpi(id);
-	}
-
-	$scope.refreshTestSets = function() {
-		$scope.testSetDetails = undefined;
-		Wpi.refreshTestSets($scope.currentWpi).then(function(){
-			Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
-				$scope.testSetDetails = testSetDetails;
-			});
-		});
-	}
-
 	$scope.setCurrentTestSet = function(testSetRef) {
-		$scope.currentWpi.testSetRef = testSetRef;
-		$scope.testSetDetails = undefined;
-		Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
-			$scope.testSetDetails = testSetDetails;
-		});
+		if ($scope.currentWpi) {
+			if (testSetRef !== $scope.currentWpi.testSetRef) {
+				$scope.currentWpi.testSetRef = testSetRef;
+				Wpi.clearFilter($scope.currentWpi); // TODO downstream cleaning shouldn't be done here.
+				updateScope();
+			}
+		}
 	}
 
-	// Set up the state in the scope
-
-	$scope.wpiList = Wpi.getList()
-	updateCurrentWpi();
-
-	// If there isn't a focused/current wpi redirect to the manage
-
-	if (!Wpi.wpiIsValid($scope.currentWpi)) {
-		$scope.openManageWpiForm();
-		return;
-	}
-
-	// We're mainly watching for changes to buildNumber and selected testSetRef
+	// We're watching for changes to buildNumber, selected testSetRef, filter settings.
+	// TODO These don't change overly often, and it's expensive to check on each digest.
+	// Consider a better approach. 
 
 	$scope.$watch('wpiList',
 		function (newValue, oldValue) {
 			Wpi.setList($scope.wpiList);
 		}, true); // deep watch
 
+	// Set up the state in the scope
 
+	$scope.wpiList = Wpi.getList()
+	updateScope();
 
+	// IMPORTANT: Filtering and Sorting
+	// 		1. (sorting) We pre-sort the TC's by FormattedID, into an array in the TestSetDetails structure. It is NOT done by Angular on the fly (which is slow).
+	// 		2. (filtering) We render ALL TC's into the DOM. Then toggle CSS classes to show/hide them. This is MUCH MUCH faster than deleting and creating DOM elements on the fly as we filter.
 
-
-
-
-
-
-/*
-
-	// ---------------
-
-	$scope.testFolderFilters  = {};
-	$scope.workProductFilters = {};
-	$scope.filterTestCasesWithoutTestFolder = false;
-	$scope.filterTestCasesWithoutWorkProduct = false;
-
-	// Filter dropdown handlers
-	//		TODO review performance concept
-	//		The original attempt had an angular filter on the ng-repeat to eliminate, but that caused DOM elements to be added/removed as we filter, which proved to be poor performance for > 1000 items
-	//		This approach has no ng filtering or sorting.
-	//		Items in the array are pre-sorted.
-	//		We will add properties to the in-memory TC's, and toggle display:none for filtering.
-	//		It looks like more code, becasue we need to iterate the TC's on each filter change. But this seems MUCH faster than iterating and removing/adding DOM elements.
-
-	$scope.toggleTestFolderFilter = function(tf) {
-		if ($scope.testFolderFilters[tf._ref]){
-			delete $scope.testFolderFilters[tf._ref]
-			_.each($scope.allTestCases, function(tc) { if (tc.TestFolderRef == tf._ref) { tc._isTestFolderFiltered = undefined; }});
-		} else {
-			$scope.testFolderFilters[tf._ref] = true;
-			_.each($scope.allTestCases, function(tc) { if (tc.TestFolderRef == tf._ref) { tc._isTestFolderFiltered = true; }});
+	$scope.toggleTestFolderFilter = function(testFolderRef) {
+		if ($scope.currentWpi && $scope.currentWpi.filter) {
+			if ($scope.currentWpi.filter.testFolders[testFolderRef]) {
+				delete $scope.currentWpi.filter.testFolders[testFolderRef];
+				// TODO update TC's
+			}
+			else {
+				$scope.currentWpi.filter.testFolders[testFolderRef] = true;
+				// TODO update TC's
+			}
 		}
 	}
 
-	$scope.toggleAllTestFolderFilter = function(applyFilter) {
-		if (applyFilter) {
-			$scope.testFolderFilters = _.reduce($scope.testFolders , function(memo, tf) { memo[tf._ref] = true; return memo; }, {});
-			$scope.filterTestCasesWithoutTestFolder = true;
-			_.each($scope.allTestCases, function(tc) { tc._isTestFolderFiltered = true; });
-		} else {
-			$scope.testFolderFilters = {}; // remove all filters
-			$scope.filterTestCasesWithoutTestFolder = false;
-			_.each($scope.allTestCases, function(tc) { tc._isTestFolderFiltered = undefined; });
+	$scope.toggleAllTestFolderFilter = function(isFiltered) {
+		if ($scope.currentWpi && $scope.currentWpi.filter && $scope.testSetDetails) {
+			if (isFiltered) {
+				$scope.currentWpi.filter.testFolders = _.reduce($scope.testSetDetails.testFolders , function(memo, tf) { memo[tf._ref] = true; return memo; }, {});
+				$scope.currentWpi.filter.withoutTestFolder = true;
+				// TODO update TC's
+			} else {
+				$scope.currentWpi.filter.testFolders = {}; // remove all filters
+				$scope.currentWpi.filter.withoutTestFolder = false;
+				// TODO update TC's
+			}
 		}
 	}
 
 	$scope.toggleFilterTestCasesWithoutTestFolder = function() {
-		$scope.filterTestCasesWithoutTestFolder = $scope.filterTestCasesWithoutTestFolder ? false : true;
-		_.each($scope.allTestCases, function(tc) { if (!tc.TestFolderRef) { tc._isTestFolderFiltered = $scope.filterTestCasesWithoutTestFolder; }});
-	}
-
-	$scope.toggleWorkProductFilter = function(wp) {
-		if ($scope.workProductFilters[wp._ref]){
-			delete $scope.workProductFilters[wp._ref]
-			_.each($scope.allTestCases, function(tc) { if (tc.WorkProductRef == wp._ref) { tc._isWorkProductFiltered = undefined; }});
-		} else {
-			$scope.workProductFilters[wp._ref] = true;
-			_.each($scope.allTestCases, function(tc) { if (tc.WorkProductRef == wp._ref) { tc._isWorkProductFiltered = true; }});
+		if ($scope.currentWpi && $scope.currentWpi.filter) {
+			$scope.currentWpi.filter.withoutTestFolder = $scope.currentWpi.filter.withoutTestFolder ? false : true;
+			// TODO update TC's
 		}
 	}
 
-	$scope.toggleAllWorkProductFilter = function(applyFilter) {
-		if (applyFilter) {
-			$scope.workProductFilters = _.reduce($scope.workProducts , function(memo, wp) { memo[wp._ref] = true; return memo; }, {});
-			$scope.filterTestCasesWithoutWorkProduct = true;
-			_.each($scope.allTestCases, function(tc) { tc._isWorkProductFiltered = true; });
-		} else {
-			$scope.workProductFilters = {}; // remove all filters
-			$scope.filterTestCasesWithoutWorkProduct = false;
-			_.each($scope.allTestCases, function(tc) { tc._isWorkProductFiltered = undefined; });
+	$scope.toggleWorkProductFilter = function(workProductRef) {
+		if ($scope.currentWpi && $scope.currentWpi.filter) {
+			if ($scope.currentWpi.filter.workProducts[workProductRef]) {
+				delete $scope.currentWpi.filter.workProducts[workProductRef];
+				// TODO update TC's
+			}
+			else {
+				$scope.currentWpi.filter.workProducts[workProductRef] = true;
+				// TODO update TC's
+			}
+		}
+	}
+
+	$scope.toggleAllWorkProductFilter = function(isFiltered) {
+		if ($scope.currentWpi && $scope.currentWpi.filter && $scope.testSetDetails) {
+			if (isFiltered) {
+				$scope.currentWpi.filter.workProducts = _.reduce($scope.testSetDetails.workProducts , function(memo, tf) { memo[tf._ref] = true; return memo; }, {});
+				$scope.currentWpi.filter.withoutWorkProduct = true;
+				// TODO update TC's
+			} else {
+				$scope.currentWpi.filter.workProducts = {}; // remove all filters
+				$scope.currentWpi.filter.withoutWorkProduct = false;
+				// TODO update TC's
+			}
 		}
 	}
 
 	$scope.toggleFilterTestCasesWithoutWorkProduct = function() {
-		$scope.filterTestCasesWithoutWorkProduct = $scope.filterTestCasesWithoutWorkProduct ? false : true;
-		_.each($scope.allTestCases, function(tc) { if (!tc.WorkProductRef) { tc._isWorkProductFiltered = $scope.filterTestCasesWithoutWorkProduct; }});
-	}
-
-	// The search predecate (NOT USED AT PRESENT)
-
-	$scope.search = '';
-	$scope.searchFilterPredicate = function(tc) {
-		
-		// Eliminate based on association filters
-
-		if ( ($scope.filterTestCasesWithoutTestFolder  && !tc.TestFolderRef)  || (tc.TestFolderRef  && $scope.testFolderFilters [tc.TestFolderRef ])) return false;
-		if ( ($scope.filterTestCasesWithoutWorkProduct && !tc.WorkProductRef) || (tc.WorkProductRef && $scope.workProductFilters[tc.WorkProductRef])) return false;
-
-		if ($scope.search && tc._searchContent.indexOf($scope.search.toUpperCase()) === -1) return false;
-
-		return true;
-	}
-
-	// Simulate polling for periodic updates.
-
-	function simulateUpdates() {
-		// Optimistic? :) Every few seconds, a number of tests are passed or failed.
-		for (var i = 0; i < 20; i++) {
-
-			var tc = $scope.allTestCases[Math.min($scope.allTestCases.length-1, Math.floor(Math.random() * $scope.allTestCases.length))];
-			if (!tc) return;
-			
-			if(Math.random() < 0.7) {
-				tc._isHappy = true;
-			} else {
-				tc.isSad = true;
-			}
+		if ($scope.currentWpi && $scope.currentWpi.filter) {
+			$scope.currentWpi.filter.withoutWorkProduct = $scope.currentWpi.filter.withoutWorkProduct ? false : true;
+			// TODO update TC's
 		}
-		$timeout(simulateUpdates, 5000);
 	}
-	$timeout(simulateUpdates, 3000);
-
-*/
 
 }]);
 

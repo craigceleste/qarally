@@ -91,9 +91,9 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 	$scope.orderByProjectIterations = function(project) {
 
 		// Group projects into 3 buckets:
-		//		1. those with no iterations at all
-		//		2. those with old iterations
-		//		3. those with recent iterations (presumably active projects)
+		//		0. those with recent iterations (presumably active projects)
+		//		1. those with old iterations (presumably inactive)
+		//		2. those with no iterations at all
 
 		var mostRecentStartDate;
 		if (project && project.iterations) {
@@ -210,9 +210,13 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 				// If it is "FA Web", call it "FA Web 90" where 90 is the trailing number of iteration name (in the format "Sprint 90"). If it is off convention, leave the .label unchanged
 
 				// TODO review: sometimes I use Rally service and sometimes WPI service. Is it right? or badly designed?
+				// ... Rally service was originally meant as a data access layer to Rally. Wpi was logical stuff that was in the controller, but moved out to a service since several screens used it.
+
 				Wpi.refreshTestSets($scope.currentWpi).then(function(wpi){
 					Rally.initTestSetDetails(wpi.testSetRef);
 				});
+
+				Wpi.clearFilter();
 			}
 
 		}, true); // deep watch

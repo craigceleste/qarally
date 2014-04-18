@@ -22,11 +22,23 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 			projectRef: undefined,
 			iterationRef: undefined,
 			testSetRef: undefined,
-			buildNumber: undefined,
+			buildNumber: undefined
 		};
-
+		service.clearFilter(wpi);
 		list[newId] = wpi;
 		return wpi;
+	}
+
+	service.clearFilter = function(wpi) {
+		if (wpi) {
+			wpi.filter = {
+				nameContains: '',
+				withoutTestFolder: false,
+				withoutWorkProduct: false,
+				workProducts: {},
+				testFolders: {}
+			}
+		}
 	}
 
 	service.wpiIsValid = function(wpi) {

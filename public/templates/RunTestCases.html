@@ -71,7 +71,7 @@
 						<form id="filterForm">
 							<label>
 								TC Name contains: <br/>
-								<input type="text" placeholder="Search" />
+								<input type="text" placeholder="Search" ng-model="currentWpi.filter.nameContains" />
 							</label>
 						</form>
 					</li>
@@ -84,27 +84,27 @@
 						</a>
 						<ul class="dropdown-menu ps-scroll">
 							<li>
-								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(true)">
 									Filter All
 								</a>
 							</li>
 							<li>
-								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(false)">
 									Filter None
 								</a>
 							</li>
 							<li class="divider"></li>
 							<li>
-								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutTestFolder}"></span>
+								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutWorkProduct()">
+									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.withoutWorkProduct}"></span>
 									Include items without a Work Product
 								</a>
 							</li>
 							<li class="divider"></li>
-							<li ng-repeat="wp in testFolders | toArray | orderBy:'name'">
-								<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf)">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': testFolderFilters[tf._ref]}"></span>
-									{{wp.name}}
+							<li ng-repeat="wp in testSetDetails.workProducts | toArray | orderBy:'name'">
+								<a href="javascript:void(0);" ps-noprop-click="toggleWorkProductFilter(wp._ref)">
+									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.workProducts[wp._ref]}"></span>
+									{{wp.FormattedID}} {{wp.Name}}
 								</a>
 							</li>
 						</ul>
@@ -127,15 +127,15 @@
 							<li class="divider"></li>
 							<li>
 								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutTestFolder}"></span>
+									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.withoutTestFolder }"></span>
 									Include items not in a Test Folder
 								</a>
 							</li>
 							<li class="divider"></li>
-							<li ng-repeat="tf in testFolders | toArray | orderBy:'name'">
-								<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf)">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': testFolderFilters[tf._ref]}"></span>
-									{{tf.name}}
+							<li ng-repeat="tf in testSetDetails.testFolders | toArray | orderBy:'name'">
+								<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf._ref)">
+									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.testFolders[tf._ref]}"></span>
+									{{tf.FormattedID}} {{tf.Name}}
 								</a>
 							</li>
 						</ul>

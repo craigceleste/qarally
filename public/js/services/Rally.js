@@ -363,6 +363,11 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 						})
 					});
 			});
+		}).then(function(){
+
+			// TODO for each work product and test folder, we need to make an additional query to learn it's FormattedID (US123, DE456, etc). Maybe some other info while we're there, if it's handy.
+			return $q.when(undefined);
+
 		}).then(function() {
 			$log.debug('getTestSetDetails', testSetDetails);
 
@@ -415,14 +420,16 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			_.each(storedTestSetDetails.testFolders, function(name, _ref) {
 				workingTestSetDetails.testFolders[_ref] = {
 					_ref: _ref,
-					Name: name
+					Name: name,
+					FormattedID: 'US123' // TODO
 				};
 			});
 
 			_.each(storedTestSetDetails.workProducts, function(name, _ref) {
 				workingTestSetDetails.workProducts[_ref] = {
 					_ref: _ref,
-					Name: name
+					Name: name,
+					FormattedID: 'TF789' // TODO
 				};
 			});
 
@@ -543,7 +550,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 				})
 			}
 		}
-		
+
 		return deferred.promise;
 	}
 
