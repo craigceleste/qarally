@@ -154,7 +154,21 @@
 					<span class="glyphicon glyphicon-cog"></span> <b class="caret"></b>
 				</a>
 				<ul class="dropdown-menu">
-					<li><a href="javascript:void(0);">Options will go here</a></li>
+					<li>
+						<a href="javascript:void(0);">Options will go here eventually</a>
+					</li>
+					<li>						
+						<a href="javascript:void(0);">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': false}"></span>
+							Hide sidebar
+						</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': true}"></span>
+							Single TC view
+						</a>
+					</li>
 				</ul>
 			</li>
 		</ul>
@@ -196,46 +210,68 @@
 
 <div id="tc-content">
 
-	<p>
-		Have an area with some stats about the test set here. How many passed, failed, filter summary, etc.<br/>
-		Test Set: {{currentWpi.testSets[currentWpi.testSetRef].name}}
-	</p>
-	
-	<div ng-model="testSetDetails.testCases[0]">
-		!
-		{{Description}}
-		$
-		{{testSetDetails.testCases[0].Description}}
-		%
+	<div class="panel panel-primary">
+	  <div class="panel-heading">
+	    <h3 class="panel-title">
+	    	{{currentWpi.testSets[currentWpi.testSetRef].name}}
+	    	(
+	    	{{testSetDetails.testCases.length}}
+	    	test cases,
+	    	XX
+	    	visible,
+	    	YY passed
+	    	)
+	    </h3>
+	  </div>
+	  <div class="panel-body">
+	    <p>If wanted a place to put the number of test cases, and repeat the name of the Test Set.</p>
+	    <p>If I don't need some kind of summary here, probably ditch this panel.
+	  </div>
 	</div>
 
-	<p>
-		This area is very rough. I'm just tossing a few fields in (unescaped, no behaviors, etc), to give a flavor of what might be here. No formatting has been done.
-	</p>
-
-	<div class=""
+	<div class="panel panel-default"
 		ng-repeat="tc in testSetDetails.testCases"
 		ng-class="{
 			'hide': tc._isFiltered
 		}">
-		<h3>
-			{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : ''}}
-			{{tc.FormattedID}}
-			{{tc.Name}}
-		</h3>
-		<p>{{tc.Description}}</p>
-		<div class="container">
-			<div class="row">
-				<div class="col-sm-6">{{tc.Notes}}</div>
-				<div class="col-sm-6">{{tc.Objective}}</div>
+		<div class="panel-heading">
+			<h3 class="panel-title">
+				{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : ''}}
+				{{tc.FormattedID}}
+				{{tc.Name}}
+			</h3>
+		</div>
+		<div class="panel-body">
+			<p><small>{{tc.Description}}</small></p>
+			<div class="tc-row" ng-if="tc.Notes || tc.Objective">
+				<div class="tc-col1" ng-if="tc.Notes">
+					<h4>Notes</h4>
+					<small ng-bind-html="tc.Notes"></small>
+				</div>
+				<div class="tc-col2" ng-if="tc.Objective">
+					<h4>Objective</h4>
+					<small ng-bind-html="tc.Objective"></small>
+				</div>
 			</div>
-			<div class="row">
-				<div class="col-sm-6">{{tc.PreConditions}}</div>
-				<div class="col-sm-6">{{PostConditions}}</div>
+			<div class="tc-row">
+				<div class="tc-col1" ng-if="tc.PreConditions">
+					<h4>Pre Conditions</h4>
+					<small ng-bind-html="tc.PreConditions"></small>
+				</div>
+				<div class="tc-col2" ng-if="tc.PostConditions">
+					<h4>Post Conditions</h4>
+					<small ng-bind-html="PostConditions"></small>
+				</div>
 			</div>
-			<div class="row">
-				<div class="col-sm-6">{{tc.ValidationInput}}</div>
-				<div class="col-sm-6">{{tc.ValidationExpectedResult}}</div>
+			<div class="tc-row">
+				<div class="tc-col1" ng-if="tc.ValidationInput">
+					<h4>Validation Input</h4>
+					<small ng-bind-html="tc.ValidationInput"></small>
+				</div>
+				<div class="tc-col2" ng-if="tc.ValidationExpectedResult">
+					<h4>Expected Results</h4>
+					<small ng-bind-html="tc.ValidationExpectedResult"></small>
+				</div>
 			</div>
 		</div>
 	</div>

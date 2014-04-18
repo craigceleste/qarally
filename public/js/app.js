@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('qa-rally', ['ngRoute']);
+var app = angular.module('qa-rally', ['ngRoute','ngSanitize']);
 
 // TODO review moving routes to another file.
 // TODO consider using 'resolve' on routes to prepare data instead of an 'isLoading' state for the controller/template.

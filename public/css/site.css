@@ -114,3 +114,30 @@ The Test Case Content area
 @media(min-width: 992px) { #tc-content { margin-left: 270px; } }
 @media(min-width: 1200px) { #tc-content { margin-left: 365px; } }
 
+/*
+Sad. The bootstrap grid didn't work for me,
+because I have a fixed-width sidebar (left) and a flexible content area (right),
+and I want the flexible width area divided into 2 50% wide columns.
+That's not really how the Bootstrap grid is meant to work.
+Instead of fighting/faking it, I'll use the Bootstrap grid in other places.
+This one is hand-made. :(
+*/
+@media(max-width: 767px) {
+	#tc-content .tc-row { margin-bottom: 10px; }
+	#tc-content .tc-row > .tc-col1 {  }
+	#tc-content .tc-row > .tc-col2 {  }
+}
+@media(min-width: 768px) {
+	#tc-content .tc-row { margin-bottom: 10px; }
+	#tc-content .tc-row::after { content:''; display:block; clear: both; } /* use bootstrap mixin for clearfloat */
+	#tc-content .tc-row > .tc-col1 { width: 47%; float: left; }
+	#tc-content .tc-row > .tc-col2 { width: 47%; float: left; margin-left: 10px; }
+}
+
+
+
+
+
+
+
+
