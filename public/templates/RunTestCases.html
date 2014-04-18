@@ -17,7 +17,7 @@
 	<div class="collapse navbar-collapse" id="header-collapse">
 		<ul class="nav navbar-nav">
 			<li class="dropdown">
-				<a id="wpi-drop-down-label" href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle wide-label" data-toggle="dropdown">
 					<span>{{currentWpi.label}}</span> <b class="caret"></b>
 				</a>
 				<ul class="dropdown-menu">
@@ -40,8 +40,8 @@
 				</ul>
 			</li>
 			<li class="dropdown">
-				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown" title="{{currentWpi.testSets[currentWpi.testSetRef].name}}">
-					TS <b class="caret"></b>
+				<a href="javascript:void(0)" class="dropdown-toggle wide-label" data-toggle="dropdown">
+					{{currentWpi.testSets[currentWpi.testSetRef].name}} <b class="caret"></b>
 				</a>
 				<ul class="dropdown-menu ps-scroll">
 					<li>
@@ -62,99 +62,112 @@
 					</li>
 				</ul>
 			</li>
+
+
+
 			<li class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
 					<span class="glyphicon glyphicon-filter"></span> <b class="caret"></b>
 				</a>
 				<ul class="dropdown-menu">
-					<li><a href="javascript:void(0);">TC Name contains: <br/> <input type="text"/></a></li>
+					<li>
+						<form id="filterForm">
+							<label>
+								TC Name contains: <br/>
+								<input type="text" placeholder="Search" />
+							</label>
+						</form>
+					</li>
 					<li class="divider"></li>
-					<li><a href="javascript:void(0);">Work Products w/submenu </a></li>
-					<li><a href="javascript:void(0);">Test Folder w/submenu</a></li>
-					<li class="divider"></li>
-					<li><a href="javascript:void(0);">Other options</a></li>
+
+
+					<li class="dropdown-submenu">
+						<a href="javascript:void(0);" class="dropdown-toggle">
+							Work Products
+						</a>
+						<ul class="dropdown-menu ps-scroll">
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
+									Filter All
+								</a>
+							</li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
+									Filter None
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
+									<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutTestFolder}"></span>
+									Include items without a Work Product
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li ng-repeat="wp in testFolders | toArray | orderBy:'name'">
+								<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf)">
+									<span class="glyphicon" ng-class="{'glyphicon-remove': testFolderFilters[tf._ref]}"></span>
+									{{wp.name}}
+								</a>
+							</li>
+						</ul>
+					</li>
+					<li class="dropdown-submenu">
+						<a href="javascript:void(0);" class="dropdown-toggle">
+							Test Folders
+						</a>
+						<ul class="dropdown-menu ps-scroll">
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
+									Filter All
+								</a>
+							</li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
+									Filter None
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
+									<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutTestFolder}"></span>
+									Include items not in a Test Folder
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li ng-repeat="tf in testFolders | toArray | orderBy:'name'">
+								<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf)">
+									<span class="glyphicon" ng-class="{'glyphicon-remove': testFolderFilters[tf._ref]}"></span>
+									{{tf.name}}
+								</a>
+							</li>
+						</ul>
+					</li>
 				</ul>
 			</li>
+
+<script>
+	// TODO move to a script file.
+	// This snippet (for dropdown submenus) complements Bootstrap JS, so I'm not trying to roll it into Angular filters/behaviors.
+	$(function(){
+		$('.dropdown-submenu > .dropdown-toggle').click(function(e) {
+			var submenu = $('> .dropdown-menu', $(this).parent());
+			$('.dropdown-submenu > .dropdown-menu').not(submenu).hide(); // hide other submenus
+			submenu.toggle(); // toggle this one
+			e.stopPropagation(); // don't close the parent menu
+		})
+		$('> .dropdown-toggle', $('.dropdown-submenu').closest('.dropdown')).click(function() {
+			$('.dropdown-submenu > .dropdown-menu', $(this).parent()).hide() // hide dropdown when parent menu is opened or closed
+		});
+	});
+</script>
+
 		</ul>
 		<form class="navbar-form navbar-left">
 			<div class="form-group">
 				<input type="text" class="form-control" accesskey="b" placeholder="Build Number (alt-b)" ng-model="currentWpi.buildNumber">
 			</div>
 		</form>
-		<ul class="nav navbar-nav">
-			<li class="dropdown">
-				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
-					TF <b class="caret"></b>
-				</a>
-				<ul class="dropdown-menu ps-scroll">
-					<li>
-						<a>Filter by Test Folders</a>
-					</li>
-					<li>
-						<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
-							<span class="glyphicon"></span>
-							Filter All
-						</a>
-					</li>
-					<li>
-						<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
-							<span class="glyphicon"></span>
-							Filter None
-						</a>
-					</li>
-					<li class="divider"></li>
-					<li>
-						<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
-							<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutTestFolder}"></span>
-							Include items not in a Test Folder
-						</a>
-					</li>
-					<li class="divider"></li>
-					<li ng-repeat="tf in testFolders | toArray | orderBy:'name'">
-						<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf)">
-							<span class="glyphicon" ng-class="{'glyphicon-remove': testFolderFilters[tf._ref]}"></span>
-							{{tf.name}}
-						</a>
-					</li>
-				</ul>
-			</li>
-			<li class="dropdown">
-				<a href="javascript:void(0)" class="dropdown-toggle" data-toggle="dropdown">
-					WP <b class="caret"></b>
-				</a>
-				<ul class="dropdown-menu ps-scroll">
-					<li>
-						<a>Filter by Work Product (US's and DE's)</a>
-					</li>
-					<li>
-						<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(true)">
-							<span class="glyphicon"></span>
-							Filter All
-						</a>
-					</li>
-					<li>
-						<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(false)">
-							<span class="glyphicon"></span>
-							Filter None
-						</a>
-					</li>
-					<li class="divider"></li>
-					<li>
-						<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutWorkProduct()">
-							<span class="glyphicon" ng-class="{'glyphicon-remove': filterTestCasesWithoutWorkProduct}"></span>
-							Include items without a Work Product
-						</a>
-					</li>
-					<li class="divider"></li>
-					<li ng-repeat="wp in workProducts | toArray | orderBy:'name'">
-						<a href="javascript:void(0);" ps-noprop-click="toggleWorkProductFilter(wp)">
-							<span class="glyphicon" ng-class="{'glyphicon-remove': workProductFilters[wp._ref]}"></span>
-							{{wp.name}}
-						</a>
-					</li>
-				</ul>
-			</li>
-		</ul>
 		<ul class="nav navbar-nav navbar-right">
 			<li class="dropdown">
 				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
@@ -202,6 +215,19 @@
 -->
 
 <div id="tc-content">
+
+	<p>
+		Have an area with some stats about the test set here. How many passed, failed, filter summary, etc.<br/>
+		Test Set: {{currentWpi.testSets[currentWpi.testSetRef].name}}
+	</p>
+	
+	<div ng-model="testSetDetails.testCases[0]">
+		!
+		{{Description}}
+		$
+		{{testSetDetails.testCases[0].Description}}
+		%
+	</div>
 
 	<p>
 		This area is very rough. I'm just tossing a few fields in (unescaped, no behaviors, etc), to give a flavor of what might be here. No formatting has been done.
