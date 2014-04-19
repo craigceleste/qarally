@@ -12,9 +12,9 @@ window.fakeBackendFactory = {
 
 			// How to use it.
 			//		1. Each unit test can use this factory to create a new instance of the fake data.
-			//		2. Each test can then modify the data of their copy as needed: add extra elements to collections, change values to illegal ones, etc.
-			//		3. Each test can modify the $httpBackend with additional .whenJSONP calls. Or use the default ones.
-			//		4. Each test then compares the transformed results from code under test, with the values in the .data properties.
+			//				They can then modify their copy of the data as needed: expand collection counts, introduce corruptions, etc.
+			//		2. Use the .data before requests to set up conditions
+			//		3. Use the .data after requests to make assertions about how the data was parsed.
 
 			subscription: {
 				inputs: {
@@ -122,6 +122,7 @@ window.fakeBackendFactory = {
 				    }
 				}
 			},
+
             projectList: {
                 inputs: {
 				    "projectsRef": "https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects"
@@ -207,6 +208,7 @@ window.fakeBackendFactory = {
 				    }
 				}               
             },
+
 			iterationList: {
 				inputs: {
 			    	"iterationsRef": "https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations"
@@ -269,6 +271,31 @@ window.fakeBackendFactory = {
 				}
 			},
 
+			testSetsList: {
+				inputs: {
+					"workspaceRef": "https://rally1.rallydev.com/slm/webservice/v3.0/workspace/286f4675-fc38-4a87-89b9-eec25d199cab",
+			    	"iterationRef": "https://rally1.rallydev.com/slm/webservice/v3.0/iteration/1becc454-eca1-4b00-ae02-fcdf8cade4d5"
+				},
+				data: {
+				    "QueryResult": {
+				        "Errors": [], 
+				        "PageSize": 200, 
+				        "Results": [
+				            {
+				                "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testset/af931b07-a8d0-4157-87a3-9772e435a8da", 
+				                "_refObjectName": "My Test Set", 
+				                "_refObjectUUID": "af931b07-a8d0-4157-87a3-9772e435a8da", 
+				                "_type": "TestSet"
+				            }
+				        ], 
+				        "StartIndex": 1, 
+				        "TotalResultCount": 1, 
+				        "Warnings": []
+				    }
+				}				
+
+			},
+
 			setup: function($httpBackend) {
 
 				// subscription
@@ -290,6 +317,11 @@ window.fakeBackendFactory = {
 				$httpBackend
 					.whenJSONP("https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations?jsonp=JSON_CALLBACK&pagesize=200")
 					.respond(this.iterationList.data);
+
+				// testSetsList
+				$httpBackend
+					.whenJSONP("https://rally1.rallydev.com/slm/webservice/v3.0/testset?jsonp=JSON_CALLBACK&workspace=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fworkspace%2F286f4675-fc38-4a87-89b9-eec25d199cab&query=(Iteration+%3D+%22https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fiteration%2F1becc454-eca1-4b00-ae02-fcdf8cade4d5%22)&pagesize=200")
+					.respond(this.testSetsList.data)
 
 			}
 		};

@@ -195,4 +195,21 @@ describe('The Rally service', function(){
 		expect(subscriptionData).toEqual('from service');
 	});
 
+	it('getTestSetList prepares request coorectly.', function() {
+
+		var resultData;
+		var fakeBackend = window.fakeBackendFactory.create();
+		fakeBackend.setup($httpBackend);
+
+		rallySvc.getTestSetList(fakeBackend.testSetsList.inputs.workspaceRef, fakeBackend.testSetsList.inputs.iterationRef)
+			.then(function(data) { resultData = data; });
+
+		$httpBackend.flush(); // simulate async http completing
+
+		expect(resultData.iterationRef).toEqual(fakeBackend.testSetsList.inputs.iterationRef);
+		expect(resultData.testSets[fakeBackend.testSetsList.data.QueryResult.Results[0]._ref]._ref).toEqual(fakeBackend.testSetsList.data.QueryResult.Results[0]._ref);
+		expect(resultData.testSets[fakeBackend.testSetsList.data.QueryResult.Results[0]._ref].name).toEqual(fakeBackend.testSetsList.data.QueryResult.Results[0]._refObjectName);
+
+	});
+
 });
