@@ -90,20 +90,20 @@
 							</li>
 							<li>
 								<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(false)">
-									Filter None
+									Show All
 								</a>
 							</li>
 							<li class="divider"></li>
 							<li>
 								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutWorkProduct()">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.withoutWorkProduct}"></span>
-									Filter items without a Work Product
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.withoutWorkProduct}"></span>
+									Show items without a Work Product
 								</a>
 							</li>
 							<li class="divider"></li>
 							<li ng-repeat="wp in testSetDetails.workProducts | toArray | orderBy:'name'">
 								<a href="javascript:void(0);" ps-noprop-click="toggleWorkProductFilter(wp._ref)">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.workProducts[wp._ref]}"></span>
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.workProducts[wp._ref]}"></span>
 									{{wp.FormattedID}} {{wp.Name}}
 								</a>
 							</li>
@@ -124,20 +124,20 @@
 							</li>
 							<li>
 								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
-									Filter None
+									Show All
 								</a>
 							</li>
 							<li class="divider"></li>
 							<li>
 								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.withoutTestFolder }"></span>
-									Filter items not in a Test Folder
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.withoutTestFolder }"></span>
+									Show items not in a Test Folder
 								</a>
 							</li>
 							<li class="divider"></li>
 							<li ng-repeat="tf in testSetDetails.testFolders | toArray | orderBy:'name'">
 								<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf._ref)">
-									<span class="glyphicon" ng-class="{'glyphicon-remove': currentWpi.filter.testFolders[tf._ref]}"></span>
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.testFolders[tf._ref]}"></span>
 									{{tf.FormattedID}} {{tf.Name}}
 								</a>
 							</li>
@@ -193,7 +193,7 @@
 	}">
 
 	<!--
-		FILTERING AND NAVIGATION
+		NAVIGATION SIDEBAR
 	-->
 
 	<div id="tc-sidebar">
