@@ -20,6 +20,7 @@ module.exports = function(config) {
 			'public/lib/bootstrap/bootstrap.min.js',
 			'public/lib/angular/angular.min.js',
 			'public/lib/angular/angular-route.min.js',
+			'public/lib/angular/angular-sanitize.min.js',
 
 			// code under test
 			'public/js/**/*.js',
