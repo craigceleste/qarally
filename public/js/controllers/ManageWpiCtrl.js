@@ -13,6 +13,10 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 		});
 	}
 
+	$scope.getWpiCount = function() {
+		return Object.keys($scope.wpiList).length;
+	}
+
 	$scope.createWpi = function() {
 		var wpi = Wpi.createWpi($scope.wpiList);
 		$scope.setCurrentWpi(wpi.id);

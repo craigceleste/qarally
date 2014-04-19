@@ -107,6 +107,9 @@
 									{{wp.FormattedID}} {{wp.Name}}
 								</a>
 							</li>
+							<li>
+								<a ng-if="getLength(testSetDetails.workProducts) === 0">There aren't any...</a>
+							</li>
 						</ul>
 					</li>
 					<li class="dropdown-submenu">
@@ -138,6 +141,9 @@
 									{{tf.FormattedID}} {{tf.Name}}
 								</a>
 							</li>
+							<li>
+								<a ng-if="getLength(testSetDetails.testFolders) === 0">There aren't any...</a>
+							</li>
 						</ul>
 					</li>
 				</ul>
@@ -158,15 +164,21 @@
 						<a href="javascript:void(0);">Options will go here eventually</a>
 					</li>
 					<li>						
-						<a href="javascript:void(0);">
-							<span class="glyphicon" ng-class="{'glyphicon-ok': false}"></span>
-							Hide sidebar
+						<a href="javascript:void(0);" ps-noprop-click="preferences.showTcSidebar = preferences.showTcSidebar ? undefined : true;">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': preferences.showTcSidebar }"></span>
+							Show sidebar
 						</a>
 					</li>
 					<li>
-						<a href="javascript:void(0);">
-							<span class="glyphicon" ng-class="{'glyphicon-ok': true}"></span>
+						<a href="javascript:void(0);" ps-noprop-click="">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': false}"></span>
 							Single TC view
+						</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="preferences.closedNoobBubble = preferences.closedNoobBubble ? undefined : true;">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': !preferences.closedNoobBubble}"></span>
+							Show the Noob's intro bubble
 						</a>
 					</li>
 				</ul>
@@ -176,105 +188,159 @@
 </nav>
 <div class="nav-spacer"></div>
 
-<!--
-	FILTERING AND NAVIGATION
--->
+<div ng-class="{
+	'show-tc-sidebar': preferences.showTcSidebar
+	}">
 
-<div id="tc-sidebar">
-	<div class="well">
-		<form class="form">
-			<input type="search" class="form-control" accesskey="s" placeholder="Search (alt-s)" ng-model="search">
-		</form>
-		<h5 id="testCasesLabel">Test Cases</h5>
-		<div id="tc-list" class="button-list small">
-			<div class="tc-button"
-				ng-repeat="tc in testSetDetails.testCases"
-				ng-class="{
-					'sad': tc._isSad,
-					'happy': tc._isHappy,
-					'hide': tc._isFiltered
-				}"
-				hover-hint="{'#testCasesLabel': tc.FormattedID + ':' + tc.Name}">
-				<div>
+	<!--
+		FILTERING AND NAVIGATION
+	-->
+
+	<div id="tc-sidebar">
+		<div class="well">
+			<form class="form">
+				<input type="search" class="form-control" accesskey="s" placeholder="Search (alt-s)" ng-model="search">
+			</form>
+			<h5 id="testCasesLabel">Test Cases</h5>
+			<div id="tc-list" class="button-list small">
+				<div class="tc-button"
+					ng-repeat="tc in testSetDetails.testCases"
+					ng-class="{
+						'sad': tc._isSad,
+						'happy': tc._isHappy,
+						'hide': tc._isFiltered
+					}"
+					hover-hint="{'#testCasesLabel': tc.FormattedID + ':' + tc.Name}">
+					<div>
+						{{tc.FormattedID}}
+						{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : '&#9675;'}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--
+		DETAIL AREA
+	-->
+
+	<div id="tc-content">
+
+		<div class="alert alert-info alert-dismissable" ng-if="!preferences.closedNoobBubble">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="preferences.closedNoobBubble = true">&times;</button>
+			<h4>The noob's intro bubble.</h4>
+			<ol>
+				<li>Choose your WPI in the first dropdown menu above. It's probably already selected.</li>
+				<li>Choose your Test Set in the second dropdown. Your choice is remembered when you close/open the browser.</li>
+				<li>Choose your Filter options in the <span class="glyphicon glyphicon-filter"></span> menu above.</li>
+				<li>Enter the build number in the space provided.</li>
+				<li>Then test those cases.</li>
+			</ol>
+			<p>And quick... close this bubble or people will think you're some kind of a noob!</p>
+		</div>
+
+		<div class="panel panel-primary">
+		  <div class="panel-heading">
+		    <h3 class="panel-title">
+		    	Test Set: {{currentWpi.testSets[currentWpi.testSetRef].name}}
+		    </h3>
+		  </div>
+		  <div class="panel-body">
+		  	I may ditch this panel. Unless it's practical to have some kind of summary here. I'm just playing with Bootstrap styles at the moment.
+		  </div>
+		  <table class="table">
+	  		<tr>
+		  		<th >Tester</th>
+		  		<th class="right">Tested</th>
+		  		<th class="right">Passed</th>
+		  		<th class="right">Failed</th>
+		  		<th class="right">Intelligence</th>
+		  		<th class="right">Dexterity</th>
+		  	</tr>
+	  		<tr>
+	  			<td>Curly</td>
+	  			<td class="right">22</td>
+	  			<td class="right">20</td>
+	  			<td class="right">2</td>
+	  			<td class="right">10</td>
+	  			<td class="right">9</td>
+	  		</tr>
+	  		<tr>
+	  			<td>Larry</td>
+	  			<td class="right">20</td>
+	  			<td class="right">2</td>
+	  			<td class="right">18</td>
+	  			<td class="right">15</td>
+	  			<td class="right">12</td>
+	  		</tr>
+	  		<tr>
+	  			<td>Moe</td>
+	  			<td class="right">10</td>
+	  			<td class="right">2</td>
+	  			<td class="right">8</td>
+	  			<td class="right">13</td>
+	  			<td class="right">10</td>
+	  		</tr>
+	  		<tr>
+	  			<th>Total</th>
+	  			<th class="right">42</th>
+	  			<th class="right">24</th>
+	  			<th class="right">28</th>
+	  			<th class="right">4</th>
+	  			<th class="right">22</th>
+	  		</tr>
+		  </table>
+		</div>
+
+		<div class="panel panel-default"
+			ng-repeat="tc in testSetDetails.testCases"
+			ng-class="{
+				'hide': tc._isFiltered,
+				'panel-danger': tc.FormattedID.indexOf('0') >= 0
+			}">
+			<div class="panel-heading">
+				<h3 class="panel-title">
+					{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : ''}}
 					{{tc.FormattedID}}
-					{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : '&#9675;'}}
+					{{tc.Name}}
+				</h3>
+			</div>
+			<div class="panel-body">
+				<p><small>{{tc.Description}}</small></p>
+				<small>Some line about the last test result for this test case goes in here somewhere.</small>
+				<div class="tc-row" ng-if="tc.Notes || tc.Objective">
+					<div class="tc-col1" ng-if="tc.Notes">
+						<h4>Notes</h4>
+						<small ng-bind-html="tc.Notes"></small>
+					</div>
+					<div class="tc-col2" ng-if="tc.Objective">
+						<h4>Objective</h4>
+						<small ng-bind-html="tc.Objective"></small>
+					</div>
+				</div>
+				<div class="tc-row">
+					<div class="tc-col1" ng-if="tc.PreConditions">
+						<h4>Pre Conditions</h4>
+						<small ng-bind-html="tc.PreConditions"></small>
+					</div>
+					<div class="tc-col2" ng-if="tc.PostConditions">
+						<h4>Post Conditions</h4>
+						<small ng-bind-html="PostConditions"></small>
+					</div>
+				</div>
+				<div class="tc-row">
+					<div class="tc-col1" ng-if="tc.ValidationInput">
+						<h4>Validation Input</h4>
+						<small ng-bind-html="tc.ValidationInput"></small>
+					</div>
+					<div class="tc-col2" ng-if="tc.ValidationExpectedResult">
+						<h4>Expected Results</h4>
+						<small ng-bind-html="tc.ValidationExpectedResult"></small>
+					</div>
 				</div>
 			</div>
 		</div>
-	</div>
-</div>
 
-<!--
-	DETAIL AREA
--->
-
-<div id="tc-content">
-
-	<div class="panel panel-primary">
-	  <div class="panel-heading">
-	    <h3 class="panel-title">
-	    	{{currentWpi.testSets[currentWpi.testSetRef].name}}
-	    	(
-	    	{{testSetDetails.testCases.length}}
-	    	test cases,
-	    	XX
-	    	visible,
-	    	YY passed
-	    	)
-	    </h3>
-	  </div>
-	  <div class="panel-body">
-	    <p>If wanted a place to put the number of test cases, and repeat the name of the Test Set.</p>
-	    <p>If I don't need some kind of summary here, probably ditch this panel.
-	  </div>
-	</div>
-
-	<div class="panel panel-default"
-		ng-repeat="tc in testSetDetails.testCases"
-		ng-class="{
-			'hide': tc._isFiltered
-		}">
-		<div class="panel-heading">
-			<h3 class="panel-title">
-				{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : ''}}
-				{{tc.FormattedID}}
-				{{tc.Name}}
-			</h3>
-		</div>
-		<div class="panel-body">
-			<p><small>{{tc.Description}}</small></p>
-			<div class="tc-row" ng-if="tc.Notes || tc.Objective">
-				<div class="tc-col1" ng-if="tc.Notes">
-					<h4>Notes</h4>
-					<small ng-bind-html="tc.Notes"></small>
-				</div>
-				<div class="tc-col2" ng-if="tc.Objective">
-					<h4>Objective</h4>
-					<small ng-bind-html="tc.Objective"></small>
-				</div>
-			</div>
-			<div class="tc-row">
-				<div class="tc-col1" ng-if="tc.PreConditions">
-					<h4>Pre Conditions</h4>
-					<small ng-bind-html="tc.PreConditions"></small>
-				</div>
-				<div class="tc-col2" ng-if="tc.PostConditions">
-					<h4>Post Conditions</h4>
-					<small ng-bind-html="PostConditions"></small>
-				</div>
-			</div>
-			<div class="tc-row">
-				<div class="tc-col1" ng-if="tc.ValidationInput">
-					<h4>Validation Input</h4>
-					<small ng-bind-html="tc.ValidationInput"></small>
-				</div>
-				<div class="tc-col2" ng-if="tc.ValidationExpectedResult">
-					<h4>Expected Results</h4>
-					<small ng-bind-html="tc.ValidationExpectedResult"></small>
-				</div>
-			</div>
-		</div>
 	</div>
 
 </div>
-

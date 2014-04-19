@@ -74,10 +74,10 @@ Note:
 - untested tests should pop once many tests have been passed. They are darker neutral gray.
 - failed or blocked tests should pop all the time.
 */
-@media(max-width:991px) {
-	#tc-sidebar { display: none; }
-}
+#tc-sidebar { display: none; }
 @media(min-width:992px) {
+	.show-tc-sidebar #tc-sidebar { display: block; }
+
 	#tc-sidebar { position: fixed; top: 60px; left: 10px; bottom: 10px; width: 250px; }
 	#tc-sidebar .well { height: 100%; }
 	#tc-sidebar .well .form { margin-bottom: 10px; }
@@ -111,8 +111,8 @@ The Test Case Content area
 #tc-content {
 	padding: 0 10px;
 }
-@media(min-width: 992px) { #tc-content { margin-left: 270px; } }
-@media(min-width: 1200px) { #tc-content { margin-left: 365px; } }
+@media(min-width: 992px) { .show-tc-sidebar #tc-content { margin-left: 270px; } }
+@media(min-width: 1200px) { .show-tc-sidebar #tc-content { margin-left: 365px; } }
 
 /*
 Sad. The bootstrap grid didn't work for me,
@@ -134,8 +134,10 @@ This one is hand-made. :(
 	#tc-content .tc-row > .tc-col2 { width: 47%; float: left; margin-left: 10px; }
 }
 
-
-
+/*
+Misc table styles
+*/
+.table .right { text-align: right; }
 
 
 

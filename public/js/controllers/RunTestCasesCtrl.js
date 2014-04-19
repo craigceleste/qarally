@@ -1,12 +1,13 @@
 'use strict';
 
-app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '$sce', 'Wpi', 'Rally', function($log, $scope, $location, $timeout, $sce, Wpi, Rally) {
+app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '$sce', 'Settings', 'Wpi', 'Rally', function($log, $scope, $location, $timeout, $sce, Settings, Wpi, Rally) {
 	$log.debug('Creating RunTestCasesCtrl')
 
 	function updateScope() {
 		$scope.wpiCurrentId = Wpi.getCurrentId();
 		$scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
 		$scope.testSetDetails = undefined;
+		$scope.preferences = Settings.get();
 
 		if (!Wpi.wpiIsValid($scope.currentWpi)) {
 			$scope.openManageWpiForm();
@@ -42,6 +43,10 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 					) ? true : false;
 			});
 		}
+	}
+
+	$scope.getLength = function(obj) {
+		return Object.keys(obj || {}).length;
 	}
 
 	$scope.openManageWpiForm = function() {
@@ -146,23 +151,24 @@ app.controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '
 		}
 	}
 
-	$scope.$watch('currentWpi.filter.nameContains', function(newValue, oldValue) {
-		updateFilters();
-	});
-
 	$scope.sanitizeHtml = function(untrustedHtml) {
 		// TODO sanitize it and return the result
 		return $sce.trustAsHtml(untrustedHtml + "<script>console.log('mooo');</script>");
 	}
 
-	// We're watching for changes to buildNumber, selected testSetRef, filter settings.
-	// TODO These don't change overly often, and it's expensive to check on each digest.
-	// Consider a better approach. 
+	$scope.$watch('preferences',
+		function(newValue, oldValue) {
+			Settings.set($scope.preferences);
+		}, true); // deep watch
 
 	$scope.$watch('wpiList',
 		function (newValue, oldValue) {
 			Wpi.setList($scope.wpiList);
 		}, true); // deep watch
+
+	$scope.$watch('currentWpi.filter.nameContains', function(newValue, oldValue) {
+		updateFilters();
+	});
 
 	// Set up the state in the scope
 
