@@ -195,7 +195,7 @@ describe('The Rally service', function(){
 		expect(subscriptionData).toEqual('from service');
 	});
 
-	it('getTestSetList prepares request coorectly.', function() {
+	it('getTestSetList makes the request and handles the response correctly.', function() {
 
 		var resultData;
 		var fakeBackend = window.fakeBackendFactory.create();
@@ -210,6 +210,25 @@ describe('The Rally service', function(){
 		expect(resultData.testSets[fakeBackend.testSetsList.data.QueryResult.Results[0]._ref]._ref).toEqual(fakeBackend.testSetsList.data.QueryResult.Results[0]._ref);
 		expect(resultData.testSets[fakeBackend.testSetsList.data.QueryResult.Results[0]._ref].name).toEqual(fakeBackend.testSetsList.data.QueryResult.Results[0]._refObjectName);
 
+	});
+
+	it('getTestSetDetails makes the request and handles the response correctly', function() {
+
+		var testSetDetails;
+		var fakeBackend = window.fakeBackendFactory.create();
+		fakeBackend.setup($httpBackend);
+
+		rallySvc._getTestSetDetails(fakeBackend.testSetDetails.inputs.testSetRef)
+			.then(function(data) { testSetDetails = data; });
+
+		$httpBackend.flush(); // simulate async http completing
+
+		expect(testSetDetails._ref).toEqual(fakeBackend.testSetDetails.data.TestSet._ref);
+		expect(testSetDetails.name).toEqual(fakeBackend.testSetDetails.data.TestSet.Name);
+
+		// The test cases will be minified
+		expect(testSetDetails.testCases[0]._).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0]._ref);
+		// TODO finish it
 	});
 
 });

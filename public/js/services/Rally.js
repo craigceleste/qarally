@@ -296,7 +296,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	// Example URLs
 	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a
 	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
-	function getTestSetDetails(testSetRef) {
+	service._getTestSetDetails = function(testSetRef) {
 
 		assert(typeof testSetRef === 'string', 'testSetRef must be a string');
 
@@ -540,7 +540,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 				deferred.resolve(testSetDetails);
 			}
 			else {
-				getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
+				service._getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
 					cacheIt(storedTestSetDetails);
 
 					// TODO update last accessed date

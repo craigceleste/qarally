@@ -5,10 +5,22 @@ window.fakeBackendFactory = {
 		return {
 
 			// How to maintain this test data.
-			//		1. Walk the Rally tree in Chrome.
-			//		2. Capture JSON from Chrome and paste it here. I use this Sublime plugin to format it: http://www.yellowduck.be/geek-stuff/2013/3/9/formatting-json-and-xml-with-sublime-text)
-			//		3. Reduce collections to 1 sample object that has a full child hierarchy under it.
-			//		4. Sanitize user data manually.
+			//		1. Become comfortable walking the Rally data using Chrome.
+			//			a. Start with this entry point URL: https://rally1.rallydev.com/slm/webservice/v3.0/subscription
+			//			b. Copy the returned JSON to an editor. I use this Sublime plugin to format it: http://www.yellowduck.be/geek-stuff/2013/3/9/formatting-json-and-xml-with-sublime-text)
+			//			c. Pull out the URL's to child elements from each package, to traverse downwards through the hierarchy.
+			//		2. For each web service we use:
+			//			a. capture the JSON as described above.
+			//			b. paste it here.
+			//			c. sanitize it: blank out any sensitive business data. GUID's are fine, I guess.
+			//			d. reduce collections to one element; preferrably one that has a full hierarchy under it.
+			//		3. Create a block in the form:
+			//			serviceName: {
+			//				inputs: { ...input values to the JS service function... },
+			//				data: { ...the sanitized JSON returned from the server... }
+			//			}
+			//		4. Wire $httpBackend (Angular's mock $http)
+			//			follow the pattern for the other ones.
 
 			// How to use it.
 			//		1. Each unit test can use this factory to create a new instance of the fake data.
@@ -221,7 +233,7 @@ window.fakeBackendFactory = {
 				            {
 				                "CreationDate": "2013-12-06T17:30:15.082Z", 
 				                "EndDate": "2014-02-01T04:59:59.000Z", 
-				                "Name": "Sprint 84", 
+				                "Name": "My Iteration", 
 				                "Notes": "", 
 				                "ObjectID": "1becc454-eca1-4b00-ae02-fcdf8cade4d5", 
 				                "PlannedVelocity": 22.0, 
@@ -295,6 +307,238 @@ window.fakeBackendFactory = {
 				}				
 
 			},
+			
+			testSetDetails: {
+				inputs: {
+					"testSetRef": "https://rally1.rallydev.com/slm/webservice/v3.0/testset/af931b07-a8d0-4157-87a3-9772e435a8da"
+				},
+				data: {
+				    "TestSet": {
+				        "Blocked": false, 
+				        "BlockedReason": null, 
+				        "Changesets": {
+				            "Count": 0, 
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Changesets", 
+				            "_type": "Changeset"
+				        }, 
+				        "CreationDate": "2014-01-07T17:01:14.021Z", 
+				        "Description": "", 
+				        "Discussion": {
+				            "Count": 0, 
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Discussion", 
+				            "_type": "ConversationPost"
+				        }, 
+				        "DisplayColor": null, 
+				        "DragAndDropRank": ",~|{\\!+I!+!5{5q]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", 
+				        "Errors": [], 
+				        "FormattedID": "TS965", 
+				        "Iteration": {
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/iteration/1becc454-eca1-4b00-ae02-fcdf8cade4d5", 
+				            "_refObjectName": "My Iteration", 
+				            "_refObjectUUID": "1becc454-eca1-4b00-ae02-fcdf8cade4d5", 
+				            "_type": "Iteration"
+				        }, 
+				        "LastUpdateDate": "2014-01-21T14:34:20.477Z", 
+				        "LatestDiscussionAgeInMinutes": null, 
+				        "Name": "My Test Set", 
+				        "Notes": "", 
+				        "ObjectID": "af931b07-a8d0-4157-87a3-9772e435a8da", 
+				        "Owner": {
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/user/beb21e1f-8ee9-42c2-a977-87a6a7f4dfbe", 
+				            "_refObjectName": "Sanitized", 
+				            "_refObjectUUID": "beb21e1f-8ee9-42c2-a977-87a6a7f4dfbe", 
+				            "_type": "User"
+				        }, 
+				        "PlanEstimate": null, 
+				        "Project": {
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/project/d0e34bc7-55c0-4757-857d-6be2604a6c6c", 
+				            "_refObjectName": "My Project", 
+				            "_refObjectUUID": "d0e34bc7-55c0-4757-857d-6be2604a6c6c", 
+				            "_type": "Project"
+				        }, 
+				        "Ready": false, 
+				        "Release": null, 
+				        "RevisionHistory": {
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/revisionhistory/a0d4dc2d-d099-4749-b958-db460e040097", 
+				            "_refObjectUUID": "a0d4dc2d-d099-4749-b958-db460e040097", 
+				            "_type": "RevisionHistory"
+				        }, 
+				        "ScheduleState": "Accepted", 
+				        "Subscription": {
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a", 
+				            "_refObjectName": "My Subscription", 
+				            "_refObjectUUID": "595548e8-ec1c-4d82-9954-38a0e1fcd05a", 
+				            "_type": "Subscription"
+				        }, 
+				        "Tags": {
+				            "Count": 0, 
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Tags", 
+				            "_tagsNameArray": [], 
+				            "_type": "Tag"
+				        }, 
+				        "TaskStatus": "NONE", 
+				        "Tasks": {
+				            "Count": 0, 
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Tasks", 
+				            "_type": "Task"
+				        }, 
+				        "TestCaseStatus": "ALL_RUN_ALL_PASSING", 
+				        "TestCases": {
+				            "Count": 194, 
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/TestCases", 
+				            "_type": "TestCase"
+				        }, 
+				        "Warnings": [], 
+				        "Workspace": {
+				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/workspace/286f4675-fc38-4a87-89b9-eec25d199cab", 
+				            "_refObjectName": "My Workspace", 
+				            "_refObjectUUID": "286f4675-fc38-4a87-89b9-eec25d199cab", 
+				            "_type": "Workspace"
+				        }, 
+				        "_CreatedAt": "Jan 7", 
+				        "_objectVersion": "464", 
+				        "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testset/af931b07-a8d0-4157-87a3-9772e435a8da", 
+				        "_refObjectName": "My Test Set", 
+				        "_refObjectUUID": "af931b07-a8d0-4157-87a3-9772e435a8da"
+				    }
+				}
+			},
+
+			testCaseList: {
+				inputs: {
+					"testSetRef": "https://rally1.rallydev.com/slm/webservice/v3.0/testset/af931b07-a8d0-4157-87a3-9772e435a8da"
+				},
+				data: {
+				    "QueryResult": {
+				        "Errors": [], 
+				        "PageSize": 200, 
+				        "Results": [
+				            {
+				                "Attachments": {
+				                    "Count": 0, 
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Attachments", 
+				                    "_type": "Attachment"
+				                }, 
+				                "Changesets": {
+				                    "Count": 0, 
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Changesets", 
+				                    "_type": "Changeset"
+				                }, 
+				                "CreationDate": "2014-01-08T15:18:40.018Z", 
+				                "DefectStatus": "NONE", 
+				                "Description": "My Test Case Description", 
+				                "Discussion": {
+				                    "Count": 0, 
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Discussion", 
+				                    "_type": "ConversationPost"
+				                }, 
+				                "DisplayColor": null, 
+				                "DragAndDropRank": ",~|v=!+I!+!5{5q]!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!", 
+				                "FormattedID": "TC33319", 
+				                "LastBuild": "123.456.789.012", 
+				                "LastRun": "2014-01-08T20:11:38.439Z", 
+				                "LastUpdateDate": "2014-01-08T20:10:31.393Z", 
+				                "LastVerdict": "Pass", 
+				                "LatestDiscussionAgeInMinutes": null, 
+				                "Method": "Manual", 
+				                "Name": "My Test Case", 
+				                "Notes": "My Notes", 
+				                "ObjectID": "b92bef0f-3158-4148-bb09-94940d1dc2e9", 
+				                "Objective": "My Objective", 
+				                "Owner": {
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/user/ba5ee3cd-8160-44d1-b709-f4a05d25bda0", 
+				                    "_refObjectName": "Sanitized", 
+				                    "_refObjectUUID": "ba5ee3cd-8160-44d1-b709-f4a05d25bda0", 
+				                    "_type": "User"
+				                }, 
+				                "Package": null, 
+				                "PostConditions": "My PostConditions", 
+				                "PreConditions": "My PostConditions", 
+				                "Priority": "Critical", 
+				                "Project": {
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/project/d0e34bc7-55c0-4757-857d-6be2604a6c6c", 
+				                    "_refObjectName": "My Project", 
+				                    "_refObjectUUID": "d0e34bc7-55c0-4757-857d-6be2604a6c6c", 
+				                    "_type": "Project"
+				                }, 
+				                "Ready": false, 
+				                "Recycled": false, 
+				                "Results": {
+				                    "Count": 1, 
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Results", 
+				                    "_type": "TestCaseResult"
+				                }, 
+				                "RevisionHistory": {
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/revisionhistory/24f20cb7-9c31-456c-b139-428f456cae12", 
+				                    "_refObjectUUID": "24f20cb7-9c31-456c-b139-428f456cae12", 
+				                    "_type": "RevisionHistory"
+				                }, 
+				                "Risk": "Medium", 
+				                "Steps": {
+				                    "Count": 0, 
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Steps", 
+				                    "_type": "TestCaseStep"
+				                }, 
+				                "Subscription": {
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a", 
+				                    "_refObjectName": "My Subscription", 
+				                    "_refObjectUUID": "595548e8-ec1c-4d82-9954-38a0e1fcd05a", 
+				                    "_type": "Subscription"
+				                }, 
+				                "Tags": {
+				                    "Count": 0, 
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Tags", 
+				                    "_tagsNameArray": [], 
+				                    "_type": "Tag"
+				                }, 
+				                "TestFolder": {
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testfolder/50ab57a5-905c-4b47-964f-6e2cafa4ff04", 
+				                    "_refObjectName": "My Folder", 
+				                    "_refObjectUUID": "50ab57a5-905c-4b47-964f-6e2cafa4ff04", 
+				                    "_type": "TestFolder"
+				                }, 
+				                "Type": "Sanitized", 
+				                "ValidationExpectedResult": "My Expected Result", 
+				                "ValidationInput": "My Input", 
+				                "WorkProduct": {
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/hierarchicalrequirement/3055bcc4-391c-4dea-a886-63a2b850bcd9", 
+				                    "_refObjectName": "My User Story", 
+				                    "_refObjectUUID": "3055bcc4-391c-4dea-a886-63a2b850bcd9", 
+				                    "_type": "HierarchicalRequirement"
+				                }, 
+				                "Workspace": {
+				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/workspace/286f4675-fc38-4a87-89b9-eec25d199cab", 
+				                    "_refObjectName": "My Workspace", 
+				                    "_refObjectUUID": "286f4675-fc38-4a87-89b9-eec25d199cab", 
+				                    "_type": "Workspace"
+				                }, 
+				                "_CreatedAt": "Jan 8", 
+				                "_objectVersion": "4", 
+				                "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testcase/b92bef0f-3158-4148-bb09-94940d1dc2e9", 
+				                "_refObjectName": "My Test Case", 
+				                "_refObjectUUID": "b92bef0f-3158-4148-bb09-94940d1dc2e9", 
+				                "_type": "TestCase", 
+				                "c_Category": null, 
+				                "c_Inputs": "", 
+				                "c_ItestcaseTemplateId": "", 
+				                "c_NewDesign": null, 
+				                "c_ProgramArea": null, 
+				                "c_Section": "Sanitized", 
+				                "c_SubProgramArea": null, 
+				                "c_TimeToConduct": null, 
+				                "c_Weight": null, 
+				                "c_obsoleteCategory": "", 
+				                "c_obsoleteCategory2": null, 
+				                "c_obsoleteProgramArea": "", 
+				                "c_oldProgramArea": null
+				            }
+				        ], 
+				        "StartIndex": 1, 
+				        "TotalResultCount": 1,
+				        "Warnings": []
+				    }
+				}
+			},
 
 			setup: function($httpBackend) {
 
@@ -323,6 +567,15 @@ window.fakeBackendFactory = {
 					.whenJSONP("https://rally1.rallydev.com/slm/webservice/v3.0/testset?jsonp=JSON_CALLBACK&workspace=https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fworkspace%2F286f4675-fc38-4a87-89b9-eec25d199cab&query=(Iteration+%3D+%22https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Fiteration%2F1becc454-eca1-4b00-ae02-fcdf8cade4d5%22)&pagesize=200")
 					.respond(this.testSetsList.data)
 
+				// testSetDetails
+				$httpBackend
+					.whenJSONP("https://rally1.rallydev.com/slm/webservice/v3.0/testset/af931b07-a8d0-4157-87a3-9772e435a8da?jsonp=JSON_CALLBACK")
+					.respond(this.testSetDetails.data)
+
+				// testCaseList
+				$httpBackend
+					.whenJSONP("https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/TestCases?jsonp=JSON_CALLBACK&pagesize=200&start=1")
+					.respond(this.testCaseList.data)
 			}
 		};
 	}
