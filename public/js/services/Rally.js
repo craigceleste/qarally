@@ -38,7 +38,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	}
 
 	// hard coded starting point: https://rally1.rallydev.com/slm/webservice/v3.0/subscription
-	function getSubscriptionData() {
+	service._getSubscriptionData = function() {
 		return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/subscription').then(function(subscriptionResponse){
 			$log.info('subscriptionResponse', subscriptionResponse);
 
@@ -55,7 +55,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	};
 
 	// workspacesRef example: https://rally1.rallydev.com/slm/webservice/v3.0/Subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a/Workspaces
-	function getWorkspaceList(workspacesRef) {
+	service._getWorkspaceList = function(workspacesRef) {
 		return getRallyJson(workspacesRef, {pagesize: rallyMaxPageSize}).then(function(workspacesResponse){
 			$log.info('workspacesResponse', workspacesResponse);
 
@@ -81,7 +81,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	};
 
 	// projectsRef example: https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects?pagesize=200
-	function getProjectList(projectsRef) {
+	service._getProjectList = function(projectsRef) {
 		return getRallyJson(projectsRef, {pagesize: rallyMaxPageSize}).then(function(projectsResponse){
 			$log.info('projectsResponse', projectsResponse);
 
@@ -107,7 +107,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	};
 
 	// projectsRef example: https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations?pagesize=200
-	function getIterationList(iterationsRef) {
+	service._getIterationList = function(iterationsRef) {
 		return getRallyJson(iterationsRef, {pagesize: rallyMaxPageSize}).then(function(iterationsResponse){
 			$log.info('iterationsResponse', iterationsResponse);
 
@@ -138,7 +138,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	};
 
 	// Traverse Subscription -> Workspace -> Project -> Iteration, and returns aggregate object for caching.
-	function getAllSubscriptionData() {
+	service._getAllSubscriptionData = function() {
 
 		// TODO review. Single or multiple subscriptions.
 		// 		When I started this app it was intended to be used by our QA people against our Rally subscription.
@@ -149,27 +149,27 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 
 		// Entry point is subscription data.
 
-		return getSubscriptionData()
+		return service._getSubscriptionData()
 			.then(function(_subscriptionData){
 				subscriptionData = _subscriptionData;
 
 		// That leads into the list of workspaces
 
-				return getWorkspaceList(subscriptionData.workspacesRef);
+				return service._getWorkspaceList(subscriptionData.workspacesRef);
 			}).then(function(workspaceList){
 				subscriptionData.workspaces = _.reduce(workspaceList, function(memo, ws) { memo[ws._ref] = ws; return memo; }, {});
 
 		// The query for each workspaces project list may run concurrently. This promise finishes when all of them are done.
 
 				return allItemPromises(workspaceList, function(workspace) {
-					return getProjectList(workspace.projectsRef)
+					return service._getProjectList(workspace.projectsRef)
 						.then(function(projectList) {
 							workspace.projects = _.reduce(projectList, function(memo, p) { memo[p._ref] = p; return memo; }, {});
 
 		// For each project, drill into the iterations in the same way.
 
 							return allItemPromises(projectList, function(project){
-								return getIterationList(project.iterationsRef)
+								return service._getIterationList(project.iterationsRef)
 									.then(function(iterationList){
 										project.iterations = _.reduce(iterationList, function(memo, it) { memo[it._ref] = it; return memo; }, {});
 									});
@@ -212,7 +212,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			deferred.resolve(innerData);
 		}
 		else {
-			getAllSubscriptionData().then(function(subscriptionData){
+			service._getAllSubscriptionData().then(function(subscriptionData){
 				$window.localStorage[storageKey] = JSON.stringify({
 					version: currentVersion,
 					data: subscriptionData
