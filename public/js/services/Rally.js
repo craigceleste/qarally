@@ -293,6 +293,15 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		return minifiedTc;
 	}
 
+	function deminifyTestCase(testCase) {
+
+		var tc = _.reduce(tcMinificationKeys, function(tc, minifiedKey, unminifiedKey){
+			tc[unminifiedKey] = testCase[minifiedKey]; return tc;
+		}, {})
+
+		return tc;
+	}
+
 	// Example URLs
 	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a
 	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
@@ -342,10 +351,16 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 								assert(typeof tc.TestFolder._refObjectName === 'string', 'TestFolder should contain a _refObjectName');
 
 								if (!testSetDetails.testFolders[tc.TestFolder._ref]) {
-									testSetDetails.testFolders[tc.TestFolder._ref] = tc.TestFolder._refObjectName;
+									testSetDetails.testFolders[tc.TestFolder._ref] = {
+										_ref: tc.TestFolder._ref,
+										Name: tc.TestFolder._refObjectName,
+										FormattedID: 'TF1234' // TODO. we'll probably have to query it separately.
+									}
 								}
 								else {
-									assert(testSetDetails.testFolders[tc.TestFolder._ref] === tc.TestFolder._refObjectName, "Each TC that references a TF with the _ref should have the same TF name.");
+									assert(testSetDetails.testFolders[tc.TestFolder._ref]._ref === tc.TestFolder._ref, "Each TC that references the same TF is expected to have the same properties.");
+									assert(testSetDetails.testFolders[tc.TestFolder._ref].Name === tc.TestFolder._refObjectName, "Each TC that references the same TF is expected to have the same properties.");
+									assert(testSetDetails.testFolders[tc.TestFolder._ref].FormattedID === 'TF1234', "Each TC that references the same TF is expected to have the same properties.");
 								}
 							}
 
@@ -354,10 +369,16 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 								assert(typeof tc.WorkProduct._refObjectName === 'string', 'WorkProduct should contain a _refObjectName');
 
 								if (!testSetDetails.workProducts[tc.WorkProduct._ref]) {
-									testSetDetails.workProducts[tc.WorkProduct._ref] = tc.WorkProduct._refObjectName;
+									testSetDetails.workProducts[tc.WorkProduct._ref] = {
+										_ref: tc.WorkProduct._ref,
+										Name: tc.WorkProduct._refObjectName,
+										FormattedID: 'US1234' // TODO. we'll probably have to query it separately.
+									}
 								}
 								else {
-									assert(testSetDetails.workProducts[tc.WorkProduct._ref] === tc.WorkProduct._refObjectName, "Each TC that references a WP with the _ref should have the same WP name.");
+									assert(testSetDetails.workProducts[tc.WorkProduct._ref]._ref === tc.WorkProduct._ref, "Each TC that references the same WP is expected to have the same properties.");
+									assert(testSetDetails.workProducts[tc.WorkProduct._ref].Name === tc.WorkProduct._refObjectName, "Each TC that references the same WP is expected to have the same properties.");
+									assert(testSetDetails.workProducts[tc.WorkProduct._ref].FormattedID === 'US1234', "Each TC that references the same WP is expected to have the same properties.");
 								}
 							}
 						})
@@ -395,19 +416,6 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 		var storageKey = 'tsd_' + testSetRef;
 		var lastAccessedKey = 'tsd_lastAccessed';
 
-		// Transform the minified storage format to the working format
-		function deminifyTestCase(testCase) {
-
-			var tc = _.reduce(tcMinificationKeys, function(tc, minifiedKey, unminifiedKey){
-				tc[unminifiedKey] = testCase[minifiedKey]; return tc;
-			}, {})
-
-			// TODO layer in additional runtime information, such as helpers/hints for searching, filtering, etc.
-			// TODO layer in information about test results (stored elsewhere)
-
-			return tc;
-		}
-
 		// Deminify the stored format into the working format
 		function deminifyTestSetDetails(storedTestSetDetails) {
 
@@ -417,21 +425,8 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 				workProducts: {}
 			}
 
-			_.each(storedTestSetDetails.testFolders, function(name, _ref) {
-				workingTestSetDetails.testFolders[_ref] = {
-					_ref: _ref,
-					Name: name,
-					FormattedID: 'US123' // TODO
-				};
-			});
-
-			_.each(storedTestSetDetails.workProducts, function(name, _ref) {
-				workingTestSetDetails.workProducts[_ref] = {
-					_ref: _ref,
-					Name: name,
-					FormattedID: 'TF789' // TODO
-				};
-			});
+			$.extend(true, workingTestSetDetails.testFolders, storedTestSetDetails.testFolders); // TODO remove reliance on jQuery for deep copy
+			$.extend(true, workingTestSetDetails.workProducts, storedTestSetDetails.workProducts); // TODO remove reliance on jQuery for deep copy
 
 			_.each(storedTestSetDetails.testCases, function(tc) {
 				workingTestSetDetails.testCases.push(deminifyTestCase(tc))
