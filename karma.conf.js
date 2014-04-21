@@ -76,6 +76,7 @@ module.exports = function(config) {
 			  'Chrome'
 //			, 'Firefox'
 //			, 'IE'
+			, 'Safari'
 		],
 
 
