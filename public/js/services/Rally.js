@@ -305,7 +305,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 	// Example URLs
 	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a
 	// https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
-	service._getTestSetDetails = function(testSetRef) {
+	service.getTestSetDetails = function(testSetRef) {
 
 		assert(typeof testSetRef === 'string', 'testSetRef must be a string');
 
@@ -435,22 +435,19 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 			return workingTestSetDetails;
 		}
 
-		// Remove oldest test sets (by last accessed date) until there is at least enough storage for the new one.
-		// IMPORTANT: we are not comparing with the amount of space within localStorage. Only by an amount allowed for Test Sets to that used by Test Sets.
-		// It is legitimate to get an out-of-space error if other components store too much stuff there.
 		function ensureFreeStorageToSize(size) {
 
-			var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
+			// Local Storage is limited to 5MB. We expect to use 4MB for Test Set Detail structures and the rest for other stuff.
+			// DO NOT: watchdog the 'other stuff'. If it goes over, we'll get an out of space exception which is fine for now.
+			// DO: remove older test set details until <size> plus existing cache is less than 4MB.
 
+			var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
 			assert(typeof size === 'number' && size != NaN && size > 0 && size <= maxSizeForAllTestSetDetails, "ensureFreeStorageToSize: size is invalid");
 
-			// The storage used by existing test sets must be reduced until there is room for the new one.
-
 			var targetSize = maxSizeForAllTestSetDetails - size;
+			assert(targetSize > 0, 'ensureFreeStorageToSize: invalid targetSize (shouldn\'t be possible');
 
-			assert(targetSize > 0, 'it should not be possible for targetSize to be <= 0 as this could result in an infinite loop.')
-
-			// Review the existing test sets
+			// Maintain a dictionary of last accessed dates outside of the test sets.
 
 			var lastAccessed = {};
 			var lastAccessedJson = $window.localStorage[lastAccessedKey];
@@ -479,7 +476,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 
 			while (targetSize < _.reduce(existingTestSets, function(memo, ts) { return memo + ts.size }, 0)) { // sum of sizes for existing ones
 				
-				assert(sanity-- > 0, 'ensureFreeStorageToSize: invinite loop guard.');
+				assert(--sanity > 0, 'ensureFreeStorageToSize: invinite loop guard.');
 
 				var victimKey = _.reduce(existingTestSets, function(bestYetKey, ts, key) {
 					if (!bestYetKey) return key;
@@ -535,7 +532,7 @@ app.factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http
 				deferred.resolve(testSetDetails);
 			}
 			else {
-				service._getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
+				service.getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
 					cacheIt(storedTestSetDetails);
 
 					// TODO update last accessed date

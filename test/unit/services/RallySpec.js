@@ -212,23 +212,74 @@ describe('The Rally service', function(){
 
 	});
 
-	it('getTestSetDetails makes the request and handles the response correctly', function() {
+	// Captured in next test. Used in the one after that.
+	var cachedTestSetDetails;
 
-		var testSetDetails;
+	it('initTestSetDetails will fetch from $http if not cached.', function() {
+
 		var fakeBackend = window.fakeBackendFactory.create();
 		fakeBackend.setup($httpBackend);
 
-		rallySvc._getTestSetDetails(fakeBackend.testSetDetails.inputs.testSetRef)
+		var testSetDetails;
+		rallySvc.initTestSetDetails(fakeBackend.testSetDetails.inputs.testSetRef)
 			.then(function(data) { testSetDetails = data; });
 
 		$httpBackend.flush(); // simulate async http completing
 
-		expect(testSetDetails._ref).toEqual(fakeBackend.testSetDetails.data.TestSet._ref);
-		expect(testSetDetails.name).toEqual(fakeBackend.testSetDetails.data.TestSet.Name);
+		expect(testSetDetails.testCases[0]._ref                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0]._ref);
+		expect(testSetDetails.testCases[0].Description             ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Description);
+		expect(testSetDetails.testCases[0].FormattedID             ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].FormattedID);
+		expect(testSetDetails.testCases[0].Name                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Name);
+		expect(testSetDetails.testCases[0].Notes                   ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Notes);
+		expect(testSetDetails.testCases[0].ObjectId                ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ObjectId);
+		expect(testSetDetails.testCases[0].Objective               ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Objective);
+		expect(testSetDetails.testCases[0].PostConditions          ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].PostConditions);
+		expect(testSetDetails.testCases[0].PreConditions           ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].PreConditions);
+		expect(testSetDetails.testCases[0].TestFolderRef           ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].TestFolder._ref);
+		expect(testSetDetails.testCases[0].Type                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Type);
+		expect(testSetDetails.testCases[0].ValidationExpectedResult).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ValidationExpectedResult);
+		expect(testSetDetails.testCases[0].ValidationInput         ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ValidationInput);
+		expect(testSetDetails.testCases[0].WorkProductRef          ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct._ref);
 
-		// The test cases will be minified
-		expect(testSetDetails.testCases[0]._).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0]._ref);
-		// TODO finish it
+		// Note that the format of the cached version (minified, etc) is not a concern of this test.
+		// Capture the minified version. Expect it to be set. And expect that if cached, it will produce the same result.
+
+		cachedTestSetDetails = mockWindow.localStorage['tsd_' + fakeBackend.testSetDetails.inputs.testSetRef];
+		expect(cachedTestSetDetails).toBeDefined();
+	});
+
+	it('initTestSetDetails will fetch from cache.', function() {
+
+		var fakeBackend = window.fakeBackendFactory.create();
+		// not initialized --> fakeBackend.setup($httpBackend);
+
+		mockWindow.localStorage['tsd_' + fakeBackend.testSetDetails.inputs.testSetRef] = cachedTestSetDetails;
+
+		var testSetDetails;
+		rallySvc.initTestSetDetails(fakeBackend.testSetDetails.inputs.testSetRef)
+			.then(function(data) { testSetDetails = data; });
+
+		$rootScope.$apply(); // cause $q promises to fulfill
+
+		expect(testSetDetails.testCases[0]._ref                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0]._ref);
+		expect(testSetDetails.testCases[0].Description             ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Description);
+		expect(testSetDetails.testCases[0].FormattedID             ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].FormattedID);
+		expect(testSetDetails.testCases[0].Name                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Name);
+		expect(testSetDetails.testCases[0].Notes                   ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Notes);
+		expect(testSetDetails.testCases[0].ObjectId                ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ObjectId);
+		expect(testSetDetails.testCases[0].Objective               ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Objective);
+		expect(testSetDetails.testCases[0].PostConditions          ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].PostConditions);
+		expect(testSetDetails.testCases[0].PreConditions           ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].PreConditions);
+		expect(testSetDetails.testCases[0].TestFolderRef           ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].TestFolder._ref);
+		expect(testSetDetails.testCases[0].Type                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].Type);
+		expect(testSetDetails.testCases[0].ValidationExpectedResult).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ValidationExpectedResult);
+		expect(testSetDetails.testCases[0].ValidationInput         ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ValidationInput);
+		expect(testSetDetails.testCases[0].WorkProductRef          ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct._ref);
+
 	});
 
 });
+
+
+
+
