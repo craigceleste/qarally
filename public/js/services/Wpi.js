@@ -25,7 +25,11 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 			buildNumber: undefined
 		};
 		service.clearFilter(wpi);
+
+		// TODO review: instead of passing 'list' in, consider binding it to the list in the controller.
+		//		(it is good that this service be stateless. This function should not be able to find the $scope's version of the list.)
 		list[newId] = wpi;
+
 		return wpi;
 	}
 
@@ -70,51 +74,54 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 	}
 
 	// exposed for unit tests
-	service.$currentListVersion = 3;
+	service._currentListVersion = 3;
 
 	service.setList = function(list) {
 
 		// TODO consider validating list. Is it worth it?
 
-		$window.localStorage['wpiList'] = JSON.stringify({
-			version: service.$currentListVersion,
-			data: list
-		});
+		if (!list) {
+			delete $window.localStorage['wpiList'];
+		}
+		else {
+			$window.localStorage['wpiList'] = JSON.stringify({
+				version: service._currentListVersion,
+				data: list
+			});
+		}
 	}
 
-	service.getList = function(ignoreCache) {
+	service.getList = function() {
 
 		var innerData;
 		var resave;
-		if (!ignoreCache) {
-			var outerDataJson = $window.localStorage['wpiList'];
-			if (outerDataJson) {
-				var outerData = JSON.parse(outerDataJson);
-				var innerData = outerData.data;
-				switch(outerData.version) {
-					
-					// Upgrade code: if wpiList schema changes
-					// 1. increment service.$currentListVersion
-					// 2. provide an upgrade case here (note there are no breaks between upgrades. each flows into the next. break at the end.)
+		var outerDataJson = $window.localStorage['wpiList'];
+		if (outerDataJson) {
+			var outerData = JSON.parse(outerDataJson);
+			var innerData = outerData.data;
+			switch(outerData.version) {
+				
+				// IMPORTANT: wpiList contains user-entered data. We should make an effort not to blow it away after a software  update.
+				// If the schema changes:
+				// 1. increment service._currentListVersion
+				// 2. Note that there is no break until we get to _currentListVersion.
 
-					case 1:
-					{
-						innerData.test1 = '1 to 2';
-						resave = true;
-					}
-					case 2:
-					{
-						innerData.test2 = '2 to 3';
-						resave = true;
-					}
-					case service.$currentListVersion:
-					{
-					}
-					break;
-
-					default:
-						throw new Error('wpi.getList: unsupported upgrade path.');
+				case 1:
+				{
+					innerData.test1 = '1 to 2';
+					resave = true;
 				}
+				case 2:
+				{
+					innerData.test2 = '2 to 3';
+					resave = true;
+				}
+				case service._currentListVersion:
+				break;
+
+				default:
+					// fail noisilly. do not blow away their data.
+					throw new Error('wpi.getList: unsupported upgrade path.');
 			}
 		}
 
