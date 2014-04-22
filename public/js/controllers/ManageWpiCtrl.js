@@ -18,7 +18,8 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 	}
 
 	$scope.createWpi = function() {
-		var wpi = Wpi.createWpi($scope.wpiList);
+		var wpi = Wpi.createWpi();
+		$scope.wpiList[wpi.id] = wpi;
 		$scope.setCurrentWpi(wpi.id);
 	}
 
@@ -89,7 +90,7 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 	};
 
 	$scope.currentWpiHasDefaultLabel = function() {
-		return $scope.currentWpi.label === Wpi.defaultWpiLabel
+		return $scope.currentWpi && $scope.currentWpi.label === Wpi.defaultWpiLabel ? true : false;
 	}
 
 	$scope.orderByProjectIterations = function(project) {
@@ -151,7 +152,7 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 	if ($scope.currentWpi) {
 		$scope.focusCurrentWpiHack = ($scope.focusCurrentWpiHack || 0) + 1;
 	}
-	$scope.refreshSubscriptionData(false);
+	$scope.refreshSubscriptionData();
 
 	// As the current WPI is edited, correct 'downstream' fields.
 

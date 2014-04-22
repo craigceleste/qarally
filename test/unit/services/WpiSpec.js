@@ -44,16 +44,12 @@ describe('The WPI Service', function() {
 
  		spyOn(wpiSvc, 'clearFilter').andCallThrough();
 
- 		var wpiList = {};
- 		var wpi = wpiSvc.createWpi(wpiList);
+ 		var wpi = wpiSvc.createWpi();
 
  		expect(wpi.id).toBeDefined();
  		expect(wpi.label).toEqual(wpiSvc.defaultWpiLabel);
  		expect(wpiSvc.clearFilter).toHaveBeenCalled();
 
- 		// TODO this function currently adds the wpi to the wpiList.
- 		// Consider NOT doing this. It would be better to do it in the controller.
- 		expect(wpiList[wpi.id]).toBe(wpi);
  	});
 
  	it('clearFilter clears the filter.', function() {

@@ -8,7 +8,7 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 
 	service.defaultWpiLabel = 'My WPI';
 
-	service.createWpi = function(list) {
+	service.createWpi = function() {
 
 		// I am intentionally being not-clever about generating a locally unique (or very high cardinality) id.
 		var newId = Math.random().toString();
@@ -25,10 +25,6 @@ app.factory('Wpi', ['$log', '$q', '$window', 'Rally', function($log, $q, $window
 			buildNumber: undefined
 		};
 		service.clearFilter(wpi);
-
-		// TODO review: instead of passing 'list' in, consider binding it to the list in the controller.
-		//		(it is good that this service be stateless. This function should not be able to find the $scope's version of the list.)
-		list[newId] = wpi;
 
 		return wpi;
 	}
