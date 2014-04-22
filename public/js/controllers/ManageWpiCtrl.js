@@ -51,36 +51,36 @@ app.controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Ra
 		// It should be the one immediately after the victim alphabetically by label, or the last one in the list if there wasn't one.
 		// Gah! I suck at algorithms. This could be way better.
 
-		var newCurrentId = _.reduce($scope.wpiList, function(memo, wpi, id, list) {
+		var newCurrentId = _.reduce($scope.wpiList, function(bestYet, wpi, id, list) {
 
 			var thisLabel = (wpi.label || '').toUpperCase();
 
-			// If memo has no value (first iteration) this one is as good as any
-			if (!memo.id) {
-				memo.id = id;
-				memo.label = thisLabel;
-				return memo;
+			// If bestYet has no value (first iteration) this one is as good as any
+			if (!bestYet.id) {
+				bestYet.id = id;
+				bestYet.label = thisLabel;
+				return bestYet;
 			}
 
-			// If either memo or this one were before victim, take the greater of memo or victim
-			if (memo.label < victimLabel || thisLabel < victimLabel) {
-				if (thisLabel > memo.label) {
-					memo.id = id;
-					memo.label = thisLabel;
-					return memo;
+			// If either bestYet or this one were before victim, take the greater of bestYet or victim
+			if (bestYet.label < victimLabel || thisLabel < victimLabel) {
+				if (thisLabel > bestYet.label) {
+					bestYet.id = id;
+					bestYet.label = thisLabel;
+					return bestYet;
 				}
-				return memo; // no change. it is the best one so far
+				return bestYet; // no change. it is the best one so far
 			}
 
-			// Both this and memo are after victim. Take the lesser of them.
-			if (thisLabel < memo.label) {
-				memo.id = id;
-				memo.label = thisLabel;
-				return memo;
+			// Both this and bestYet are after victim. Take the lesser of them.
+			if (thisLabel < bestYet.label) {
+				bestYet.id = id;
+				bestYet.label = thisLabel;
+				return bestYet;
 			}
-			return memo; // no change. it is the best one so far
+			return bestYet; // no change. it is the best one so far
 
-			// initial memo
+			// initial bestYet
 		}, {id: undefined, label: undefined}).id;
 		$scope.setCurrentWpi(newCurrentId);
 	}

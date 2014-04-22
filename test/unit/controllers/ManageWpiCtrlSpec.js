@@ -267,5 +267,30 @@ describe('The ManageWpiCtrl', function() {
 			expect(label1).not.toEqual(label2);
 			expect(label2).not.toEqual(label0);
 		});
+
+		it('getTestSetCount returns count.', function() {
+
+			$scope.currentWpi = { testSets: { 1: 'X', 2: 'Y'}};
+			expect($scope.getTestSetCount()).toEqual(2);
+
+			$scope.currentWpi = undefined;
+			expect($scope.getTestSetCount()).toEqual(0);
+		});
+
+		it('doneClick navigates to root of site.', function() {
+
+			var isValid;
+			spyOn($scope, 'currentWpiIsValid').andCallFake(function(project) { return isValid });
+			spyOn($location, 'url').andCallThrough();
+
+			var isValid = false;
+			$scope.doneClick();
+			expect($location.url).not.toHaveBeenCalled();
+
+			var isValid = true;
+			$scope.doneClick();
+			expect($location.url).toHaveBeenCalledWith('/');
+
+		})
 	})
 });
