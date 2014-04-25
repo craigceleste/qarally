@@ -2,295 +2,275 @@
 
 describe('The ManageWpiCtrl', function() {
 
-	var manageWpiCtrl; // unit under test
-
-	// DI's
-	var $httpBackend, $q, $location, $rootScope, $scope, mockWindow, rallySvc, wpiSvc;
-
-	beforeEach(function() {
-
-		module('qa-rally');
-
-		module(function($provide) {
-			mockWindow = { localStorage: {} };
-			$provide.value('$window', mockWindow);
-		});
-
-		inject(function($injector, _$q_, _$location_, _$rootScope_, Wpi, Rally) {
-			$httpBackend = $injector.get('$httpBackend');
-			$q = _$q_;
-			$location = _$location_;
-			$rootScope = _$rootScope_;
-			wpiSvc = Wpi;
-			rallySvc = Rally;
-		});
-
-	});
-
-	afterEach(function() {
-		$httpBackend.verifyNoOutstandingExpectation();
- 		$httpBackend.verifyNoOutstandingRequest();
- 	});
-
-	// A vanilla WPI with data that matches the fake data in fakeBackend mocks.
-	function getMockWpi(fakeBackend) {
-		return {
-			"id": "0.3256912708748132", 
-			"label": "My WPI", 
-			"workspaceRef": "https://rally1.rallydev.com/slm/webservice/v3.0/workspace/286f4675-fc38-4a87-89b9-eec25d199cab",
-			"projectRef": "https://rally1.rallydev.com/slm/webservice/v3.0/project/d0e34bc7-55c0-4757-857d-6be2604a6c6c", 
-			"iterationRef": "https://rally1.rallydev.com/slm/webservice/v3.0/iteration/1becc454-eca1-4b00-ae02-fcdf8cade4d5", 
-			"testSets": {
-				"https://rally1.rallydev.com/slm/webservice/v3.0/testset/0d0ac990-94c6-4fbd-ba76-12cda2e90bcd": {
-					"_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/testset/0d0ac990-94c6-4fbd-ba76-12cda2e90bcd", 
-					"name": "My Test Set"
-				},
-			}, 
-			"testSetRef": "https://rally1.rallydev.com/slm/webservice/v3.0/testset/a2407f6c-7835-4e04-98dd-96fa93837a45", 
-			"filter": {
-				"nameContains": "My", 
-				"testFolders": {}, 
-				"withoutTestFolder": false, 
-				"withoutWorkProduct": false, 
-				"workProducts": {}
-			}
-		};
-	}
+  var manageWpiCtrl; // unit under test
 
-	// Tests in this 'describe' sub-section will create the controller manually
+  // DI's
+  var $httpBackend, $q, $location, $rootScope, $scope, mockWindow, rallySvc, wpiSvc;
 
-	describe('initialization', function() {
+  beforeEach(function() {
 
-		var $controller;
+    module('qa-rally');
 
-		beforeEach(inject(function(_$controller_){
-			$scope = $rootScope.$new();
-			$controller = _$controller_;
-		}));
+    module(function($provide) {
+      mockWindow = { localStorage: {} };
+      $provide.value('$window', mockWindow);
+    });
 
-		it('of fresh environment initializes state correctly.', function() {
+    inject(function($injector, _$q_, _$location_, _$rootScope_, Wpi, Rally) {
+      $httpBackend = $injector.get('$httpBackend');
+      $q = _$q_;
+      $location = _$location_;
+      $rootScope = _$rootScope_;
+      wpiSvc = Wpi;
+      rallySvc = Rally;
+    });
 
-			spyOn(wpiSvc, 'getList').andCallThrough();
-			spyOn(wpiSvc, 'getCurrentId').andCallThrough();
-			spyOn(rallySvc, 'initSubscriptionData').andCallThrough();
+  });
 
-			// Use our boilerplate mock data access.
-			var fakeBackend = window.fakeBackendFactory.create();
-			fakeBackend.setup($httpBackend);
-		
-			// --- code under test: creating a controller
-			manageWpiCtrl = $controller('ManageWpiCtrl', { $scope: $scope });
-			// ---
+  afterEach(function() {
+    $httpBackend.verifyNoOutstandingExpectation();
+    $httpBackend.verifyNoOutstandingRequest();
+  });
 
-			// it should initialize with an empty list
-			expect($scope.wpiList).toEqual({});
-			expect($scope.wpiCurrentId).not.toBeDefined();
-			expect($scope.currentWpi).not.toBeDefined();
-			expect($scope.focusCurrentWpiHack).not.toBeDefined();
-			expect(wpiSvc.getList).toHaveBeenCalled();
-			expect(wpiSvc.getCurrentId).toHaveBeenCalled();
-
-			// It should begin loading the subscription data
-			expect($scope.isLoading).toEqual(true);
-			expect(rallySvc.initSubscriptionData).toHaveBeenCalled();
-			expect($scope.subscriptionData).not.toBeDefined();
+  // Tests in this 'describe' sub-section will create the controller manually
 
-			// resolve async requests
-			$httpBackend.flush();
+  describe('initialization', function() {
 
-			// the subscription data is loaded and put into local storage.
-			expect($scope.isLoading).toEqual(false);
-			expect($scope.subscriptionData).toBeDefined();
-		});
+    var $controller;
 
-	});
+    beforeEach(inject(function(_$controller_){
+      $scope = $rootScope.$new();
+      $controller = _$controller_;
+    }));
 
-	// Tests in this describe sub-section share a beforeEach to create the controller.
-	describe('', function() {
+    it('of fresh environment initializes state correctly.', function() {
 
-		var fakeBackend;
+      spyOn(wpiSvc, 'getList').andCallThrough();
+      spyOn(wpiSvc, 'getCurrentId').andCallThrough();
+      spyOn(rallySvc, 'initSubscriptionData').andCallThrough();
 
-		beforeEach(inject(function($controller){
+      // Use our boilerplate mock data access.
+      var fakeBackend = window.fakeBackendFactory.create();
+      fakeBackend.setup($httpBackend);
+    
+      // --- code under test: creating a controller
+      manageWpiCtrl = $controller('ManageWpiCtrl', { $scope: $scope });
+      // ---
 
-			fakeBackend = window.fakeBackendFactory.create();
-			fakeBackend.setup($httpBackend);
+      // it should initialize with an empty list
+      expect($scope.wpiList).toEqual({});
+      expect($scope.wpiCurrentId).not.toBeDefined();
+      expect($scope.currentWpi).not.toBeDefined();
+      expect($scope.focusCurrentWpiHack).not.toBeDefined();
+      expect(wpiSvc.getList).toHaveBeenCalled();
+      expect(wpiSvc.getCurrentId).toHaveBeenCalled();
 
-			$scope = $rootScope.$new();
-			manageWpiCtrl = $controller('ManageWpiCtrl', { $scope: $scope });
+      // It should begin loading the subscription data
+      expect($scope.isLoading).toEqual(true);
+      expect(rallySvc.initSubscriptionData).toHaveBeenCalled();
+      expect($scope.subscriptionData).not.toBeDefined();
 
-			$httpBackend.flush();
+      // resolve async requests
+      $httpBackend.flush();
 
-		}));
+      // the subscription data is loaded and put into local storage.
+      expect($scope.isLoading).toEqual(false);
+      expect($scope.subscriptionData).toBeDefined();
+    });
 
-		it('getWpiCount returns the right number.', function(){
+  });
 
-			$scope.wpiList = {};
-			expect($scope.getWpiCount()).toEqual(0);
+  // Tests in this describe sub-section share a beforeEach to create the controller.
+  describe('', function() {
 
-			$scope.wpiList = { a: 'x', b: 'y'};
-			expect($scope.getWpiCount()).toEqual(2);
+    var fakeBackend;
 
-		});
+    beforeEach(inject(function($controller){
 
-		it('createWpi calls the Wpi service.', function(){
+      fakeBackend = window.fakeBackendFactory.create();
+      fakeBackend.setup($httpBackend);
 
-			var fakeWpi = { id: 'fake', foo: 'bar'};
-			spyOn(wpiSvc, 'createWpi').andReturn(fakeWpi);
+      $scope = $rootScope.$new();
+      manageWpiCtrl = $controller('ManageWpiCtrl', { $scope: $scope });
 
-			$scope.createWpi();
+      $httpBackend.flush();
 
-			expect($scope.wpiList[fakeWpi.id]).toBe(fakeWpi);
-			expect($scope.currentWpi).toBe(fakeWpi);
+    }));
 
-		});
+    it('getWpiCount returns the right number.', function(){
 
-		it('setCurrentWpi saves the current value.', function() {
+      $scope.wpiList = {};
+      expect($scope.getWpiCount()).toEqual(0);
 
-			spyOn(wpiSvc, 'setCurrentId').andCallThrough();
-			spyOn(wpiSvc, 'getCurrentId').andReturn('the value from getter');
-			expect($scope.focusCurrentWpiHack).not.toBeDefined();
+      $scope.wpiList = { a: 'x', b: 'y'};
+      expect($scope.getWpiCount()).toEqual(2);
 
-			$scope.setCurrentWpi('fake');
+    });
 
-			expect(wpiSvc.setCurrentId).toHaveBeenCalledWith('fake');
+    it('createWpi calls the Wpi service.', function(){
 
-			// It should write the value, then re-read it in case the service rejected it for some reason.
-			expect($scope.wpiCurrentId).toEqual('the value from getter');
+      var fakeWpi = { id: 'fake', foo: 'bar'};
+      spyOn(wpiSvc, 'createWpi').andReturn(fakeWpi);
 
-			expect($scope.focusCurrentWpiHack).toBeGreaterThan(0);
-		});
+      $scope.createWpi();
 
-		it('removeCurrentWpi deals with different cases', function() {
+      expect($scope.wpiList[fakeWpi.id]).toBe(fakeWpi);
+      expect($scope.currentWpi).toBe(fakeWpi);
 
-			$scope.wpiList = {
-				// make key orders different than labels
-				'1A': { id:'1A', label: 'A' },
-				'3B': { id:'3B', label: 'B' },
-				'4C': { id:'4C', label: 'C' },
-				'2D': { id:'2D', label: 'D' },
-			}
-			
-			$scope.wpiCurrentId = '3B'; // alphabetically middle (neither first nor last)
-			$scope.removeCurrentWpi();
-			expect($scope.wpiList['1A']).toBeDefined();
-			expect($scope.wpiList['3B']).not.toBeDefined();
-			expect($scope.wpiList['4C']).toBeDefined();
-			expect($scope.wpiList['2D']).toBeDefined();
-			expect($scope.wpiCurrentId).toEqual('4C'); // next alphabetical label becomes current.
+    });
 
-			$scope.wpiCurrentId = '2D'; // alphabetically last label
-			$scope.removeCurrentWpi();
-			expect($scope.wpiList['1A']).toBeDefined();
-			expect($scope.wpiList['3B']).not.toBeDefined();
-			expect($scope.wpiList['4C']).toBeDefined();
-			expect($scope.wpiList['2D']).not.toBeDefined();
-			expect($scope.wpiCurrentId).toEqual('4C'); // if none after victim, new last place is current.
+    it('setCurrentWpi saves the current value.', function() {
 
-			// TODO the order that the items go through the _.reduce in the code under test seems nondeterministic.
-			// I'm not sure how to cover each branch. I'm pretty sure it's working correctly. :(
-		});
+      spyOn(wpiSvc, 'setCurrentId').andCallThrough();
+      spyOn(wpiSvc, 'getCurrentId').andReturn('the value from getter');
+      expect($scope.focusCurrentWpiHack).not.toBeDefined();
 
-		it('currentWpiIsValid passes through to service.', function() {
+      $scope.setCurrentWpi('fake');
 
-			spyOn(wpiSvc, 'wpiIsValid').andReturn('sandwiches');
+      expect(wpiSvc.setCurrentId).toHaveBeenCalledWith('fake');
 
-			// it is a dumb passthrough
-			expect($scope.currentWpiIsValid()).toEqual('sandwiches');
+      // It should write the value, then re-read it in case the service rejected it for some reason.
+      expect($scope.wpiCurrentId).toEqual('the value from getter');
 
-		});
+      expect($scope.focusCurrentWpiHack).toBeGreaterThan(0);
+    });
 
-		it('currentWpiHasDefaultLabel compares the label.', function() {
+    it('removeCurrentWpi deals with different cases', function() {
 
-			wpiSvc.defaultWpiLabel = 'sandwiches';
+      $scope.wpiList = {
+        // make key orders different than labels
+        '1A': { id:'1A', label: 'A' },
+        '3B': { id:'3B', label: 'B' },
+        '4C': { id:'4C', label: 'C' },
+        '2D': { id:'2D', label: 'D' },
+      };
+      
+      $scope.wpiCurrentId = '3B'; // alphabetically middle (neither first nor last)
+      $scope.removeCurrentWpi();
+      expect($scope.wpiList['1A']).toBeDefined();
+      expect($scope.wpiList['3B']).not.toBeDefined();
+      expect($scope.wpiList['4C']).toBeDefined();
+      expect($scope.wpiList['2D']).toBeDefined();
+      expect($scope.wpiCurrentId).toEqual('4C'); // next alphabetical label becomes current.
 
-			$scope.currentWpi = { label: 'sandwiches' };
-			expect($scope.currentWpiHasDefaultLabel()).toEqual(true);
+      $scope.wpiCurrentId = '2D'; // alphabetically last label
+      $scope.removeCurrentWpi();
+      expect($scope.wpiList['1A']).toBeDefined();
+      expect($scope.wpiList['3B']).not.toBeDefined();
+      expect($scope.wpiList['4C']).toBeDefined();
+      expect($scope.wpiList['2D']).not.toBeDefined();
+      expect($scope.wpiCurrentId).toEqual('4C'); // if none after victim, new last place is current.
 
-			$scope.currentWpi = { label: 'XX' };
-			expect($scope.currentWpiHasDefaultLabel()).toEqual(false);
+      // TODO the order that the items go through the _.reduce in the code under test seems nondeterministic.
+      // I'm not sure how to cover each branch. I'm pretty sure it's working correctly. :(
+    });
 
-			$scope.currentWpi = undefined;
-			expect($scope.currentWpiHasDefaultLabel()).toEqual(false);
+    it('currentWpiIsValid passes through to service.', function() {
 
-		});
+      spyOn(wpiSvc, 'wpiIsValid').andReturn('sandwiches');
 
-		it('orderByProjectIterations produces a number based on whether the project has recent iterations', function() {
+      // it is a dumb passthrough
+      expect($scope.currentWpiIsValid()).toEqual('sandwiches');
 
-			var rank;
+    });
 
-			// Project with no iteration (or project is not set)
+    it('currentWpiHasDefaultLabel compares the label.', function() {
 
-			rank = $scope.orderByProjectIterations(undefined);
-			expect(rank).toEqual(2)
+      wpiSvc.defaultWpiLabel = 'sandwiches';
 
-			rank = $scope.orderByProjectIterations({});
-			expect(rank).toEqual(2)
+      $scope.currentWpi = { label: 'sandwiches' };
+      expect($scope.currentWpiHasDefaultLabel()).toEqual(true);
 
-			rank = $scope.orderByProjectIterations({iterations:{}});
-			expect(rank).toEqual(2)
+      $scope.currentWpi = { label: 'XX' };
+      expect($scope.currentWpiHasDefaultLabel()).toEqual(false);
 
-			// Project with old iterations
+      $scope.currentWpi = undefined;
+      expect($scope.currentWpiHasDefaultLabel()).toEqual(false);
 
-			rank = $scope.orderByProjectIterations({iterations:{
-				'it1': {startDate: '2010-01-01T00:00:00'},
-				'it2': {startDate: '2010-02-01T00:00:00'},
-				'it3': {startDate: '2010-03-01T00:00:00'}
-			}});
-			expect(rank).toEqual(1)
+    });
 
-			// Project with old iterations
+    it('orderByProjectIterations produces a number based on whether the project has recent iterations', function() {
 
-			rank = $scope.orderByProjectIterations({iterations:{
-				'it1': {startDate: '2010-01-01T00:00:00'},
-				'it2': {startDate: new Date()}, // recent
-				'it3': {startDate: '2010-03-01T00:00:00'}
-			}});
-			expect(rank).toEqual(0)
+      var rank;
 
-		});
+      // Project with no iteration (or project is not set)
 
-		it('scope.groupByProjectIterations produces a label based on the orderByProjectIterations.', function() {
+      rank = $scope.orderByProjectIterations(undefined);
+      expect(rank).toEqual(2);
 
-			var rank;
-			spyOn($scope, 'orderByProjectIterations').andCallFake(function(project) { return rank });
+      rank = $scope.orderByProjectIterations({});
+      expect(rank).toEqual(2);
 
-			rank = 2; var label2 = $scope.groupByProjectIterations('ignore project');
-			rank = 1; var label1 = $scope.groupByProjectIterations('ignore project');
-			rank = 0; var label0 = $scope.groupByProjectIterations('ignore project');
+      rank = $scope.orderByProjectIterations({iterations:{}});
+      expect(rank).toEqual(2);
 
-			// We can change the labels without updating the test. But they should be different and defined.
-			expect(label0).toBeDefined();
-			expect(label1).toBeDefined();
-			expect(label2).toBeDefined();
+      // Project with old iterations
 
-			expect(label0).not.toEqual(label1);
-			expect(label1).not.toEqual(label2);
-			expect(label2).not.toEqual(label0);
-		});
+      rank = $scope.orderByProjectIterations({iterations:{
+        'it1': {startDate: '2010-01-01T00:00:00'},
+        'it2': {startDate: '2010-02-01T00:00:00'},
+        'it3': {startDate: '2010-03-01T00:00:00'}
+      }});
+      expect(rank).toEqual(1);
 
-		it('getTestSetCount returns count.', function() {
+      // Project with old iterations
 
-			$scope.currentWpi = { testSets: { 1: 'X', 2: 'Y'}};
-			expect($scope.getTestSetCount()).toEqual(2);
+      rank = $scope.orderByProjectIterations({iterations:{
+        'it1': {startDate: '2010-01-01T00:00:00'},
+        'it2': {startDate: new Date()}, // recent
+        'it3': {startDate: '2010-03-01T00:00:00'}
+      }});
+      expect(rank).toEqual(0);
 
-			$scope.currentWpi = undefined;
-			expect($scope.getTestSetCount()).toEqual(0);
-		});
+    });
 
-		it('doneClick navigates to root of site.', function() {
+    it('scope.groupByProjectIterations produces a label based on the orderByProjectIterations.', function() {
 
-			var isValid;
-			spyOn($scope, 'currentWpiIsValid').andCallFake(function(project) { return isValid });
-			spyOn($location, 'url').andCallThrough();
+      var rank;
+      spyOn($scope, 'orderByProjectIterations').andCallFake(function() { return rank; });
 
-			var isValid = false;
-			$scope.doneClick();
-			expect($location.url).not.toHaveBeenCalled();
+      rank = 2;
+      var label2 = $scope.groupByProjectIterations('ignore project');
 
-			var isValid = true;
-			$scope.doneClick();
-			expect($location.url).toHaveBeenCalledWith('/');
+      rank = 1;
+      var label1 = $scope.groupByProjectIterations('ignore project');
 
-		})
-	})
+      rank = 0;
+      var label0 = $scope.groupByProjectIterations('ignore project');
+
+      // We can change the labels without updating the test. But they should be different and defined.
+      expect(label0).toBeDefined();
+      expect(label1).toBeDefined();
+      expect(label2).toBeDefined();
+
+      expect(label0).not.toEqual(label1);
+      expect(label1).not.toEqual(label2);
+      expect(label2).not.toEqual(label0);
+    });
+
+    it('getTestSetCount returns count.', function() {
+
+      $scope.currentWpi = { testSets: { 1: 'X', 2: 'Y'}};
+      expect($scope.getTestSetCount()).toEqual(2);
+
+      $scope.currentWpi = undefined;
+      expect($scope.getTestSetCount()).toEqual(0);
+    });
+
+    it('doneClick navigates to root of site.', function() {
+
+      var isValid;
+      spyOn($scope, 'currentWpiIsValid').andCallFake(function() { return isValid; });
+      spyOn($location, 'url').andCallThrough();
+
+      isValid = false;
+      $scope.doneClick();
+      expect($location.url).not.toHaveBeenCalled();
+
+      isValid = true;
+      $scope.doneClick();
+      expect($location.url).toHaveBeenCalledWith('/');
+
+    });
+  });
 });

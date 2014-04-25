@@ -2,49 +2,49 @@
 
 describe('The Settings service', function() {
 
-	var settingsSvc; // object under test
+  var settingsSvc; // object under test
 
-	var mockWindow; // DI's
+  var mockWindow; // DI's
 
-	beforeEach(function(){
+  beforeEach(function(){
 
-		module('qa-rally')
+    module('qa-rally');
 
-		mockWindow = { localStorage: {} };
+    mockWindow = { localStorage: {} };
 
-		module(function($provide){
-			$provide.value('$window', mockWindow);
-		});
+    module(function($provide){
+      $provide.value('$window', mockWindow);
+    });
 
-		inject(function(Settings){
-			settingsSvc = Settings;
-		});
+    inject(function(Settings){
+      settingsSvc = Settings;
+    });
 
-	});
+  });
 
-	it('will set/get/delete a simple JavaScript object to localStorage.', function(){
+  it('will set/get/delete a simple JavaScript object to localStorage.', function(){
 
-		expect(settingsSvc).toBeDefined()
+    expect(settingsSvc).toBeDefined();
 
-		// Set an object
+    // Set an object
 
-		var expected = {mySetting:"setting"};
-		settingsSvc.set(expected);
+    var expected = {mySetting: 'setting'};
+    settingsSvc.set(expected);
 
-		// Get to compare it
+    // Get to compare it
 
-		var actual = settingsSvc.get();
-		expect(JSON.stringify(actual)).toBe(JSON.stringify(expected)); // cheap way to deep compare
+    var actual = settingsSvc.get();
+    expect(JSON.stringify(actual)).toBe(JSON.stringify(expected)); // cheap way to deep compare
 
-		// Set undefined
+    // Set undefined
 
-		settingsSvc.set(undefined);
+    settingsSvc.set(undefined);
 
-		// Get to compare it
+    // Get to compare it
 
-		var actual = settingsSvc.get();
-		expect(JSON.stringify(actual)).toBe(JSON.stringify({})); // get will return empty object if not present
+    actual = settingsSvc.get();
+    expect(JSON.stringify(actual)).toBe(JSON.stringify({})); // get will return empty object if not present
 
-	});
+  });
 
 });
