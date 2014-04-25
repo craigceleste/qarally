@@ -1,0 +1,292 @@
+<!--
+	TOP NAVBAR
+-->
+
+<nav class="nav navbar-default navbar-fixed-top" role="navigation">
+
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#header-collapse">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="/">QARally</a>
+	</div>
+
+	<div class="collapse navbar-collapse" id="header-collapse">
+		<ul class="nav navbar-nav">
+			<li class="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle wide-label" data-toggle="dropdown">
+					<span>{{currentWpi.label}}</span> <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu">
+					<li>
+						<a>Select one WPI to work on.</a>
+					</li>
+					<li ng-repeat="w in wpiList | toArray | filter:wpiIsValid | orderBy:'label'">
+						<a ng-click="setCurrentWpi(w.id)" href="javascript:void(0);">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': wpiCurrentId == w.id}"></span>
+							{{w.label}}
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li>
+						<a ng-click="openManageWpiForm()" href="javascript:void(0);">
+							<span class="glyphicon"></span>
+							Manage...
+						</a>
+					</li>
+				</ul>
+			</li>
+			<li class="dropdown">
+				<a href="javascript:void(0)" class="dropdown-toggle wide-label" data-toggle="dropdown">
+					{{currentWpi.testSets[currentWpi.testSetRef].name}} <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu ps-scroll">
+					<li>
+						<a>Select one test set to work on.</a>
+					</li>
+					<li ng-repeat="ts in currentWpi.testSets | toArray | orderBy:'name'">
+						<a ng-click="setCurrentTestSet(ts._ref)" href="javascript:void(0);">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': currentWpi.testSetRef == ts._ref}"></span>
+							{{ts.name}}
+						</a>
+					</li>
+					<li class="divider"></li>
+					<li>
+						<a ps-noprop-click="refreshTestSets()" href="javascript:void(0);">
+							<span class="glyphicon"></span>
+							Refresh
+						</a>
+					</li>
+				</ul>
+			</li>
+			<li class="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+					<span class="glyphicon glyphicon-filter"></span> <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu">
+					<li>
+						<form id="filterForm">
+							<label>
+								TC Name contains: <br/>
+								<input type="text" placeholder="Search" ng-model="currentWpi.filter.nameContains" />
+							</label>
+						</form>
+					</li>
+					<li class="divider"></li>
+
+
+					<li class="dropdown-submenu">
+						<a href="javascript:void(0);" class="dropdown-toggle">
+							Work Products
+						</a>
+						<ul class="dropdown-menu ps-scroll">
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(true)">
+									Filter All
+								</a>
+							</li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(false)">
+									Show All
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutWorkProduct()">
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.withoutWorkProduct}"></span>
+									Show items without a Work Product
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li ng-repeat="wp in testSetDetails.workProducts | toArray | orderBy:'name'">
+								<a href="javascript:void(0);" ps-noprop-click="toggleWorkProductFilter(wp._ref)">
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.workProducts[wp._ref]}"></span>
+									{{wp.FormattedID}} {{wp.Name}}
+								</a>
+							</li>
+							<li>
+								<a ng-if="getLength(testSetDetails.workProducts) === 0">There aren't any...</a>
+							</li>
+						</ul>
+					</li>
+					<li class="dropdown-submenu">
+						<a href="javascript:void(0);" class="dropdown-toggle">
+							Test Folders
+						</a>
+						<ul class="dropdown-menu ps-scroll">
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
+									Filter All
+								</a>
+							</li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
+									Show All
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li>
+								<a href="javascript:void(0);" ps-noprop-click="toggleFilterTestCasesWithoutTestFolder()">
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.withoutTestFolder }"></span>
+									Show items not in a Test Folder
+								</a>
+							</li>
+							<li class="divider"></li>
+							<li ng-repeat="tf in testSetDetails.testFolders | toArray | orderBy:'name'">
+								<a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf._ref)">
+									<span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.testFolders[tf._ref]}"></span>
+									{{tf.FormattedID}} {{tf.Name}}
+								</a>
+							</li>
+							<li>
+								<a ng-if="getLength(testSetDetails.testFolders) === 0">There aren't any...</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<form class="navbar-form navbar-left">
+			<div class="form-group">
+				<input type="text" class="form-control" accesskey="b" placeholder="Build Number (alt-b)" ng-model="currentWpi.buildNumber">
+			</div>
+		</form>
+		<ul class="nav navbar-nav navbar-right">
+			<li class="dropdown">
+				<a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
+					<span class="glyphicon glyphicon-cog"></span> <b class="caret"></b>
+				</a>
+				<ul class="dropdown-menu">
+					<li>
+						<a href="javascript:void(0);">Options will go here eventually</a>
+					</li>
+					<li>						
+						<a href="javascript:void(0);" ps-noprop-click="preferences.showTcSidebar = preferences.showTcSidebar ? undefined : true;">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': preferences.showTcSidebar }"></span>
+							Show sidebar
+						</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': false}"></span>
+							Single TC view
+						</a>
+					</li>
+					<li>
+						<a href="javascript:void(0);" ps-noprop-click="preferences.closedNoobBubble = preferences.closedNoobBubble ? undefined : true;">
+							<span class="glyphicon" ng-class="{'glyphicon-ok': !preferences.closedNoobBubble}"></span>
+							Show the Noob's intro bubble
+						</a>
+					</li>
+				</ul>
+			</li>
+		</ul>
+	</div>
+</nav>
+<div class="nav-spacer"></div>
+
+<div ng-class="{
+	'show-tc-sidebar': preferences.showTcSidebar
+	}">
+
+	<!--
+		NAVIGATION SIDEBAR
+	-->
+
+	<div id="tc-sidebar">
+		<div class="well">
+			<form class="form">
+				<input type="search" class="form-control" accesskey="s" placeholder="Search (alt-s)" ng-model="search">
+			</form>
+			<h5 id="testCasesLabel">Test Cases</h5>
+			<div id="tc-list" class="button-list small">
+				<div class="tc-button"
+					ng-repeat="tc in testSetDetails.testCases"
+					ng-class="{
+						'sad': tc._isSad,
+						'happy': tc._isHappy,
+						'hide': tc._isFiltered
+					}"
+					hover-hint="{'#testCasesLabel': tc.FormattedID + ':' + tc.Name}">
+					<div>
+						{{tc.FormattedID}}
+						{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : '&#9675;'}}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!--
+		DETAIL AREA
+	-->
+
+	<div id="tc-content">
+
+		<div class="alert alert-info alert-dismissable" ng-if="!preferences.closedNoobBubble">
+			<button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="preferences.closedNoobBubble = true">&times;</button>
+			<h4>The noob's intro bubble.</h4>
+			<ol>
+				<li>Choose your WPI in the first dropdown menu above. It's probably already selected.</li>
+				<li>Choose your Test Set in the second dropdown. Your choice is remembered when you close/open the browser.</li>
+				<li>Choose your Filter options in the <span class="glyphicon glyphicon-filter"></span> menu above.</li>
+				<li>Enter the build number in the space provided.</li>
+				<li>Then test those cases.</li>
+			</ol>
+			<p>And quick... close this bubble or people will think you're some kind of a noob!</p>
+		</div>
+
+		<div class="panel panel-default"
+			ng-repeat="tc in testSetDetails.testCases"
+			ng-class="{
+				'hide': tc._isFiltered,
+				'panel-danger': tc.FormattedID.indexOf('0') >= 0
+			}">
+			<div class="panel-heading">
+				<h3 class="panel-title">
+					{{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : ''}}
+					{{tc.FormattedID}}
+					{{tc.Name}}
+				</h3>
+			</div>
+			<div class="panel-body">
+				<p><small>{{tc.Description}}</small></p>
+				<small>Some line about the last test result for this test case goes in here somewhere.</small>
+				<div class="tc-row" ng-if="tc.Notes || tc.Objective">
+					<div class="tc-col1" ng-if="tc.Notes">
+						<h4>Notes</h4>
+						<small ng-bind-html="tc.Notes"></small>
+					</div>
+					<div class="tc-col2" ng-if="tc.Objective">
+						<h4>Objective</h4>
+						<small ng-bind-html="tc.Objective"></small>
+					</div>
+				</div>
+				<div class="tc-row">
+					<div class="tc-col1" ng-if="tc.PreConditions">
+						<h4>Pre Conditions</h4>
+						<small ng-bind-html="tc.PreConditions"></small>
+					</div>
+					<div class="tc-col2" ng-if="tc.PostConditions">
+						<h4>Post Conditions</h4>
+						<small ng-bind-html="PostConditions"></small>
+					</div>
+				</div>
+				<div class="tc-row">
+					<div class="tc-col1" ng-if="tc.ValidationInput">
+						<h4>Validation Input</h4>
+						<small ng-bind-html="tc.ValidationInput"></small>
+					</div>
+					<div class="tc-col2" ng-if="tc.ValidationExpectedResult">
+						<h4>Expected Results</h4>
+						<small ng-bind-html="tc.ValidationExpectedResult"></small>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+</div>

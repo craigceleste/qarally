@@ -1,0 +1,55 @@
+<!doctype html>
+<html class="no-js" ng-app="qa-rally">
+  <head>
+    <meta charset="utf-8">
+    <title>QA Rally</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:css({.tmp,app}) styles/main.css -->
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- endbuild -->
+  </head>
+  <body>
+    <!--[if lt IE 9]>
+      <p>TODO: unsupported browser</p>
+    <![endif]-->
+
+    <!-- Add your site or application content here -->
+    <div ng-view></div>
+
+    <!-- build:js scripts/vendor.js -->
+    <!-- bower:js -->
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/underscore/underscore.js"></script>
+    <!-- endbower -->
+    <!-- endbuild -->
+
+    <!-- build:js({.tmp,app}) scripts/scripts.js -->
+    <script src="scripts/site.js"></script>
+    <script src="scripts/app.js"></script>
+
+    <script src="scripts/services/settings.js"></script>
+    <script src="scripts/services/rally.js"></script>
+    <script src="scripts/services/wpi.js"></script>
+
+    <script src="scripts/filters/to-array.js"></script>
+
+    <script src="scripts/directives/focus-me.js"></script>
+    <script src="scripts/directives/hover-hint.js"></script>
+    <script src="scripts/directives/no-propagate-click.js"></script>
+
+    <script src="pages/manage-wpi/ctrl.js"></script>
+    <script src="pages/run-test-cases/ctrl.js"></script>
+    <!-- endbuild -->
+
+    <script>window.onerror = function() {$('body').append('<div style="position:fixed;bottom:0;left:10px;right:10px;background-color:#FEE;border:3px solid black;padding:15px;">An error has happened. It\'s probably a bug.<br/><br/>A lot of information is sent to the console. Hit F12 to see what\'s going on.');}</script>
+</body>
+</html>

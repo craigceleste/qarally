@@ -1,0 +1,144 @@
+/*
+Cause all ng-cloak elements to be hidden until Angular finishes loading.
+http://docs.angularjs.org/api/ng.directive:ngCloak
+*/
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak
+{
+  display: none !important;
+}
+
+/*
+The navbar-fixed-top requires us to push the content down past the nav.
+Recommended is margin-top the body, but some pages won't have the navbar.
+Also, individual templates don't have access to the <body> without code.
+I could have a <div> with margin-top around the main content of the page.
+For now a humble <div class="fix-it-hack"> after the navbar.
+*/
+.nav-spacer { display:block; height: 60px; }
+
+/*
+I have a dropdown-menu (Test Sets) that I expected to have 3 to 5 items, 8 or so on the extreme end.
+Turns out it was a bad assumption and some iterations have 15 or 18, which puts the extreme at 50 or so.
+The correct solution would be to think up a different UI.
+But for now I add a vertical scrollbar on the dropdown-menu. But don't pollute bootstrap styles by giving all dropdown-menu's the scrollbar.
+*/
+@media(min-width:768px) {
+  .dropdown-menu.ps-scroll
+  {
+    max-height: 400px;
+    max-width: 500px;
+    overflow: auto;
+  }
+}
+
+/*
+Limit the width of some labels in the navbar to avoid navbar wrapping.
+TODO review. this solution loses the .caret in the overflow area. Alternate solutions get klugey with keeping the caret on the baseline
+*/
+@media(min-width:768px) {
+  .dropdown > .wide-label {
+    max-width: 160px; /* width chosen so the 2 wide labels + textbox + small icon labels does not wrap at lower resolutions. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+@media(min-width:1200px){ .dropdown > .wide-label { max-width: 250px; } }
+
+/*
+The form inside the Filter dropdown needs some help.
+*/
+.dropdown form {
+  margin: 5px 10px;
+}
+
+/*
+Bootstrap 3 doesn't support the submenu.
+This solution: http://firdaus.grandexa.com/2013/09/twitter-bootstrap-3-multilevel-dropdown-menu/
+...is not cross-browser perfect, especially at lower screen resolutions.
+But it gets the job done for the normal use case.
+TODO consider what media queries I need for it to work in responsive small-screen modes.
+*/
+.dropdown-submenu { position:relative; }
+.dropdown-submenu > .dropdown-menu { top:0; left:100%; margin-top:-6px; margin-left:-1px; -webkit-border-radius:0 6px 6px 6px; -moz-border-radius:0 6px 6px 6px; border-radius:0 6px 6px 6px; }
+.dropdown-submenu > a:after { display:block;content:" ";float:right;width:0;height:0;border-color:transparent;border-style:solid;border-width:5px 0 5px 5px;border-left-color:#cccccc;margin-top:5px;margin-right:-10px; }
+.dropdown-submenu:hover > a:after{ border-left-color:#555; }
+.dropdown-submenu .pull-left{ float:none; }
+.dropdown-submenu.pull-left > .dropdown-menu { left:-100%;margin-left:10px;-webkit-border-radius:6px 0 6px 6px;-moz-border-radius:6px 0 6px 6px;border-radius:6px 0 6px 6px;}
+
+/*
+The TC sideboard is the grid of TC numbers.
+Note:
+- passed tests are the normal (not exceptional) state. They should fade into the background as light/dull gray. Avoid green.
+- untested tests should pop once many tests have been passed. They are darker neutral gray.
+- failed or blocked tests should pop all the time.
+*/
+#tc-sidebar { display: none; }
+@media(min-width:992px) {
+  .show-tc-sidebar #tc-sidebar { display: block; }
+
+  #tc-sidebar { position: fixed; top: 60px; left: 10px; bottom: 10px; width: 250px; }
+  #tc-sidebar .well { height: 100%; }
+  #tc-sidebar .well .form { margin-bottom: 10px; }
+  #tc-sidebar .well .button-list { margin-bottom: 10px; }
+  #tc-sidebar .well .button-list:after { content:''; display:block; clear: both; } /* use bootstrap mixin for clearfloat */
+  #tc-sidebar .well .button-list .tc-button { float:left; width: 93px; text-align: center; white-space: nowrap; text-decoration: none; cursor: pointer; padding: 0 3px 2px 0; }
+  #tc-sidebar .well .button-list .tc-button > div { border: 1px solid silver; }
+  #tc-sidebar .well .button-list .tc-button:hover > div { background-color: #eee; }
+  #tc-sidebar .button-list a             { color: #333; }
+  #tc-sidebar .button-list .happy        { color: #ada; }
+  #tc-sidebar .button-list .happy:hover  { color: #8c8; }
+  #tc-sidebar .button-list .sad          { color: #d00;  }
+
+  #testCasesLabel { display:block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /*
+  CSS Trickery:
+  - making #tc-list height:100% makes it the same height as its container, EVEN THOUGH it has content above it.
+  - giving #tc-sidebar .well padding equal to the height of the Search textbox + label compensates.
+  */
+  #tc-list { height: 100%; overflow:hidden; overflow-y: auto; }
+  #tc-sidebar .well { padding-bottom: 80px; }
+}
+@media(min-width: 1200px){
+  #tc-sidebar { width: 345px; }
+}
+
+/*
+The Test Case Content area
+*/
+#tc-content {
+  padding: 0 10px;
+}
+@media(min-width: 992px) { .show-tc-sidebar #tc-content { margin-left: 270px; } }
+@media(min-width: 1200px) { .show-tc-sidebar #tc-content { margin-left: 365px; } }
+
+/*
+Sad. The bootstrap grid didn't work for me,
+because I have a fixed-width sidebar (left) and a flexible content area (right),
+and I want the flexible width area divided into 2 50% wide columns.
+That's not really how the Bootstrap grid is meant to work.
+Instead of fighting/faking it, I'll use the Bootstrap grid in other places.
+This one is hand-made. :(
+*/
+@media(max-width: 767px) {
+  #tc-content .tc-row { margin-bottom: 10px; }
+  #tc-content .tc-row > .tc-col1 {  }
+  #tc-content .tc-row > .tc-col2 {  }
+}
+@media(min-width: 768px) {
+  #tc-content .tc-row { margin-bottom: 10px; }
+  #tc-content .tc-row::after { content:''; display:block; clear: both; } /* use bootstrap mixin for clearfloat */
+  #tc-content .tc-row > .tc-col1 { width: 47%; float: left; }
+  #tc-content .tc-row > .tc-col2 { width: 47%; float: left; margin-left: 10px; }
+}
+
+/*
+Misc table styles
+*/
+.table .right { text-align: right; }
+
+
+
+
+

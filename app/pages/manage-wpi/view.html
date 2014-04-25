@@ -1,0 +1,188 @@
+<!--
+Loading Splash Screen
+-->
+<div class="container"
+	ng-cloak
+	ng-if="isLoading"
+	>
+	<br/><br/><br/><br/><br/><!-- lame -->
+	<div class="well text-center">
+		<img src="images/large-progress.gif" class="img-rounded">
+	</div>
+</div>
+
+<!--
+	Top nav
+-->
+
+<nav class="nav navbar-default navbar-fixed-top" role="navigation"
+	ng-cloak
+	ng-if="!isLoading">
+
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#header-collapse">
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+			<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand" href="/">QARally</a>
+	</div>
+
+</nav>
+<div class="nav-spacer"></div>
+
+<!--
+Main Form
+-->
+<div class="container"
+	ng-cloak
+	ng-if="!isLoading"
+	>
+	<h1>Manage WPI's</h1>
+	<p>A WPI is a named combination of Workspace + Project + Iteration. Use this page to set up your WPI's to easily switch between them.</p>
+
+	<div class="alert alert-info" ng-if="!getWpiCount()">
+		<p>
+			<strong>Welcome!</strong> Click the <strong>New...</strong> button to begin creating a WPI.
+		</p>
+	</div>
+	
+	<div class="alert alert-warning" ng-if="wpiBytes > 1024 * 100">
+		<p>
+			Your browser only allows <strong>5 MB</strong> of local storage.
+			You are currently using {{(wpiBytes / 1024 / 1024).toFixed(2)}} MB ({{(wpiBytes / (5*1024*1024) * 100).toFixed(0)}} %) for WPI's.
+		</p>
+		<p>
+			QA Rally is designed with a rough guideline of 60% for test cases, 30% for test results, 5% for WPI's and 5% for misc settings.
+			None of these caps is strongly enforced, but if you tempt fate, it will eventually blow up and leave you sad.
+			Consider removing any WPIs that you are not using regularly. They are easy enough to recreate.
+		</p>
+	</div>
+	<div class="row">
+		<div class="col-sm-5">
+			<div class="well">
+				<div class="list-group">
+					<a	href="javascript:void(0);"
+						class="list-group-item"
+						ng-repeat="w in wpiList | toArray | orderBy:'label'"
+						ng-class="{
+							'active': wpiCurrentId == w.id
+						}"
+						ng-click="setCurrentWpi(w.id)"
+						>
+						{{w.label}}
+					</a>
+					<a	href="javascript:void(0);"
+						class="list-group-item"
+						ng-click="createWpi()"
+						>
+						New...
+					</a>
+				</div>
+			</div>
+			<div class="panel panel-default">
+				<div class="panel-body">
+					<h4>QA Rally Tips</h4>
+
+					<h5>WPI's</h5>
+					<p class="small">Nobody likes to enter the same thing in repeatedly. Define a named combination of Workspace, Project and Iteration once and use it each time. You can configure several and switch between them.</p>
+
+					<h5>Local Storage</h5>
+					<p class="small">All data that is not stored in Rally is stored on your computer using HTML5 local storage. This improves speed tremendously, but if you clear your browser storage, you will lose your WPI list.</p>
+
+					<h5>Filters</h5>
+					<p class="small">Filters and build number are kept inside each WPI. Protip: create multiple WPI's to the same iteration to switch between different filter combinations. Give each one a label to distinguish them.</p>
+
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-7">
+			<div class="well">
+				<form role="form">
+					<div class="form-group">
+						<label for="workspace">Workspace</label>
+						<select id="workspace" class="form-control"
+							ng-disabled="!currentWpi"
+							ng-model="currentWpi.workspaceRef"
+							ng-required
+							ng-options="w._ref as w.name for w in subscriptionData.workspaces | toArray | orderBy:'name'"
+							focus-me="focusCurrentWpiHack"
+							>
+							<option>Select a Workspace</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="project">Project</label>
+						<select id="project" class="form-control"
+							ng-disabled="!currentWpi"
+							ng-model="currentWpi.projectRef"
+							ng-required
+							ng-options="p._ref as p.name group by groupByProjectIterations(p) for (_ref,p) in subscriptionData.workspaces[currentWpi.workspaceRef].projects | toArray | orderBy:[orderByProjectIterations,'name']"
+							>
+<!--
+ng-options="p._ref as p.name group by groupByProjectIterations(p) for p in subscriptionData.workspaces[currentWpi.workspaceRef].projects | toArray | orderBy:'name'"
+-->
+							<option>Select a Project</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label for="iteration">
+							Iteration
+							<small ng-if="currentWpi.testSets">({{getTestSetCount()}} test sets)</small>
+						</label>
+						<select id="iteration" class="form-control"
+							ng-disabled="!currentWpi"
+							ng-model="currentWpi.iterationRef"
+							ng-required
+							ng-options="i._ref as i.name for i in subscriptionData.workspaces[currentWpi.workspaceRef].projects[currentWpi.projectRef].iterations | toArray | orderBy:'name':true"
+							>
+							<option>Select an Iteration</option>
+						</select>
+					</div>
+					<div class="form-group"
+						ng-class="{
+							'has-warning': currentWpiIsValid() && currentWpiHasDefaultLabel() || currentWpi.label.length > 25
+							}"
+						>
+						<label for="label" class="control-label">
+							Label
+							<small ng-if="currentWpiIsValid() && currentWpiHasDefaultLabel()">
+								(consider changing the default label)
+							</small>
+							<small ng-if=" currentWpi.label.length > 25">
+								(only the first few characters of the label appear on the test running page)
+							</small>
+						</label>
+						<input type="text" class="form-control" id="label"
+							ng-disabled="!currentWpi"
+							ng-model="currentWpi.label">
+					</div>
+					<p>Changes are saved automatically as you edit.</p>
+					<p>
+						<button type="button" class="btn btn-primary"
+							ng-click="doneClick()"
+							ng-disabled="!currentWpiIsValid()"
+							>
+							Done
+						</button>
+						<button type="button" class="btn btn-default"
+							ng-click="refreshSubscriptionData(true)"
+							>
+							Refresh Rally Data
+						</button>
+						<button type="button" class="btn btn-danger pull-right"
+							ng-disabled="!currentWpi"
+							ng-click="removeCurrentWpi()"
+							>
+							Remove this WPI
+						</button>
+					</p>
+					<br/>
+					<div class="alert alert-success" ng-if="currentWpiIsValid()">
+						<p>Click <strong>Done</strong> to begin testing with this WPI.</p>
+					</div>
+	  			</form>
+			</div>
+		</div>
+	</div>
+</div>
