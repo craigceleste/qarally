@@ -7,16 +7,16 @@
 
 // <input type="text" focus-me="focusThisInput">
 angular.module('qa-rally').directive('focusMe', function($timeout, $parse) {
-	return {
-		link: function(scope, element, attrs) {
-			var model = $parse(attrs.focusMe);
-			scope.$watch(model, function(newValue) {
-				if(newValue) {
-					$timeout(function() {
-						element[0].focus();
-					});
-				}
-			});
-		}
-	};
+  return {
+    link: function(scope, element, attrs) {
+      var model = $parse(attrs.focusMe);
+      scope.$watch(model, function(newValue) {
+        if(newValue) {
+          $timeout(function() {
+            element[0].focus();
+          });
+        }
+      });
+    }
+  };
 });
