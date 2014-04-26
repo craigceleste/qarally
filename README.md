@@ -21,8 +21,8 @@ This app is an internal tool for our company. It will likely be maintained by AS
         npm install grunt-cli -g
 
 1. Decide where to download the source code.
-
    * I recommend NOT `C:\Users\Yourname\Documents\Projects` or similar. The path of the files you'll download will become too long for many Windows programs like Visual Studio. Consider `C:\Dev` or something like that.
+
 1. Download the source code:
 
         # from C:\Dev
