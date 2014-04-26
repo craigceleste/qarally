@@ -16,9 +16,9 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Install the following node modules by running this from PowerShell.
 
-       npm install bower -g
-       npm install karma-cli -g
-       npm install grunt-cli -g
+    npm install bower -g
+    npm install karma-cli -g
+    npm install grunt-cli -g
 
 1. Decide where to download the source code.
 
@@ -26,15 +26,15 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Download the source code:
 
-       # from C:\Dev
-       git clone https://github.com/craigceleste/qarally.git
+        # from C:\Dev
+        git clone https://github.com/craigceleste/qarally.git
 
    * It will create a directory called `qarally` with the project in it.
 
 1. Install the node modules required for development.
 
-       # from C:\Dev\qarally
-       npm install
+        # from C:\Dev\qarally
+        npm install
 
    * Node will look at the `package.json` file and download any modules it needs into the `node_modules` directory. These modules are run on your dev computer to do dev related tasks like unit tests, code validation, build tasks like minification, and so forth. (Node is much more general purpose, but that's what we use it for in this project).
 
@@ -47,15 +47,15 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Run unit tests
 
-       # from C:\Dev\qarally
-       karma start
+        # from C:\Dev\qarally
+        karma start
 
     * This will open instances of Chrome and Firefox to run the JavaScript and unit tests in their honest natural habitat (the browser). It may look ugly but it's quite zen once you get used to it. Note that you can actually debug the tests in the browsers developer tools.
     
 1. Begin a server to view the site. Leave the unit tests running. In another terminal, run:
 
-       # from C:\Dev\qarally
-       grunt serve
+        # from C:\Dev\qarally
+        grunt serve
 
    * Grunt should start a simple web server and open a browser to use the site. This is analogous to Visual Studio's built-in development server for testing. You can easily configure any web server such as IIS (I use pow on the mac) to point to the `/app` folder.
 
@@ -65,8 +65,8 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Do a build
 
-       # from C:\Dev\qarally
-       grunt
+        # from C:\Dev\qarally
+        grunt
 
    * If you're lucky and there are no errors you need to fix, the site will be minified, bundled, unit tested, and put in the `/dist` folder. You can copy it out from ther and deploy it. Working out a continuous integration server is on the to-do list, but I'm not that far yet.
 
