@@ -27,8 +27,8 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
         # from C:\Dev
         git clone https://github.com/craigceleste/qarally.git
-
    * It will create a directory called `qarally` with the project in it.
+
 1. Install the node modules required for development.
 
         # from C:\Dev\qarally
