@@ -43,7 +43,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // hard coded starting point: https://rally1.rallydev.com/slm/webservice/v3.0/subscription
   service._getSubscriptionData = function() {
     return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/subscription').then(function(subscriptionResponse){
-      $log.info('subscriptionResponse', subscriptionResponse);
 
       var subscriptionData = {
         _ref: subscriptionResponse.data.Subscription._ref,
@@ -60,7 +59,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // workspacesRef example: https://rally1.rallydev.com/slm/webservice/v3.0/Subscription/595548e8-ec1c-4d82-9954-38a0e1fcd05a/Workspaces
   service._getWorkspaceList = function(workspacesRef) {
     return getRallyJson(workspacesRef, {pagesize: rallyMaxPageSize}).then(function(workspacesResponse){
-      $log.info('workspacesResponse', workspacesResponse);
 
       assert(workspacesResponse.data.QueryResult.TotalResultCount <= workspacesResponse.data.QueryResult.PageSize, 'This app expects few workspaces (2 or 3 max) workspaces, but exceeded the page size.');
 
@@ -86,7 +84,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // projectsRef example: https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects?pagesize=200
   service._getProjectList = function(projectsRef) {
     return getRallyJson(projectsRef, {pagesize: rallyMaxPageSize}).then(function(projectsResponse){
-      $log.info('projectsResponse', projectsResponse);
 
       assert(projectsResponse.data.QueryResult.TotalResultCount <= projectsResponse.data.QueryResult.PageSize, 'Expect few projects (20 or so). If there are more items than fit on 1 page, this function should be refactored.');
 
@@ -112,7 +109,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // projectsRef example: https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations?pagesize=200
   service._getIterationList = function(iterationsRef) {
     return getRallyJson(iterationsRef, {pagesize: rallyMaxPageSize}).then(function(iterationsResponse){
-      $log.info('iterationsResponse', iterationsResponse);
 
       // This assertion may fail in the next year or so.
       // Option 1: order desc by date and take the first page. Older iterations fall out of use by this tool.
@@ -233,7 +229,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
       query: '(Iteration = "' + iterationRef + '")', // space to left+right of = is important (30 minutes of my life...)
       pagesize: rallyMaxPageSize
     }).then(function(testSetsResponse){
-      $log.info('testSetsResponse', testSetsResponse);
 
       return {
         // echo back iterationRef with the actual result for concurrency checking.
@@ -319,7 +314,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
     };
 
     return getRallyJson(testSetRef).then(function(testSetResponse) {
-      $log.info('testSetResponse', testSetResponse);
 
       assert(testSetResponse.data.TestSet.Name, 'Test Set name is expected to be set.');
       testSetDetails.name = testSetResponse.data.TestSet.Name;
@@ -334,7 +328,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
       return allItemPromises(pageStarts, function(pageStart) {
         return getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {pagesize: rallyMaxPageSize, start: pageStart})
           .then(function(testCaseListResponse){
-            $log.info('testCaseListResponse', testCaseListResponse);
 
             _.each(testCaseListResponse.data.QueryResult.Results, function(tc) {
 
@@ -577,7 +570,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
 
       // Then aggregate that data into our final testResults structure.
       }).then(function(testCaseResultResponse) {
-        $log.info('testCaseResultResponse', testCaseResultResponse);
 
         assert(testCaseResultResponse.data.QueryResult.PageSize === rallyMaxPageSize, 'PageSize is expected to match.');
 
