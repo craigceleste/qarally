@@ -28,7 +28,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
 
   function getRallyJson(url, data) {
     var querystring = _.reduce(data, function(memo, value, key){
-      return memo += '&' + key + '=' + encodeURIComponent(value)
+      return memo += '&' + key + '=' + encodeURIComponent(value);
     }, 'jsonp=JSON_CALLBACK');
     url += (url.indexOf('?') >= 0 ? '&' : '?') + querystring;
     return $http.jsonp(url);

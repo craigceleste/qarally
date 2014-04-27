@@ -9,6 +9,9 @@ angular.module('qa-rally').factory('rally-error-handler', ['$q', '$log', functio
 
   var rallyUrl = 'https://rally1.rallydev.com';
 
+  // TODO inject it
+  var _ = window._;
+  
   return {
 
     // On successful responses from Rally (status 200 with json), look for logical errors.

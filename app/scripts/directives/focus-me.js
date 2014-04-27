@@ -6,7 +6,7 @@
 // http://stackoverflow.com/questions/14833326/how-to-set-focus-in-angularjs
 
 // <input type="text" focus-me="focusThisInput">
-angular.module('qa-rally').directive('focusMe', function($timeout, $parse) {
+angular.module('qa-rally').directive('focusMe', [ '$timeout', '$parse', function($timeout, $parse) {
   return {
     link: function(scope, element, attrs) {
       var model = $parse(attrs.focusMe);
@@ -19,4 +19,4 @@ angular.module('qa-rally').directive('focusMe', function($timeout, $parse) {
       });
     }
   };
-});
+}]);
