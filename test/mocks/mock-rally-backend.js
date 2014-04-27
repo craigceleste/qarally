@@ -92,7 +92,7 @@ window.fakeBackendFactory = {
 				                    "_type": "User"
 				                }, 
 				                "Projects": {
-				                    "Count": 25, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/Projects", 
 				                    "_type": "Project"
 				                }, 
@@ -111,7 +111,7 @@ window.fakeBackendFactory = {
 				                    "_type": "Subscription"
 				                }, 
 				                "TypeDefinitions": {
-				                    "Count": 66, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Workspace/286f4675-fc38-4a87-89b9-eec25d199cab/TypeDefinitions", 
 				                    "_type": "TypeDefinition"
 				                }, 
@@ -151,19 +151,19 @@ window.fakeBackendFactory = {
 				                    "_type": "BuildDefinition"
 				                }, 
 				                "Children": {
-				                    "Count": 0, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Children", 
 				                    "_type": "Project"
 				                }, 
 				                "CreationDate": "2010-04-26T19:17:32.100Z", 
 				                "Description": "", 
 				                "Editors": {
-				                    "Count": 45, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Editors", 
 				                    "_type": "User"
 				                }, 
 				                "Iterations": {
-				                    "Count": 41, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Iterations", 
 				                    "_type": "Iteration"
 				                }, 
@@ -183,7 +183,7 @@ window.fakeBackendFactory = {
 				                    "_type": "Project"
 				                }, 
 				                "Releases": {
-				                    "Count": 18, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/Releases", 
 				                    "_type": "Release"
 				                }, 
@@ -196,7 +196,7 @@ window.fakeBackendFactory = {
 				                    "_type": "Subscription"
 				                }, 
 				                "TeamMembers": {
-				                    "Count": 23, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Project/d0e34bc7-55c0-4757-857d-6be2604a6c6c/TeamMembers", 
 				                    "_type": "User"
 				                }, 
@@ -258,7 +258,7 @@ window.fakeBackendFactory = {
 				                }, 
 				                "Theme": "Sanitized", 
 				                "UserIterationCapacities": {
-				                    "Count": 7, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/Iteration/1becc454-eca1-4b00-ae02-fcdf8cade4d5/UserIterationCapacities", 
 				                    "_type": "UserIterationCapacity"
 				                }, 
@@ -317,14 +317,14 @@ window.fakeBackendFactory = {
 				        "Blocked": false, 
 				        "BlockedReason": null, 
 				        "Changesets": {
-				            "Count": 0, 
+				            "Count": 1, 
 				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Changesets", 
 				            "_type": "Changeset"
 				        }, 
 				        "CreationDate": "2014-01-07T17:01:14.021Z", 
 				        "Description": "", 
 				        "Discussion": {
-				            "Count": 0, 
+				            "Count": 1, 
 				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Discussion", 
 				            "_type": "ConversationPost"
 				        }, 
@@ -371,20 +371,20 @@ window.fakeBackendFactory = {
 				            "_type": "Subscription"
 				        }, 
 				        "Tags": {
-				            "Count": 0, 
+				            "Count": 1, 
 				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Tags", 
 				            "_tagsNameArray": [], 
 				            "_type": "Tag"
 				        }, 
 				        "TaskStatus": "NONE", 
 				        "Tasks": {
-				            "Count": 0, 
+				            "Count": 1, 
 				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/Tasks", 
 				            "_type": "Task"
 				        }, 
 				        "TestCaseStatus": "ALL_RUN_ALL_PASSING", 
 				        "TestCases": {
-				            "Count": 194, 
+				            "Count": 1, 
 				            "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/af931b07-a8d0-4157-87a3-9772e435a8da/TestCases", 
 				            "_type": "TestCase"
 				        }, 
@@ -415,12 +415,12 @@ window.fakeBackendFactory = {
 				        "Results": [
 				            {
 				                "Attachments": {
-				                    "Count": 0, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Attachments", 
 				                    "_type": "Attachment"
 				                }, 
 				                "Changesets": {
-				                    "Count": 0, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Changesets", 
 				                    "_type": "Changeset"
 				                }, 
@@ -428,7 +428,7 @@ window.fakeBackendFactory = {
 				                "DefectStatus": "NONE", 
 				                "Description": "My Test Case Description", 
 				                "Discussion": {
-				                    "Count": 0, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Discussion", 
 				                    "_type": "ConversationPost"
 				                }, 
@@ -475,7 +475,7 @@ window.fakeBackendFactory = {
 				                }, 
 				                "Risk": "Medium", 
 				                "Steps": {
-				                    "Count": 0, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Steps", 
 				                    "_type": "TestCaseStep"
 				                }, 
@@ -486,7 +486,7 @@ window.fakeBackendFactory = {
 				                    "_type": "Subscription"
 				                }, 
 				                "Tags": {
-				                    "Count": 0, 
+				                    "Count": 1, 
 				                    "_ref": "https://rally1.rallydev.com/slm/webservice/v3.0/TestCase/b92bef0f-3158-4148-bb09-94940d1dc2e9/Tags", 
 				                    "_tagsNameArray": [], 
 				                    "_type": "Tag"

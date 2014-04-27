@@ -35,11 +35,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // Internal helper to produce a single promise for a list of items.
 
   function allItemPromises(listOfItems, getPromiseForItem) {
-    var promises = [];
-    _.each(listOfItems, function(item) {
-      promises.push(getPromiseForItem(item));
-    });
-    return $q.all(promises);
+    return $q.all(_.reduce(listOfItems, function(promises, item) { return getPromiseForItem(item); }, []));
   }
 
   // hard coded starting point: https://rally1.rallydev.com/slm/webservice/v3.0/subscription
@@ -333,7 +329,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
 
       // make an array containing the first index on each page
       var pageStarts = [];
-      for (var pageStart = 1; pageStart < testSetResponse.data.TestSet.TestCases.Count; pageStart = pageStart + rallyMaxPageSize) {
+      for (var pageStart = 1; pageStart <= testSetResponse.data.TestSet.TestCases.Count; pageStart = pageStart + rallyMaxPageSize) {
         pageStarts.push(pageStart);
       }
 
@@ -410,13 +406,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
 
   // Wrap getTestSetDetails in a caching layer
   service.initTestSetDetails = function(testSetRef, ignoreCache) {
-
-    // Here are some stats about the number of test cases per test set for our data:
-    //      6 test sets have > 1000        TC's (1482 max)
-    //     14 test sets have >  500 < 1000 TC's
-    //    254 test sets have >  100 <  500 TC's (most closer to 100)
-    //    434 test sets have >   10 <  100 TC's (most closer to 100)
-    //    160 test sets have        <   10 TC's  <-- many are probably experiments or for dummy projects. I would discount these.
 
     var storageVersion = 1;
     var storageKey = 'tsd_' + testSetRef;
