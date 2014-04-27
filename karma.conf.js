@@ -16,7 +16,7 @@ module.exports = function(config) {
       'app/bower_components/angular/angular.js',
       'app/bower_components/angular-sanitize/angular-sanitize.js',
       'app/bower_components/angular-route/angular-route.js',
-      'app/bower_components/jquery/dist/jquery.js', // TODO remove: angular code should not use jquery.
+      // NOT 'app/bower_components/jquery/dist/jquery.js', // the website uses it for Bootstrap, but the Angular stuff under test SHOULD NOT use it.
 
       // testing tools
       'app/bower_components/angular-mocks/angular-mocks.js',
@@ -33,9 +33,17 @@ module.exports = function(config) {
 
     // list of files / patterns to exclude
     exclude: [
-      // contains old-school DOM manipulation. not tested
+      // contains old-school DOM manipulation. not tested.
       'app/scripts/site.js'
     ],
+
+    preprocessors: {
+      'app/scripts/**/*.js': 'coverage'
+    },
+
+    // test results reporter to use
+    // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
+    reporters: ['progress', 'coverage'],
 
     // web server port
     port: 9876,
@@ -58,7 +66,6 @@ module.exports = function(config) {
     // - PhantomJS
     // - IE (only Windows)
     browsers: ['Chrome'],
-
 
     // Continuous Integration mode
     // if true, it capture browsers, run tests and exit

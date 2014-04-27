@@ -10,8 +10,8 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
 
   var service = {};
 
+  // TODO figure out how to inject underscore
   var _ = window._;
-  var $ = window.$;
 
   var rallyMaxPageSize = 200;
 
@@ -27,8 +27,10 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // Internal helper to handle the JSONP stuff
 
   function getRallyJson(url, data) {
-    var querystring = $.param(_.extend({jsonp:'JSON_CALLBACK'}, data));
-    url = url + (url.indexOf('?') >= 0 ? '&' : '?') + querystring;
+    var querystring = _.reduce(data, function(memo, value, key){
+      return memo += '&' + key + '=' + encodeURIComponent(value)
+    }, 'jsonp=JSON_CALLBACK');
+    url += (url.indexOf('?') >= 0 ? '&' : '?') + querystring;
     return $http.jsonp(url);
   }
 
@@ -322,13 +324,13 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
       assert(testSetResponse.data.TestSet.Name, 'Test Set name is expected to be set.');
       testSetDetails.name = testSetResponse.data.TestSet.Name;
 
-      // make an array containing the first index on each page
+      // make an array containing the first index on each page: [1,201,401,...]
       var pageStarts = [];
       for (var pageStart = 1; pageStart <= testSetResponse.data.TestSet.TestCases.Count; pageStart = pageStart + rallyMaxPageSize) {
         pageStarts.push(pageStart);
       }
 
-      // separate request for each page of test cases; complete promise when all are done.
+      // Create a set of requests for each page.
       return allItemPromises(pageStarts, function(pageStart) {
         return getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {pagesize: rallyMaxPageSize, start: pageStart})
           .then(function(testCaseListResponse){
@@ -415,8 +417,8 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
         workProducts: {}
       };
 
-      $.extend(true, workingTestSetDetails.testFolders, storedTestSetDetails.testFolders); // TODO remove reliance on jQuery for deep copy
-      $.extend(true, workingTestSetDetails.workProducts, storedTestSetDetails.workProducts); // TODO remove reliance on jQuery for deep copy
+      _.extend(true, workingTestSetDetails.testFolders, storedTestSetDetails.testFolders); // TODO remove reliance on jQuery for deep copy
+      _.extend(true, workingTestSetDetails.workProducts, storedTestSetDetails.workProducts); // TODO remove reliance on jQuery for deep copy
 
       _.each(storedTestSetDetails.testCases, function(tc) {
         workingTestSetDetails.testCases.push(deminifyTestCase(tc));
@@ -484,7 +486,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
         return key;
       }
       while (targetSize < _.reduce(existingTestSets, tallySizes, 0)) { // sum of sizes for existing ones
-        
+
         assert(--sanity > 0, 'ensureFreeStorageToSize: invinite loop guard.');
 
         var victimKey = _.reduce(existingTestSets, compareVictims, null);
@@ -505,7 +507,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
     }
 
     var deferred = $q.defer();
-    
+
     if (!testSetRef) {
       deferred.resolve(undefined);
     }
@@ -527,7 +529,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
       if (testSetDetails){
 
         // TODO update last accessed date
-        
+
         deferred.resolve(testSetDetails);
       }
       else {
@@ -545,6 +547,105 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
     return deferred.promise;
   };
 
+  // Get all the test results for the Test Set.
+  //    Note: this queries more than we need, since we get all result for all test cases in the test set. We only the most recent Result per test case,
+  //          but a single request with excess data is more efficient than a separate query for each TC, with just the latest test result.
+
+  // https://rally1.rallydev.com/slm/webservice/v3.0/TestCaseResult?query=(TestSet%20=%20https://rally1.rallydev.com/slm/webservice/v3.0/testset/af931b07-a8d0-4157-87a3-9772e435a8da)&pagesize=200&fetch=true
+
+  // Note: Test Case Results are NOT cached. They change too often during day-to-day testing.
+
+  service.getTestCaseResultsForTestSet = function(testSetRef) {
+
+    // Final result is aggregated from multiple queries.
+    var testResults = {
+      // 'testCaseRef': {
+      //   'all': [tcr,tcr,tcr,...]
+      //   'mostRecent': tcr
+      // }
+    };
+
+    // Helper to process each page
+    function getPage(start) {
+
+      // Query a page of data from Rally
+      return getRallyJson('https://rally1.rallydev.com/slm/webservice/v3.0/TestCaseResult', {
+        query: '(TestSet = ' + testSetRef + ')', // spaces around = are required
+        pagesize: rallyMaxPageSize,
+        start: start, // first item on page. 1 based.
+        fetch: true
+
+      // Then aggregate that data into our final testResults structure.
+      }).then(function(testCaseResultResponse) {
+        $log.info('testCaseResultResponse', testCaseResultResponse);
+
+        assert(testCaseResultResponse.data.QueryResult.PageSize === rallyMaxPageSize, 'PageSize is expected to match.');
+
+        _.each(testCaseResultResponse.data.QueryResult.Results, function(tcr) {
+
+          assert(typeof tcr.CreationDate === 'string', 'Test Case CreationDate is invalid.');
+
+          var tcResult = {
+            TestCaseRef: tcr.TestCase._ref,
+            CreationDate: new Date(tcr.CreationDate),
+            Build: tcr.Build,
+            TesterName: tcr.Tester._refObjectName,
+            Verdict: tcr.Verdict,
+            Notes: tcr.Notes
+          };
+
+          assert(typeof tcResult.TestCaseRef  === 'string', 'Test Case TestCaseRef is invalid.');
+          assert(typeof tcResult.CreationDate === 'object', 'Test Case CreationDate is invalid.');
+          assert(typeof tcResult.Build        === 'string', 'Test Case Build is invalid.');
+          assert(typeof tcResult.TesterName   === 'string', 'Test Case TesterName is invalid.');
+          assert(typeof tcResult.Verdict      === 'string', 'Test Case Verdict is invalid.');
+          assert(typeof tcResult.Notes        === 'string', 'Test Case Notes is invalid.');
+
+          // Create a structure on testResults, keyed on testCaseRef, containing an array of all tc results.
+
+          if (!testResults[tcResult.TestCaseRef]) {
+            testResults[tcResult.TestCaseRef] = { all: [] };
+          }
+          testResults[tcResult.TestCaseRef].all.push(tcResult);
+
+          // Put the most recent tcResult for the TC on the object itself.
+
+          if (!testResults[tcResult.TestCaseRef].mostRecent || tcResult.CreationDate > testResults[tcResult.TestCaseRef].mostRecent.CreationDate) {
+            testResults[tcResult.TestCaseRef].mostRecent = tcResult;
+          }
+
+        });
+
+        // Bit of a hack, but return the totalResultCount (of all pages) after each page, so we can request extra pages after page 1.
+        return testCaseResultResponse.data.QueryResult.Count;
+      });
+    }
+
+    // Process the first page separately...
+    return getPage(1).then(function(totalResultCount) {
+      $log.info('totalResultCount', totalResultCount);
+
+      // The first page tells us how many more pages there are.
+      // The rest of the pages may be loaded concurrently.
+
+      var pageStarts = [];
+      for (var pageStart = rallyMaxPageSize + 1; pageStart <= totalResultCount; pageStart = pageStart + rallyMaxPageSize) {
+        pageStarts.push(pageStart);
+      }
+
+      return allItemPromises(pageStarts, function(pageStart) {
+        return getPage(pageStart);
+      }).then(function() {
+
+        // When all of the pages have been loaded, return the aggregate structure we've created.
+        return testResults;
+      });
+    });
+  };
+
   return service;
 }]);
+
+
+
 
