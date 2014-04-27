@@ -113,9 +113,6 @@ Main Form
               ng-required
               ng-options="p._ref as p.name group by groupByProjectIterations(p) for (_ref,p) in subscriptionData.workspaces[currentWpi.workspaceRef].projects | toArray | orderBy:[orderByProjectIterations,'name']"
               >
-<!--
-ng-options="p._ref as p.name group by groupByProjectIterations(p) for p in subscriptionData.workspaces[currentWpi.workspaceRef].projects | toArray | orderBy:'name'"
--->
               <option>Select a Project</option>
             </select>
           </div>

@@ -141,11 +141,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // Traverse Subscription -> Workspace -> Project -> Iteration, and returns aggregate object for caching.
   service._getAllSubscriptionData = function() {
 
-    // TODO review. Single or multiple subscriptions.
-    //     When I started this app it was intended to be used by our QA people against our Rally subscription.
-    //    It seems that our QA people work on contract for more than one client, some of whom also have Rally subscriptions.
-    //    The current approach forces them to clear all cached data when switching between subscriptions.
-
     var subscriptionData;
 
     // Entry point is subscription data.

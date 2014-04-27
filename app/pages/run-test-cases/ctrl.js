@@ -151,13 +151,14 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
     }
   };
 
+  $scope.clearFilters = function() {
+    Wpi.clearFilter($scope.currentWpi);
+        updateFilters();
+  };
+
   $scope.sanitizeHtml = function(untrustedHtml) {
     // TODO sanitize it and return the result
     return $sce.trustAsHtml(untrustedHtml);
-  };
-
-  $scope.clearFilters = function() {
-    Wpi.clearFilter($scope.currentWpi);
   };
 
   $scope.$watch('preferences',
