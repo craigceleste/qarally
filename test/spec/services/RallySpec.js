@@ -8,6 +8,9 @@ describe('Rally', function(){
   // Dependency Injections
   var mockWindow, $rootScope, $httpBackend;
 
+  // TODO: how to inject it
+  var _ = window._;
+  
   beforeEach(function() {
 
     module('qa-rally');
@@ -192,7 +195,7 @@ describe('Rally', function(){
       // Arrange
 
       mockWindow.localStorage.subscriptionData = JSON.stringify({
-        version: 3,
+        version: rallySvc._subscriptionDataVersion,
         data: 'from cache'
       });
 
@@ -210,11 +213,7 @@ describe('Rally', function(){
       expect(subscriptionData).toEqual('from cache');
     });
 
-  });
-
-  describe('initSubscriptionData', function() {
-
-    it('will fetch from service.', function() {
+    it('will fetch from the service.', function() {
 
       // Arrange
 
@@ -240,16 +239,12 @@ describe('Rally', function(){
       expect(subscriptionData).toEqual('from service');
     });
 
-  });
-
-  describe('initSubscriptionData', function() {
-
     it('can be foreced to ignoreCache.', function() {
 
       // Arrange
 
       mockWindow.localStorage.subscriptionData = JSON.stringify({
-        version: 3,
+        version: rallySvc._subscriptionDataVersion,
         data: 'from cache'
       });
 
@@ -265,6 +260,35 @@ describe('Rally', function(){
 
       var subscriptionData;
       rallySvc.initSubscriptionData(ignoreCache).then(function(data){
+        subscriptionData = data;
+      });
+
+      $rootScope.$apply(); // cause $q promises to fulfill
+
+      // Assert
+
+      expect(subscriptionData).toEqual('from service');
+    });
+
+    it('will reject the cache if it is an older version.', function() {
+
+      // Arrange
+
+      mockWindow.localStorage.subscriptionData = JSON.stringify({
+        version: rallySvc._subscriptionDataVersion - 1, // older version in the cache
+        data: 'from cache'
+      });
+
+      spyOn(rallySvc, '_getAllSubscriptionData').andReturn({
+        then: function(thenCallback) {
+          thenCallback('from service'); // new version from the service
+        }
+      });
+
+      // Act
+
+      var subscriptionData;
+      rallySvc.initSubscriptionData().then(function(data){
         subscriptionData = data;
       });
 
@@ -342,9 +366,18 @@ describe('Rally', function(){
       expect(testSetDetails.testCases[0].ValidationInput         ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ValidationInput);
       expect(testSetDetails.testCases[0].WorkProductRef          ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct._ref);
 
+      var testFolderRef = fakeBackend.testCaseList.data.QueryResult.Results[0].TestFolder._ref;
+      expect(testSetDetails.testFolders[testFolderRef]._ref).toEqual(testFolderRef);
+      expect(testSetDetails.testFolders[testFolderRef].Name).toEqual('My Folder');
+
+      var workProductRef = fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct._ref;
+      expect(testSetDetails.workProducts[workProductRef]._ref).toEqual(workProductRef);
+      expect(testSetDetails.workProducts[workProductRef].Name).toEqual('My User Story');
+
       // Hack: I feel (but probably am wrong) that it makes the tests fragile to hard code knowledge about internal cache format.
       // So long as it can cache it, and decache it, and it's in the right format, we should be good.
       // To that end, capture the minified version that this test caches, and use it in the next test to decache it.
+      // TODO this is a sin for conventional unit tests, but jasmine is guaranteed to be sequential execution, so maybe it isn't so bad here. We'll see...
 
       cachedTestSetDetails = mockWindow.localStorage['tsd_' + fakeBackend.testSetDetails.inputs.testSetRef];
       expect(cachedTestSetDetails).toBeDefined();
@@ -384,8 +417,103 @@ describe('Rally', function(){
       expect(testSetDetails.testCases[0].ValidationInput         ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].ValidationInput);
       expect(testSetDetails.testCases[0].WorkProductRef          ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct._ref);
 
+      var testFolderRef = fakeBackend.testCaseList.data.QueryResult.Results[0].TestFolder._ref;
+      expect(testSetDetails.testFolders[testFolderRef]._ref).toEqual(testFolderRef);
+      expect(testSetDetails.testFolders[testFolderRef].Name).toEqual('My Folder');
+
+      var workProductRef = fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct._ref;
+      expect(testSetDetails.workProducts[workProductRef]._ref).toEqual(workProductRef);
+      expect(testSetDetails.workProducts[workProductRef].Name).toEqual('My User Story');
+
     });
     
+    it('will map test cases without a test folder or test set.', function() {
+
+      // Arrange
+
+      var fakeBackend = window.fakeBackendFactory.create();
+      fakeBackend.testCaseList.data.QueryResult.Results[0].TestFolder = null;
+      fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct = null;
+      fakeBackend.setup($httpBackend);
+
+      // Act
+
+      var testSetDetails;
+      rallySvc.initTestSetDetails(fakeBackend.testSetDetails.inputs.testSetRef)
+        .then(function(data) { testSetDetails = data; });
+
+      $httpBackend.flush(); // simulate async http completing
+
+      // Assert
+
+      expect(testSetDetails.testCases[0]._ref                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0]._ref);
+      expect(testSetDetails.testCases[0].TestFolderRef           ).not.toBeDefined();
+      expect(testSetDetails.testCases[0].WorkProductRef          ).not.toBeDefined();
+
+    });
+
+    it('will map test cases without a test folder or test set.', function() {
+
+      // Arrange
+
+      var fakeBackend = window.fakeBackendFactory.create();
+      fakeBackend.testCaseList.data.QueryResult.Results[0].TestFolder = null;
+      fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct = null;
+      fakeBackend.setup($httpBackend);
+
+      // Act
+
+      var testSetDetails;
+      rallySvc.initTestSetDetails(fakeBackend.testSetDetails.inputs.testSetRef)
+        .then(function(data) { testSetDetails = data; });
+
+      $httpBackend.flush(); // simulate async http completing
+
+      // Assert
+
+      expect(testSetDetails.testCases[0]._ref                    ).toEqual(fakeBackend.testCaseList.data.QueryResult.Results[0]._ref);
+      expect(testSetDetails.testCases[0].TestFolderRef           ).not.toBeDefined();
+      expect(testSetDetails.testCases[0].WorkProductRef          ).not.toBeDefined();
+
+    });
+
+    it('will correctly handle multiple test cases with the same grouping.', function() {
+
+      // Arrange
+
+      var fakeBackend = window.fakeBackendFactory.create();
+
+      fakeBackend.testCaseList.data.QueryResult.Results.push(
+        _.extend({}, fakeBackend.testCaseList.data.QueryResult.Results[0])); // copy of existing item
+      fakeBackend.testCaseList.data.QueryResult.Results[0]._ref = 'ref0'; // give them unique ids
+      fakeBackend.testCaseList.data.QueryResult.Results[1]._ref = 'ref1';
+
+      fakeBackend.setup($httpBackend);
+
+      // Act
+
+      var testSetDetails;
+      rallySvc.initTestSetDetails(fakeBackend.testSetDetails.inputs.testSetRef)
+        .then(function(data) { testSetDetails = data; });
+
+      $httpBackend.flush(); // simulate async http completing
+
+      // Assert
+
+      expect(testSetDetails.testCases[0]._ref).toEqual('ref0'); // tc's made it in the list
+      expect(testSetDetails.testCases[1]._ref).toEqual('ref1');
+
+      expect(Object.keys(testSetDetails.testFolders).length).toEqual(1); // groupings are shared
+      expect(Object.keys(testSetDetails.workProducts).length).toEqual(1);
+
+      var testFolderRef = fakeBackend.testCaseList.data.QueryResult.Results[0].TestFolder._ref;
+      expect(testSetDetails.testFolders[testFolderRef]._ref).toEqual(testFolderRef);
+      expect(testSetDetails.testFolders[testFolderRef].Name).toEqual('My Folder');
+
+      var workProductRef = fakeBackend.testCaseList.data.QueryResult.Results[0].WorkProduct._ref;
+      expect(testSetDetails.workProducts[workProductRef]._ref).toEqual(workProductRef);
+      expect(testSetDetails.workProducts[workProductRef].Name).toEqual('My User Story');
+    });
   });
 
   describe('getTestCaseResultsForTestSet', function() {

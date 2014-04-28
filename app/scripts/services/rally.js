@@ -17,9 +17,14 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
 
   // I am making an effort to over-validate and assert expectations about Rally's services,
   // because this app will be maintained by people not familiar with Rally, AngularJS or this code.
+  // Also, Rally (no disrespect to them: they are awesome!) is an external connection point and may change without us noticing.
 
   function assert(test, message) {
     if (!test) {
+      $log.error('ASSERT FAILED: ' + message);
+
+      // TODO see if we can bubble an error (not message) up to the UI, to look at the console.
+      // Instead of throwing here, see if we can $log the error and reject promises.
       throw new Error(message);
     }
   }
@@ -141,19 +146,19 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
 
     var subscriptionData;
 
-    // Entry point is subscription data.
+    // Entry point is a single call into subscription data.
 
     return service._getSubscriptionData()
       .then(function(_subscriptionData){
         subscriptionData = _subscriptionData;
 
-    // That leads into the list of workspaces
+    // That leads into exactly 1 call for the list of workspaces
 
         return service._getWorkspaceList(subscriptionData.workspacesRef);
       }).then(function(workspaceList){
         subscriptionData.workspaces = _.reduce(workspaceList, function(memo, ws) { memo[ws._ref] = ws; return memo; }, {});
 
-    // The query for each workspaces project list may run concurrently. This promise finishes when all of them are done.
+    // For each workspace in the list, make a separate call for the projects of that workspace.
 
         return allItemPromises(workspaceList, function(workspace) {
           return service._getProjectList(workspace.projectsRef)
@@ -183,10 +188,9 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   };
 
   // Wrap getAllSubscriptionData in a caching layer
+  service._subscriptionDataVersion = 3;
   service.initSubscriptionData = function(ignoreCache) {
 
-    // increment currentVersion if the schema if cached data is changed.
-    var currentVersion = 3;
     var storageKey = 'subscriptionData';
     var deferred = $q.defer();
 
@@ -196,7 +200,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
       if (outerDataJson) {
         var outerData = JSON.parse(outerDataJson);
         // no upgrade path provided for this data. It is a pure cache; no user data is here.
-        if (outerData.version === currentVersion) {
+        if (outerData.version === service._subscriptionDataVersion) {
           innerData = outerData.data;
         }
       }
@@ -208,7 +212,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
     else {
       service._getAllSubscriptionData().then(function(subscriptionData){
         $window.localStorage[storageKey] = JSON.stringify({
-          version: currentVersion,
+          version: service._subscriptionDataVersion,
           data: subscriptionData
         });
         deferred.resolve(subscriptionData);
@@ -410,8 +414,8 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
         workProducts: {}
       };
 
-      _.extend(true, workingTestSetDetails.testFolders, storedTestSetDetails.testFolders); // TODO remove reliance on jQuery for deep copy
-      _.extend(true, workingTestSetDetails.workProducts, storedTestSetDetails.workProducts); // TODO remove reliance on jQuery for deep copy
+      _.extend(workingTestSetDetails.testFolders, storedTestSetDetails.testFolders);
+      _.extend(workingTestSetDetails.workProducts, storedTestSetDetails.workProducts);
 
       _.each(storedTestSetDetails.testCases, function(tc) {
         workingTestSetDetails.testCases.push(deminifyTestCase(tc));
