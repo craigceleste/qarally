@@ -19,7 +19,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
         npm install bower -g
         npm install karma-cli -g
         npm install grunt-cli -g
-   * TODO: it would be nice if I could tell people to `npm install` and the project would install everything it needs, but for gower, grunt and karma to run from the terminal, they seem to need to be installed globally.
+   * TODO: it would be nice if I could tell people to `npm install` and Node would install everything it needs, but for bower, grunt and karma to run from the terminal, they seem to need to be installed globally.
    
 1. Decide where to download the source code.
    * I recommend NOT `C:\Users\Yourname\Documents\Projects` or similar. The path of the files you'll download will become too long for many Windows programs like Visual Studio. Consider `C:\Dev` or something like that.
