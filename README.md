@@ -53,7 +53,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
         # from C:\Dev\qarally
         grunt serve
    * Grunt should start a simple web server and open a browser to use the site. This is analogous to Visual Studio's built-in development server for testing. You can easily configure any web server such as IIS (I use pow on the mac) to point to the `/app` folder.
-   * This stack of technologies leverages the console more than ASP.NET. Scripts, (most of them run in Node) does most of the things that we may be used to having Visual Studio do. Consider investing some time becoming familiar with using PowerShell. Consider downloading [Console2], which allows for tabbed console windows, among other things. I personally use the Mac's default terminal, which is good enough for me.
+   * This stack of technologies leverages the console more than ASP.NET. Scripts (most of them run in Node) do most of the heavy lifting that we may be used to getting from Visual Studio do. Consider investing some time becoming familiar with using PowerShell. Consider downloading [Console2], which allows for tabbed console windows, among other things. I personally use the Mac's default terminal, which is good enough for me.
 
 1. Edit the source code in `/app`
    * Note that the unit tests will run when you save your changes. And the browser may also refresh when you save changes (although the life reload is a bit flakey for me).
