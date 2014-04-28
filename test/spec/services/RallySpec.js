@@ -7,9 +7,6 @@ describe('Rally', function(){
 
   // Dependency Injections
   var mockWindow, $rootScope, $httpBackend;
-
-  // TODO: how to inject it
-  var _ = window._;
   
   beforeEach(function() {
 
@@ -35,6 +32,12 @@ describe('Rally', function(){
     $httpBackend.verifyNoOutstandingExpectation();
     $httpBackend.verifyNoOutstandingRequest();
   });
+
+  // this is not meant to be robust.
+
+  function deepCopy(x) {
+    return JSON.parse(JSON.stringify(x));
+  }
 
   it('is wired for construction.', function() {
     expect(rallySvc).toBeDefined();
@@ -484,7 +487,7 @@ describe('Rally', function(){
       var fakeBackend = window.fakeBackendFactory.create();
 
       fakeBackend.testCaseList.data.QueryResult.Results.push(
-        _.extend({}, fakeBackend.testCaseList.data.QueryResult.Results[0])); // copy of existing item
+        deepCopy(fakeBackend.testCaseList.data.QueryResult.Results[0])); // copy of existing item
       fakeBackend.testCaseList.data.QueryResult.Results[0]._ref = 'ref0'; // give them unique ids
       fakeBackend.testCaseList.data.QueryResult.Results[1]._ref = 'ref1';
 
@@ -536,6 +539,113 @@ describe('Rally', function(){
       $httpBackend.flush(); // simulate async http completing
 
       // Assert
+
+      // testResults is an object keyed on testCaseRef. There is 1 test case.
+      expect(Object.keys(testResults).length).toEqual(1);
+
+      // Pull the TestCaseResult original from the mock data
+      var trExpected = fakeBackend.testCasesByTestSet.data.QueryResult.Results[0];
+
+      // testResults is keyed on test case. Pull the structure for the TC
+      var tcActual = testResults[trExpected.TestCase._ref];
+
+      // The TC result object has a collection of all results. Pull this one.
+      var trActual = tcActual.all[0];
+      expect(trActual._ref          ).toEqual(trExpected._ref);
+      expect(trActual.TestCaseRef   ).toEqual(trExpected.TestCase._ref);
+      expect(trActual.CreationDate  ).toEqual(new Date(trExpected.CreationDate));
+      expect(trActual.Build         ).toEqual(trExpected.Build);
+      expect(trActual.TesterName    ).toEqual(trExpected.Tester._refObjectName);
+      expect(trActual.Verdict       ).toEqual(trExpected.Verdict);
+      expect(trActual.Notes         ).toEqual(trExpected.Notes);
+    });
+
+    it('sorts multiple TestCaseResult objects for the same TestCase.', function() {
+
+      // Arrange
+
+      var fakeBackend = window.fakeBackendFactory.create();
+
+      // duplicate the mock test case result
+      var tcr0 = fakeBackend.testCasesByTestSet.data.QueryResult.Results[0];
+      var tcr1 = deepCopy(tcr0);
+      var tcr2 = deepCopy(tcr0);
+      
+      tcr1._ref = 'new key';
+      tcr2._ref = 'another key';
+
+      fakeBackend.testCasesByTestSet.data.QueryResult.Results.push(tcr1);
+      fakeBackend.testCasesByTestSet.data.QueryResult.Results.push(tcr2);
+
+      tcr0.CreationDate = '2014-01-08T20:10:31.089Z'; // <-- middle date
+      tcr1.CreationDate = '2014-01-09T20:10:31.089Z'; // <-- more recent
+      tcr2.CreationDate = '2014-01-07T20:10:31.089Z'; // <-- least recent
+
+      fakeBackend.setup($httpBackend);
+
+      // Act
+
+      var testResults;
+      rallySvc.getTestCaseResultsForTestSet(fakeBackend.testCasesByTestSet.inputs.testSetRef)
+      .then(function(data) {
+        testResults = data;
+      });
+
+      $httpBackend.flush(); // simulate async http completing
+
+      // Assert
+
+      expect(Object.keys(testResults).length).toEqual(1);  // 1 TC...
+      var tcActual = testResults[tcr0.TestCase._ref];
+      expect(tcActual.all.length).toEqual(3);              // ...with multiple TR's
+
+      // The one with the more recent CreationDate is at .mostRecent
+      expect(tcActual.mostRecent.CreationDate).toEqual(new Date(tcr1.CreationDate));
+
+    });
+
+    it('supports multiple pages.', function() {
+
+      // Arrange
+
+      var fakeBackend = window.fakeBackendFactory.create();
+
+      var page1Data = fakeBackend.testCasesByTestSet.data;
+      page1Data.QueryResult.TotalResultCount = 210;
+      page1Data.QueryResult.PageSize = 200; // a lie, but that's okay
+
+      var page2Data = deepCopy(page1Data); // copy page1Data
+
+      page2Data.QueryResult.StartIndex = 201;
+      page2Data.QueryResult.Results[0]._ref = 'different id';
+      page2Data.QueryResult.Results[0].TestCase._ref = 'different tc for fun';
+
+      $httpBackend
+        .whenJSONP('https://rally1.rallydev.com/slm/webservice/v3.0/TestCaseResult?jsonp=JSON_CALLBACK&query=(TestSet%20%3D%20https%3A%2F%2Frally1.rallydev.com%2Fslm%2Fwebservice%2Fv3.0%2Ftestset%2Faf931b07-a8d0-4157-87a3-9772e435a8da)&pagesize=200&start=201&fetch=true')
+        .respond(page2Data);
+
+      fakeBackend.setup($httpBackend);
+
+      // Act
+
+      var testResults;
+      rallySvc.getTestCaseResultsForTestSet(fakeBackend.testCasesByTestSet.inputs.testSetRef)
+      .then(function(data) {
+        testResults = data;
+      });
+
+      $httpBackend.flush(); // simulate async http completing
+
+      // Assert
+
+      // 2 TC's...
+      expect(Object.keys(testResults).length).toEqual(2);
+      var tc1 = testResults[page1Data.QueryResult.Results[0].TestCase._ref];
+      var tc2 = testResults[page2Data.QueryResult.Results[0].TestCase._ref];
+
+      // With the right TR in each one
+      expect(tc1.all[0]._ref).toEqual(page1Data.QueryResult.Results[0]._ref);
+      expect(tc2.all[0]._ref).toEqual(page2Data.QueryResult.Results[0]._ref);
 
     });
 

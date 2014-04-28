@@ -414,8 +414,8 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
         workProducts: {}
       };
 
-      _.extend(workingTestSetDetails.testFolders, storedTestSetDetails.testFolders);
-      _.extend(workingTestSetDetails.workProducts, storedTestSetDetails.workProducts);
+      workingTestSetDetails.testFolders = JSON.parse(JSON.stringify(storedTestSetDetails.testFolders));
+      workingTestSetDetails.workProducts = JSON.parse(JSON.stringify(storedTestSetDetails.workProducts));
 
       _.each(storedTestSetDetails.testCases, function(tc) {
         workingTestSetDetails.testCases.push(deminifyTestCase(tc));
@@ -582,6 +582,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
           assert(typeof tcr.CreationDate === 'string', 'Test Case CreationDate is invalid.');
 
           var tcResult = {
+            _ref: tcr._ref,
             TestCaseRef: tcr.TestCase._ref,
             CreationDate: new Date(tcr.CreationDate),
             Build: tcr.Build,
@@ -590,6 +591,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
             Notes: tcr.Notes
           };
 
+          assert(typeof tcResult._ref         === 'string', 'Test Case _ref is invalid.');
           assert(typeof tcResult.TestCaseRef  === 'string', 'Test Case TestCaseRef is invalid.');
           assert(typeof tcResult.CreationDate === 'object', 'Test Case CreationDate is invalid.');
           assert(typeof tcResult.Build        === 'string', 'Test Case Build is invalid.');
@@ -598,7 +600,6 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
           assert(typeof tcResult.Notes        === 'string', 'Test Case Notes is invalid.');
 
           // Create a structure on testResults, keyed on testCaseRef, containing an array of all tc results.
-
           if (!testResults[tcResult.TestCaseRef]) {
             testResults[tcResult.TestCaseRef] = { all: [] };
           }
@@ -613,7 +614,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
         });
 
         // Bit of a hack, but return the totalResultCount (of all pages) after each page, so we can request extra pages after page 1.
-        return testCaseResultResponse.data.QueryResult.Count;
+        return testCaseResultResponse.data.QueryResult.TotalResultCount;
       });
     }
 

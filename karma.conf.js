@@ -16,7 +16,7 @@ module.exports = function(config) {
       'app/bower_components/angular/angular.js',
       'app/bower_components/angular-sanitize/angular-sanitize.js',
       'app/bower_components/angular-route/angular-route.js',
-      // NOT 'app/bower_components/jquery/dist/jquery.js', // the website uses it for Bootstrap, but the Angular stuff under test SHOULD NOT use it.
+      // NOT jQuery 'app/bower_components/jquery/dist/jquery.js'
 
       // testing tools
       'app/bower_components/angular-mocks/angular-mocks.js',
