@@ -38,7 +38,8 @@ module.exports = function(config) {
     ],
 
     preprocessors: {
-      'app/scripts/**/*.js': 'coverage'
+      'app/scripts/**/*.js': 'coverage',
+      'app/pages/**/*.js': 'coverage'
     },
 
     // test results reporter to use
