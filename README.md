@@ -61,6 +61,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
         # from C:\Dev\qarally
         grunt
+   * `grunt serve` should be stopped or it won't be able to delete .tmp files.
    * If you're lucky and there are no errors you need to fix, the site will be validated (jshint), unit tested, minified, bundled, and put in the `/dist` folder. You can copy it out from there and deploy it. At present, I haven't worked out a continuous integration solution, figured out how to set up a build machine, etc. We build and deploy from a dev machine for now. CI is on the todo list.
 
 
