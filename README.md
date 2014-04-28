@@ -10,7 +10,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
     1. [Google Chrome] - required for running unit tests.
     1. [FireFox] - required for running unit tests.
-    1. [Sublime] (not free but worth it) or [Notepad++] or a text editor of choice.
+    1. [Sublime] or [Notepad++] or your text editor of choice.
     1. [Node.js] is the engine for running build scripts, unit tests, and all the dev-time stuff.
     1. [Git] or another git client you like.
 
