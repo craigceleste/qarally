@@ -4,7 +4,7 @@ My first AngularJS app. Mainly as a learning exercise.
 
 Dev environment
 ---------------
-This app is an internal tool for our company. It will likely be maintained by ASP.NET developers, backend developers, or in general people who are not familiar with this stack of technologies. These instructions are for you.
+This app is an internal tool for our company. It will likely be maintained by ASP.NET developers, backend developers, or in general people who are not familiar with this stack of technologies. These instructions are for you (and future me).
 
 1. Install the following software.
 
