@@ -145,7 +145,7 @@ angular.module('qa-rally').factory('Wpi', ['$log', '$q', '$window', 'Rally', fun
           // Concurrency: if iterationRef changes before this is complete, just ignore this response.
           if (testSetData.iterationRef === wpi.iterationRef) {
             wpi.testSets = testSetData.testSets;
-            var first = _.chain(wpi.testSets).sortBy(function(ts){ return (ts.name || '').toUpperCase(); }).first().value();
+            var first = _.chain(wpi.testSets).sortBy(function(ts){ return ts.name.toUpperCase(); }).first().value();
             wpi.testSetRef = first ? first._ref : undefined;
           }
           return wpi;
