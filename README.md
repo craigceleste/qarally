@@ -23,9 +23,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Install the following node modules by running this from PowerShell.
 
-        npm install bower -g
-        npm install karma-cli -g
-        npm install grunt-cli -g
+        npm install -g bower karma-cli grunt-cli
    * TODO: it would be nice if I could tell people to `npm install` and Node would install everything it needs, but for bower, grunt and karma to run from the terminal, they seem to need to be installed globally.
    
 1. Decide where to download the source code.
