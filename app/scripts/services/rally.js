@@ -303,7 +303,7 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
   // Example URLs
   // https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a
   // https://rally1.rallydev.com/slm/webservice/v3.0/TestSet/4072261e-d0d2-4119-9288-c94ba6b5686a/TestCases
-  service.getTestSetDetails = function(testSetRef) {
+  function getTestSetDetails(testSetRef) {
 
     assert(typeof testSetRef === 'string', 'testSetRef must be a string');
 
@@ -396,14 +396,169 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
       $log.debug('getTestSetDetails', testSetDetails);
       return testSetDetails;
     });
+  }
+
+  // TODO move these caching helpers to a different service of their own.
+
+  //  svc.ensureFreeStorageToSize({
+  //    prefix: 'abc',                      // All localStorage items with a key using this prefix are in a bucket or namespace...
+  //    maxSize: 1024 * 1024 * 4,           // ...whose maximum size is thiiis big.
+  //    size: 5000,                         // Ensure that there is at least this much space available in that bucket by summing the size of all existing items with prefix...
+  //    key: '123',                         // ...except this one, which will be replaced, (the prefix will be added later) ...
+  //                                        // ...and deleting those items which have been accessed least recently, until there is room.
+  //  }
+  service._ensureFreeStorageToSize = function(options) {
+
+    // Local Storage is limited to 5MB.
+    // We expect to use 4MB for Test Set Detail structures and the rest for other stuff.
+    // DO NOT: watchdog the 'other stuff'. If it goes over, we'll get an out of space exception which is fine for now.
+    // DO NOT: get into the business of figuring out how much space is left in localStorage. Only care about how much space our 'bucket' is using.
+
+    assert(options && options.prefix && options.key && options.size && options.maxSize, 'ensureFreeStorageToSize: required argument missing.');
+    assert(options.maxSize >= 1 && options.maxSize <= 1024 * 1024 * 5, 'ensureFreeStorageToSize: maxSize is out of range.');
+    assert(options.size > 0 && options.size <= options.maxSize, 'ensureFreeStorageToSize: size is out of range.');
+
+    var targetSize = options.maxSize - options.size; // we need to reduce the storage used in the bucket to this amount.
+    assert(targetSize > 0, 'ensureFreeStorageToSize: targetSize is out of range.');
+
+    // Maintain a dictionary of last accessed dates, keyed on localStorage key, value is a date.
+    // This structure does not count towards space inside the bucket.
+
+    var lastAccessed = {};
+    var lastAccessedJson = $window.localStorage[options.prefix + '_lastAccessed'];
+    if (lastAccessedJson) {
+      var lastAccessedOuter = JSON.parse(lastAccessedJson);
+      if (lastAccessedOuter.version === 1) {
+        lastAccessed = lastAccessedOuter.data;
+      }
+    }
+
+    // Produce a structure of the existing items in the bucket.
+
+    var existingItems = {};
+    for(var key in $window.localStorage) {
+      if ( (key !== options.prefix + '_' + options.key) && (key !== options.prefix + '_lastAccessed')) { // ignore the one being replaced
+        if (key.indexOf(options.prefix) === 0) {
+          existingItems[key] = {
+            size: $window.localStorage[key].length,
+            lastAccessed: lastAccessed[key] // which might be undefined, which is fine
+          };
+        }
+      }
+    }
+
+    // Eliminate items until there is room for the new one.
+
+    var sanity = 5000;
+
+    // these functions are not inline/anonymous becasue it is bad practice to define anonymous functions in a loop.
+    
+    function tallySizes(memo, item)
+    {
+      return memo + item.size;
+    }
+
+    function compareVictims(bestYetKey, item, key) {
+
+      // if there is no better choice yet, choose this one
+      if (!bestYetKey)
+      {
+        return key;
+      }
+      var bestYet = existingItems[bestYetKey];
+
+      // If both the bestYet victim and the item being reviewed have dates, compare on date.
+      if (bestYet.lastAccessed && item.lastAccessed) {
+        return bestYet.lastAccessed < item.lastAccessed ? bestYetKey : key;
+      }
+
+      // Otherwise, choose the one that doesn't have a date.
+      if (!bestYet.lastAccessed) {
+        return bestYetKey;
+      }
+      return key;
+    }
+
+    // Repeat (killing a victim each iteration) until there is room
+    while (targetSize < _.reduce(existingItems, tallySizes, 0)) { // sum of sizes for existing ones
+
+      assert(--sanity > 0, 'ensureFreeStorageToSize: invinite loop guard.');
+
+      var victimKey = _.reduce(existingItems, compareVictims, null);
+
+      $log.info('test set data de-cached to make room: ' + victimKey, existingItems[victimKey].size, $window.localStorage[victimKey]);
+      delete $window.localStorage[victimKey];
+      delete existingItems[victimKey];
+      // TODO delete victimKey from lastAccessed
+    }
+
+  };
+
+  // Example:
+  //    service._cacheIt({
+  //      prefix: 'tsd',
+  //      key: testSetRef,
+  //      maxSize: 1024 * 1024 * 4,
+  //      data: storedTestSetDetails,
+  //      version: 1
+  //    });
+  service._cacheIt = function(options) {
+
+    assert(options && options.prefix && options.key && options.maxSize && options.data && options.version, 'cacheIt: required argument missing.');
+
+    var outerDataJson = JSON.stringify({
+      version: options.version,
+      data: options.data
+    });
+
+    service._ensureFreeStorageToSize({
+      prefix: options.prefix,
+      key: options.key,
+      maxSize: options.maxSize,
+      size: outerDataJson.length,
+    });
+
+    // TODO update last accessed date
+
+    $window.localStorage[options.prefix + '_' + options.key] = outerDataJson;
+  };
+
+  // Example:
+  //    service._cacheIt({
+  //      prefix: 'tsd',
+  //      key: testSetRef,
+  //      version: 1
+  //    });
+  service._decacheIt = function(options) {
+
+    assert(options && options.prefix && options.key && options.version, 'cacheIt: required argument missing.');
+
+    var outerDataJson = $window.localStorage[options.prefix + '_' + options.key];
+    if (outerDataJson) {
+      var outerData = JSON.parse(outerDataJson);
+
+      if (outerData.version === options.version) {
+
+        // TODO update last accessed date
+
+        return outerData.data;
+      }
+
+      // if I need an upgrade path, eventually have: if (typeof options.upgrade === 'function') return options.upgrade(outerData.data);
+    }
+    return undefined;
   };
 
   // Wrap getTestSetDetails in a caching layer
+  service._testSetDetailsStorageVersion = 1;
   service.initTestSetDetails = function(testSetRef, ignoreCache) {
 
-    var storageVersion = 1;
-    var storageKey = 'tsd_' + testSetRef;
-    var lastAccessedKey = 'tsd_lastAccessed';
+    var cacheOptions = {
+      prefix: 'tsd',
+      key: testSetRef,
+      version: service._testSetDetailsStorageVersion,
+      maxSize: 1024 * 1024 * 4
+    };
 
     // Deminify the stored format into the working format
     function deminifyTestSetDetails(storedTestSetDetails) {
@@ -424,116 +579,38 @@ angular.module('qa-rally').factory('Rally', ['$log', '$q', '$http', '$window', f
       return workingTestSetDetails;
     }
 
-    function ensureFreeStorageToSize(size) {
-
-      // Local Storage is limited to 5MB. We expect to use 4MB for Test Set Detail structures and the rest for other stuff.
-      // DO NOT: watchdog the 'other stuff'. If it goes over, we'll get an out of space exception which is fine for now.
-      // DO: remove older test set details until <size> plus existing cache is less than 4MB.
-
-      var maxSizeForAllTestSetDetails = 1024 * 1024 * 4;
-      assert(typeof size === 'number' && !isNaN(size) && size > 0 && size <= maxSizeForAllTestSetDetails, 'ensureFreeStorageToSize: size is invalid');
-
-      var targetSize = maxSizeForAllTestSetDetails - size;
-      assert(targetSize > 0, 'ensureFreeStorageToSize: invalid targetSize (shouldn\'t be possible');
-
-      // Maintain a dictionary of last accessed dates outside of the test sets.
-
-      var lastAccessed = {};
-      var lastAccessedJson = $window.localStorage[lastAccessedKey];
-      if (lastAccessedJson) {
-        var lastAccessedOuter = JSON.parse(lastAccessedJson);
-        if (lastAccessedOuter.version === 1) {
-          lastAccessed = lastAccessedOuter.data;
-        }
-      }
-
-      var existingTestSets = {};
-      for(var key in $window.localStorage) {
-        if (key !== storageKey) { // ignore the one being saved
-          if (key.indexOf('tsd_') === 0) {
-            existingTestSets[key] = {
-              size: $window.localStorage[key].length,
-              lastAccessed: lastAccessed[key]
-            };
-          }
-        }
-      }
-
-      // Eliminate test sets until there is room for the new one.
-
-      var sanity = 1000;
-
-      // these functions are not inline/anonymous becasue it is bad practice to define anonymous functions in a loop.
-      function tallySizes(memo, ts)
-      {
-        return memo + ts.size;
-      }
-      function compareVictims(bestYetKey, ts, key) {
-        if (!bestYetKey)
-        {
-          return key;
-        }
-        var bestYet = existingTestSets[bestYetKey];
-        if (bestYet.lastAccessed && ts.lastAccessed) {
-          return bestYet.lastAccessed < ts.lastAccessed ? bestYetKey : key;
-        }
-        if (!bestYet.lastAccessed) {
-          return bestYetKey;
-        }
-        return key;
-      }
-      while (targetSize < _.reduce(existingTestSets, tallySizes, 0)) { // sum of sizes for existing ones
-
-        assert(--sanity > 0, 'ensureFreeStorageToSize: invinite loop guard.');
-
-        var victimKey = _.reduce(existingTestSets, compareVictims, null);
-
-        $log.info('test set data de-cached to make room: ' + victimKey, existingTestSets[victimKey].size, $window.localStorage[victimKey]);
-        delete $window.localStorage[victimKey];
-        delete existingTestSets[victimKey];
-      }
-    }
-
-    function cacheIt(storedTestSetDetails) {
-      var outerDataJson = JSON.stringify({
-        version: storageVersion,
-        data: storedTestSetDetails
-      });
-      ensureFreeStorageToSize(outerDataJson.length + storageKey.length + 2);
-      $window.localStorage[storageKey] = outerDataJson;
-    }
-
     var deferred = $q.defer();
 
     if (!testSetRef) {
-      deferred.resolve(undefined);
+      deferred.reject('No test set specified.');
     }
     else {
 
+      // Try to load it from the cache
+
       var testSetDetails;
       if (!ignoreCache) {
-        var outerDataJson = $window.localStorage[storageKey];
-        if (outerDataJson) {
-          var outerData = JSON.parse(outerDataJson);
-          // no upgrade path for purely cached data. Refetch on stale.
-          if (outerData.version === storageVersion) {
-            var storedTestSetDetails = outerData.data;
-            testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
-          }
+        var storedTestSetDetails = service._decacheIt(cacheOptions);
+        if (storedTestSetDetails) {
+          testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
         }
       }
 
+      // If we got it from cache, return it
+
       if (testSetDetails){
 
-        // TODO update last accessed date
 
         deferred.resolve(testSetDetails);
       }
-      else {
-        service.getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
-          cacheIt(storedTestSetDetails);
 
-          // TODO update last accessed date
+      // If we didn't get it from cache, get it from $http
+      else {
+        getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
+
+          service._cacheIt(
+            _.extend(cacheOptions, {data: storedTestSetDetails})
+          );
 
           var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
           deferred.resolve(testSetDetails);
