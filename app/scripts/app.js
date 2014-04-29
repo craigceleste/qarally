@@ -1,11 +1,9 @@
 'use strict';
 
-angular
-  .module('qa-rally', [
-    'ngSanitize',
-    'ngRoute'
-  ])
-  .config(function ($routeProvider) {
+angular.module('qa-rally', ['ngSanitize', 'ngRoute'])
+  .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
+
+    $httpProvider.interceptors.push('rally-error-handler');
 
 // TODO consider using 'resolve' on routes to prepare data instead of an 'isLoading' state for the controller/template.
 
@@ -21,5 +19,5 @@ angular
       .otherwise({
         redirectTo: '/'
       });
-  });
+  }]);
 

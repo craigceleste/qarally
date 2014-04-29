@@ -1,6 +1,6 @@
 'use strict';
 
-describe('The Settings service', function() {
+describe('Service Settings', function() {
 
   var settingsSvc; // object under test
 

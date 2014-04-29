@@ -6,17 +6,24 @@
 // http://stackoverflow.com/questions/14833326/how-to-set-focus-in-angularjs
 
 // <input type="text" focus-me="focusThisInput">
-angular.module('qa-rally').directive('focusMe', [ '$timeout', '$parse', function($timeout, $parse) {
-  return {
-    link: function(scope, element, attrs) {
-      var model = $parse(attrs.focusMe);
-      scope.$watch(model, function(newValue) {
-        if(newValue) {
-          $timeout(function() {
-            element[0].focus();
-          });
-        }
-      });
-    }
-  };
-}]);
+angular.module('qa-rally')
+  .directive('focusMe', [ '$timeout', '$parse', function($timeout, $parse) {
+    return {
+      link: function(scope, element, attrs) {
+
+        // attrs.focusMe equals 'focusThisInput'
+        // parsing it returns an observable object pointing to $scope['focusThisInput'] if I understand it correctly.
+        var model = $parse(attrs.focusMe);
+
+        // Watch can take a string to watch a property on scope, or an observable as we do here.
+        // Here we are watching for changes of $scope['focusThisInput']
+        scope.$watch(model, function(newValue) {
+          if(newValue) {
+            $timeout(function() {
+              element[0].focus();
+            });
+          }
+        });
+      }
+    };
+  }]);

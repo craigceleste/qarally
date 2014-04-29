@@ -1,6 +1,6 @@
 'use strict';
 
-describe('Rally', function(){
+describe('Service Rally', function(){
 
   // unit under test
   var rallySvc;

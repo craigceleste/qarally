@@ -1,6 +1,6 @@
 'use strict';
 
-describe('The ManageWpiCtrl', function() {
+describe('ManageWpiCtrl', function() {
 
   var manageWpiCtrl; // unit under test
 

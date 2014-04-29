@@ -12,13 +12,17 @@ describe('Underscore', function(){
 
   describe('extend', function(){
 
-    it('is a deep copy.', function() {
+    it('is a deep copy, not a deep clone.', function() {
 
-      var a = { b: { c: 'a fine chanel.'}};
+      var a = {
+        test: { property: 'value' }
+      };
 
-      var b = _.extend({}, a);
+      var b = _.extend({}, a);          // should copy .test to b
+      a.test.property = 'different';    // but does it copy a reference to 'test' or clone 'test'?
 
-      expect(b.b.c).toEqual(a.b.c);
+      expect(b.test.property).toEqual('different');
+      expect(a.test.property).toEqual('different'); // it is a reference. I can't use this for deep cloning stuff. :(
 
     });
   });

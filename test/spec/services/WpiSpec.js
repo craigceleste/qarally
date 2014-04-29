@@ -1,6 +1,6 @@
 'use strict';
 
-describe('The WPI Service', function() {
+describe('Service Wpi', function() {
 
   var wpiSvc; // unit under test
 
