@@ -43,20 +43,20 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
         # from C:\Dev\qarally
         grunt
-   * This will ultimately run a bunch of small tasks (grunt is a task runner) that produces the `/dist` folder. But it also does code review (jshint), unit tests, bundling, minifying, file copying, etc.
+   * This will ultimately run a bunch of small tasks (grunt is a task runner) that produces the `/dist` folder. Don't worry about the `/dist` folder. We just want to make sure things build properly.
 
-1. Run unit tests
+1. Start the unit tests running
 
         # from C:\Dev\qarally
         karma start
-    * This will run the JavaScript and unit tests. It will also monitor for file changes and re-run the tests every time you save. Put this terminal in a corner of a side monitor and keep an eye out for red/green while you work.
+    * This will run the unit tests, monitor for file changes and re-run the tests every time you save a file. Move this PowerShell window to a side monitor and keep an eye out for red/green while you work.
 
-1. Begin a server to view the site. Leave the unit tests running. In another terminal, run:
+1. Begin a web server to run site. Leave the unit tests running. In another terminal, run:
 
         # from C:\Dev\qarally
         grunt serve
-   * Grunt should start a simple web server and open a browser to use the site. This is analogous to Visual Studio's built-in development server for testing. Alternately, configure a different web server to point to the `/app` folder. (I use `pow` for Mac at home.)
-   * This stack of technologies leverages the console more than ASP.NET. Most of the heavy lifting that Visual Studio normally does, is done instead by smaller, focused scripts. Consider becoming comfortable with PowerShell (on windows) or bash (on mac). On windows, consider downloading [Console2], which allows for tabbed console windows, among other things.
+   * Grunt should start a simple web server and open a browser to use the site. This is analogous to Visual Studio's built-in development server for testing. Alternately, configure different web server to point to the `/app` folder. I use `pow` for Mac at home, and IIS for Windows at work.
+   * SIDE NOTE: this stack of technologies leverages scripts run from the console more than ASP.NET. Most of the heavy lifting that Visual Studio normally does, is done instead by smaller, focused scripts. Consider becoming comfortable with PowerShell (on windows) or bash (on mac). On windows, consider downloading [Console2], which allows for tabbed console windows, among other things.
 
 1. Edit the source code in the `/app` directory
    * Consider using a "simple" text editor like [Sublime]. Visual Studio has a tendency to leave extra files in the project. If you do use Visual Studio, figure out what those files are and add them to the `.gitignore` file in the root of the project.
