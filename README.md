@@ -29,7 +29,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Install the node modules required for development.
 
-        # from C:\Dev\qarally   &gt;--- changed
+        # from C:\Dev\qarally   <=== changed
         npm install
    * Node will look at the `package.json` file and download any modules it needs into the `node_modules` directory. These modules are run on your dev computer to do dev related tasks like unit tests, code validation, build tasks like minification, and so forth. (Node is much more general purpose, but that's what we use it for in this project).
 
