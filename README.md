@@ -53,7 +53,6 @@ This app is an internal tool for our company. It will likely be maintained by AS
         # from C:\Dev\qarally
         grunt
    * This will ultimately run a bunch of small tasks (grunt is a task runner) that produces the `/dist` folder. But it also does code review (jshint), unit tests, bundling, minifying, file copying, etc.
-   * *Also run grunt* before checking in changes to make sure it works. `travis-ci.org` will is a continuous integration server that will monitor check-ins and do this as well, but it would be nice if builds did not fail often.
 
 1. Run unit tests
 
@@ -71,7 +70,10 @@ This app is an internal tool for our company. It will likely be maintained by AS
 1. Edit the source code in the `/app` directory
    * Consider using a "simple" text editor like [Sublime]. Visual Studio has a tendency to leave extra files in the project. If you do use Visual Studio, figure out what those files are and add them to the `.gitignore` file in the root of the project.
 
-
+1. Push to git when you're ready
+   * Please run `grunt` and that all the jshint, unit tests, etc pass before checking in.
+   * When you do push changes to github, [travis-ci.org] will be notified of the change, and it will do a build. This is a continuous integration server. Travis will look at the .travis.yml file in the root of the site for configuration.
+   * TODO: distribution from travis is not configured yet. I am hoping to push the `/dist` to an FTP site for a staging area.
 
 
 [Google Chrome]:https://www.google.com/intl/en_uk/chrome/browser/
@@ -81,3 +83,4 @@ This app is an internal tool for our company. It will likely be maintained by AS
 [Node.js]:http://nodejs.org/
 [Git]:http://git-scm.com/downloads
 [Console2]:http://sourceforge.net/projects/console/
+[travis-ci.org]:http://travis-ci.org
