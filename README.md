@@ -19,7 +19,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
    
 1. Decide where to download the source code.
    * Example: C:\Dev
-   * I recommend NOT `C:\Users\Yourname\Documents\Projects` or similar. The path of the files you'll download will become too long for many Windows programs like Visual Studio. Consider `C:\Dev` or something like that.
+   * I recommend NOT `C:\Users\Yourname\Documents\GitHub` (the default). The path of the files will become too long for many Windows programs like Visual Studio.
 
 1. Download the source code:
 
@@ -29,7 +29,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Install the node modules required for development.
 
-        # from C:\Dev\qarally   &gt;--- changed
+        # from C:\Dev\qarally   <=== changed
         npm install
    * Node will look at the `package.json` file and download any modules it needs into the `node_modules` directory. These modules are run on your dev computer to do dev related tasks like unit tests, code validation, build tasks like minification, and so forth. (Node is much more general purpose, but that's what we use it for in this project).
 
@@ -37,26 +37,26 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
         # from C:\Dev\qarally
         bower install
-   * Bower will look at the `bower.json` file and download any modules it needs into the `app/bower_modules` folder. These modules are client-side assets like Bootstrap, jQuery, AngularJS, Underscore and so forth. Bower differs from Node in that node supports 2 places to put modules (globally or locally), where we need client-side components installed inside of the website (`/app`). Bower is a ligher-weight package manager specifically for dealing with client side components _inside_ a sub-part of your project.
+   * Bower will look at the `bower.json` file and download any modules it needs into the `app/bower_modules` folder. These modules are client-side assets like Bootstrap, jQuery, AngularJS, Underscore and so forth. Bower differs from Node in that node supports 2 places to put modules (globally or locally), but we need client-side components installed inside of the website (`/app`). Bower is a ligher-weight package manager specifically for dealing with client side components _inside_ a sub-part of your project.
 
 1. Do a build to make sure it works
 
         # from C:\Dev\qarally
         grunt
-   * This will ultimately run a bunch of small tasks (grunt is a task runner) that produces the `/dist` folder. But it also does code review (jshint), unit tests, bundling, minifying, file copying, etc.
+   * This will ultimately run a bunch of small tasks (grunt is a task runner) that produces the `/dist` folder. Don't worry about the `/dist` folder. We just want to make sure things build properly.
 
-1. Run unit tests
+1. Start the unit tests running
 
         # from C:\Dev\qarally
         karma start
-    * This will run the JavaScript and unit tests. It will also monitor for file changes and re-run the tests every time you save. Put this terminal in a corner of a side monitor and keep an eye out for red/green while you work.
+    * This will run the unit tests, monitor for file changes and re-run the tests every time you save a file. Move this PowerShell window to a side monitor and keep an eye out for red/green while you work.
 
-1. Begin a server to view the site. Leave the unit tests running. In another terminal, run:
+1. Begin a web server to run site. Leave the unit tests running. In another terminal, run:
 
         # from C:\Dev\qarally
         grunt serve
-   * Grunt should start a simple web server and open a browser to use the site. This is analogous to Visual Studio's built-in development server for testing. Alternately, configure a different web server to point to the `/app` folder. (I use `pow` for Mac at home.)
-   * This stack of technologies leverages the console more than ASP.NET. Most of the heavy lifting that Visual Studio normally does, is done instead by smaller, focused scripts. Consider becoming comfortable with PowerShell (on windows) or bash (on mac). On windows, consider downloading [Console2], which allows for tabbed console windows, among other things.
+   * Grunt should start a simple web server and open a browser to use the site. This is analogous to Visual Studio's built-in development server for testing. Alternately, configure different web server to point to the `/app` folder. I use `pow` for Mac at home, and IIS for Windows at work.
+   * SIDE NOTE: this stack of technologies leverages scripts run from the console more than ASP.NET. Most of the heavy lifting that Visual Studio normally does, is done instead by smaller, focused scripts. Consider becoming comfortable with PowerShell (on windows) or bash (on mac). On windows, consider downloading [Console2], which allows for tabbed console windows, among other things.
 
 1. Edit the source code in the `/app` directory
    * Consider using a "simple" text editor like [Sublime]. Visual Studio has a tendency to leave extra files in the project. If you do use Visual Studio, figure out what those files are and add them to the `.gitignore` file in the root of the project.
