@@ -3,7 +3,7 @@
 angular.module('qa-rally', ['ngSanitize', 'ngRoute'])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
-    $httpProvider.interceptors.push('rally-error-handler');
+    $httpProvider.interceptors.push('rallyErrorHandler');
 
 // TODO consider using 'resolve' on routes to prepare data instead of an 'isLoading' state for the controller/template.
 

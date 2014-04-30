@@ -3,7 +3,7 @@
 // Intercept responses from Rally to centralize error handling.
 
 angular.module('qa-rally')
-  .factory('rally-error-handler', ['$q', '$log', function($q, $log){
+  .factory('rallyErrorHandler', ['$q', '$log', function($q, $log){
 
     // TODO: IMPORTANT, this is hugely fragile. How do I hook it up just to Rally requests, without knowledge about the URL's?
     // I need to identify which requests are directly to Rally.
@@ -31,22 +31,26 @@ angular.module('qa-rally')
         // }
 
         // Look for Errors first, then Warnings...
-
         var wasSuccessful = _.reduce(['Errors','Warnings'], function(result, messageType) {
 
-          // Look through each top level key in response.data...
+          if (!result)
+          {
+            return result;
+          }
 
+          // Look through each top level key in response.data...
           return _.reduce(Object.keys(response.data), function(result, key) {
 
-            // If there is a message of this type here, returning false indicate failure.
+            if (!result) {
+              return result;
+            }
 
             if (response.data[key][messageType] && response.data[key][messageType].length) {
-              $log.error('Rally ' + messageType + ': ' + response.data[key][messageType][0]);
+              $log.error('Rally Error: ' + response.data[key][messageType][0]);
               return false;
             }
 
-            // Carry on with the existing result.
-            return result;
+            return true;
           }, true);
         }, true);
 
