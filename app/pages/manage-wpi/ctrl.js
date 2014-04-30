@@ -3,7 +3,10 @@
 // Manage WPI form
 
 angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$location', '$q', 'Wpi', 'Rally',  function($log, $scope, $location, $q, Wpi, Rally) {
-  $log.debug('Creating ManageWpiCtrl')
+  $log.debug('Creating ManageWpiCtrl');
+
+  // TODO inject it
+  var _ = window._;
 
   $scope.refreshSubscriptionData = function(ignoreCache) {
     $scope.isLoading = true;
@@ -11,17 +14,17 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
       $scope.isLoading = false;
       $scope.subscriptionData = subscriptionData;
     });
-  }
+  };
 
   $scope.getWpiCount = function() {
     return Object.keys($scope.wpiList).length;
-  }
+  };
 
   $scope.createWpi = function() {
     var wpi = Wpi.createWpi();
     $scope.wpiList[wpi.id] = wpi;
     $scope.setCurrentWpi(wpi.id);
-  }
+  };
 
   $scope.setCurrentWpi = function(id)
   {
@@ -33,7 +36,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
     // I have a directive watching this property.
     // Whenever it changes, it will focus the control in the form. Seems over complicated just to focus a control.
     $scope.focusCurrentWpiHack = ($scope.focusCurrentWpiHack || 0) + 1;
-  }
+  };
 
   $scope.removeCurrentWpi = function() {
     var victimId = $scope.wpiCurrentId;
@@ -51,7 +54,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
     // It should be the one immediately after the victim alphabetically by label, or the last one in the list if there wasn't one.
     // Gah! I suck at algorithms. This could be way better.
 
-    var newCurrentId = _.reduce($scope.wpiList, function(bestYet, wpi, id, list) {
+    var newCurrentId = _.reduce($scope.wpiList, function(bestYet, wpi, id) {
 
       var thisLabel = (wpi.label || '').toUpperCase();
 
@@ -83,7 +86,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
       // initial bestYet
     }, {id: undefined, label: undefined}).id;
     $scope.setCurrentWpi(newCurrentId);
-  }
+  };
 
   $scope.currentWpiIsValid = function() {
     return Wpi.wpiIsValid($scope.currentWpi);
@@ -91,7 +94,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
 
   $scope.currentWpiHasDefaultLabel = function() {
     return $scope.currentWpi && $scope.currentWpi.label === Wpi.defaultWpiLabel ? true : false;
-  }
+  };
 
   $scope.orderByProjectIterations = function(project) {
 
@@ -108,7 +111,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
         {
           mostRecentStartDate = startDate;
         }
-      })
+      });
     }
 
     if (!mostRecentStartDate) {
@@ -122,26 +125,38 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
     }
 
     return 0;
-  }
+  };
 
   $scope.groupByProjectIterations = function(project) {
     switch($scope.orderByProjectIterations(project)) {
-      case 0: return 'Projects';
-      case 1: return '...with dated iterations';
-      default: return '...with no iterations';
+      case 0:
+        {
+          return 'Projects';
+        }
+      case 1:
+        {
+          return '...with dated iterations';
+        }
+      default:
+        {
+          return '...with no iterations';
+        }
     }
-  }
+  };
 
   $scope.getTestSetCount = function() {
-    if (!$scope.currentWpi) return 0;
+    if (!$scope.currentWpi)
+    {
+      return 0;
+    }
     return Object.keys($scope.currentWpi.testSets).length;
-  }
+  };
 
   $scope.doneClick = function() {
     if ($scope.currentWpiIsValid()) {
-      $location.url('/')
+      $location.url('/');
     }
-  }
+  };
 
   // Expose wpiList to the $scope.
   // Make .currentWpi a shorthand to one of the objects in the list.
@@ -162,7 +177,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
       // We're looking for changes to the currentWpi, from editing the form.
       // Ignore changes to which wpi is current.
 
-      if (!newValue || !oldValue || newValue.id != oldValue.id) {
+      if (!newValue || !oldValue || newValue.id !== oldValue.id) {
         return;
       }
 
@@ -186,14 +201,14 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
 
       // If workspace changes, clear project
 
-      if (newValue.workspaceRef != oldValue.workspaceRef) {
+      if (newValue.workspaceRef !== oldValue.workspaceRef) {
         $scope.currentWpi.projectRef = undefined;
         projectReset = true;
       }
 
       // If project changes, clear iteration
 
-      if (projectReset || newValue.projectRef != oldValue.projectRef) {
+      if (projectReset || newValue.projectRef !== oldValue.projectRef) {
         $scope.currentWpi.iterationRef = undefined;
         iterationReset = true;
 
@@ -208,7 +223,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
 
       // If iteration changes, clear test set and buildNumber
 
-      if (iterationReset || newValue.iterationRef != oldValue.iterationRef) {
+      if (iterationReset || newValue.iterationRef !== oldValue.iterationRef) {
         $scope.currentWpi.buildNumber = undefined;
 
         // TODO: continue defaulting WPI .label
@@ -236,7 +251,10 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
       $scope.wpiBytes = angular.toJson(newValue).length;
 
       // Ignore false positive calls to this watch (happens on page load)
-      if (angular.toJson(newValue) === angular.toJson(oldValue)) return;
+      if (angular.toJson(newValue) === angular.toJson(oldValue))
+      {
+        return;
+      }
 
       Wpi.setList($scope.wpiList);
     }, true); // deep watch

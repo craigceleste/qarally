@@ -1,7 +1,10 @@
 'use strict';
 
 angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$location', '$timeout', '$sce', 'Settings', 'Wpi', 'Rally', function($log, $scope, $location, $timeout, $sce, Settings, Wpi, Rally) {
-  $log.debug('Creating RunTestCasesCtrl')
+  $log.debug('Creating RunTestCasesCtrl');
+
+  // TODO inject it
+  var _ = window._;
 
   function updateScope() {
     $scope.wpiCurrentId = Wpi.getCurrentId();
@@ -17,7 +20,7 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
     if ($scope.currentWpi) {
       if ($scope.currentWpi.testSetRef) {
         Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
-          $scope.testSetDetails = testSetDetails
+          $scope.testSetDetails = testSetDetails;
           updateFilters();
         });
       }
@@ -35,11 +38,11 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
       _.each($scope.testSetDetails.testCases, function(tc) {
 
         tc._isFiltered = (
-             (!tc.WorkProductRef && $scope.currentWpi.filter.withoutWorkProduct)
-          || ( tc.WorkProductRef && $scope.currentWpi.filter.workProducts[tc.WorkProductRef])
-             || (!tc.TestFolderRef  && $scope.currentWpi.filter.withoutTestFolder)
-          || ( tc.TestFolderRef  && $scope.currentWpi.filter.testFolders[tc.TestFolderRef])
-          || ($scope.currentWpi.filter.nameContains && (tc.Name || '').toUpperCase().indexOf($scope.currentWpi.filter.nameContains.toUpperCase()) < 0)
+             (!tc.WorkProductRef && $scope.currentWpi.filter.withoutWorkProduct) ||
+             ( tc.WorkProductRef && $scope.currentWpi.filter.workProducts[tc.WorkProductRef]) ||
+             (!tc.TestFolderRef  && $scope.currentWpi.filter.withoutTestFolder) ||
+             ( tc.TestFolderRef  && $scope.currentWpi.filter.testFolders[tc.TestFolderRef]) ||
+             ($scope.currentWpi.filter.nameContains && (tc.Name || '').toUpperCase().indexOf($scope.currentWpi.filter.nameContains.toUpperCase()) < 0)
           ) ? true : false;
       });
     }
@@ -47,31 +50,30 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
 
   $scope.getLength = function(obj) {
     return Object.keys(obj || {}).length;
-  }
+  };
 
   $scope.openManageWpiForm = function() {
-    $location.url('/manage-wpi')
-  }
+    $location.url('/manage-wpi');
+  };
 
   $scope.wpiIsValid = function(wpi) {
     return Wpi.wpiIsValid(wpi);
-  }
+  };
 
-  $scope.setCurrentWpi = function(id)
-  {
+  $scope.setCurrentWpi = function(id) {
     Wpi.setCurrentId(id);
     updateScope();
-  }
+  };
 
   $scope.refreshTestSets = function() {
     if ($scope.currentWpi) {
       $scope.currentWpi.testSetRef = undefined;
       updateScope();
-      Wpi.refreshTestSets($scope.currentWpi).then(function(wpi) {
+      Wpi.refreshTestSets($scope.currentWpi).then(function() {
         updateScope();
       });
     }
-  }
+  };
 
   $scope.setCurrentTestSet = function(testSetRef) {
     if ($scope.currentWpi) {
@@ -81,7 +83,7 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
         updateScope();
       }
     }
-  }
+  };
 
   $scope.toggleTestFolderFilter = function(testFolderRef) {
     if ($scope.currentWpi && $scope.currentWpi.filter) {
@@ -94,7 +96,7 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
         updateFilters();
       }
     }
-  }
+  };
 
   $scope.toggleAllTestFolderFilter = function(isFiltered) {
     if ($scope.currentWpi && $scope.currentWpi.filter && $scope.testSetDetails) {
@@ -108,14 +110,14 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
         updateFilters();
       }
     }
-  }
+  };
 
   $scope.toggleFilterTestCasesWithoutTestFolder = function() {
     if ($scope.currentWpi && $scope.currentWpi.filter) {
       $scope.currentWpi.filter.withoutTestFolder = $scope.currentWpi.filter.withoutTestFolder ? false : true;
       updateFilters();
     }
-  }
+  };
 
   $scope.toggleWorkProductFilter = function(workProductRef) {
     if ($scope.currentWpi && $scope.currentWpi.filter) {
@@ -128,7 +130,7 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
         updateFilters();
       }
     }
-  }
+  };
 
   $scope.toggleAllWorkProductFilter = function(isFiltered) {
     if ($scope.currentWpi && $scope.currentWpi.filter && $scope.testSetDetails) {
@@ -153,7 +155,7 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
 
   $scope.clearFilters = function() {
     Wpi.clearFilter($scope.currentWpi);
-        updateFilters();
+    updateFilters();
   };
 
   $scope.sanitizeHtml = function(untrustedHtml) {
@@ -162,22 +164,22 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
   };
 
   $scope.$watch('preferences',
-    function(newValue, oldValue) {
+    function() {
       Settings.set($scope.preferences);
     }, true); // deep watch
 
   $scope.$watch('wpiList',
-    function (newValue, oldValue) {
+    function () {
       Wpi.setList($scope.wpiList);
     }, true); // deep watch
 
-  $scope.$watch('currentWpi.filter.nameContains', function(newValue, oldValue) {
+  $scope.$watch('currentWpi.filter.nameContains', function() {
     updateFilters();
   });
 
   // Set up the state in the scope
 
-  $scope.wpiList = Wpi.getList()
+  $scope.wpiList = Wpi.getList();
   updateScope();
 
 
