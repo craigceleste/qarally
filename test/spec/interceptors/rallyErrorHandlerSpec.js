@@ -18,7 +18,7 @@ describe('Interceptor RallyErrorHandler', function() {
 
     inject(function(_$rootScope_) {
       $rootScope = _$rootScope_;
-    })
+    });
   });
 
   it('is wired correctly.', function(){
@@ -69,10 +69,10 @@ describe('Interceptor RallyErrorHandler', function() {
       // Act
 
       var data, rejection;
-      var responseOut = interceptor.response(responseIn)
+      interceptor.response(responseIn)
         .then(
           function(d) { data = d; },
-          function(r) { rejection = r; })
+          function(r) { rejection = r; });
 
       $rootScope.$apply();
 
@@ -100,10 +100,10 @@ describe('Interceptor RallyErrorHandler', function() {
       // Act
 
       var data, rejection;
-      var responseOut = interceptor.response(responseIn)
+      interceptor.response(responseIn)
         .then(
           function(d) { data = d; },
-          function(r) { rejection = r; })
+          function(r) { rejection = r; });
 
       $rootScope.$apply();
 
@@ -148,10 +148,10 @@ describe('Interceptor RallyErrorHandler', function() {
 
       // Act
       var data, rejectionOut;
-      var rejectionOut = interceptor.responseError(rejectionIn)
+      interceptor.responseError(rejectionIn)
         .then(
           function(d) { data = d; },
-          function(r) { rejectionOut = r; })
+          function(r) { rejectionOut = r; });
 
       $rootScope.$apply();
 
