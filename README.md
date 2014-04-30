@@ -12,7 +12,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
     1. [FireFox] - required for running unit tests.
     1. [Sublime] or [Notepad++] or your text editor of choice.
     1. [Node.js] is the engine for running build scripts, unit tests, and all the dev-time stuff.
-    1. [Git] or another git client you like.
+    1. [Git] console app or [GitHub] windows client, or another git client you like.
 
 1. Configure git
  
@@ -76,11 +76,12 @@ This app is an internal tool for our company. It will likely be maintained by AS
    * TODO: distribution from travis is not configured yet. I am hoping to push the `/dist` to an FTP site for a staging area.
 
 
-[Google Chrome]:https://www.google.com/intl/en_uk/chrome/browser/
-[FireFox]:http://www.mozilla.org/en-US/firefox/new/
-[Sublime]:http://www.sublimetext.com/
-[Notepad++]:http://notepad-plus-plus.org/
-[Node.js]:http://nodejs.org/
-[Git]:http://git-scm.com/downloads
 [Console2]:http://sourceforge.net/projects/console/
+[FireFox]:http://www.mozilla.org/en-US/firefox/new/
+[Git]:http://git-scm.com/downloads
+[GitHub]:https://help.github.com/articles/set-up-git
+[Google Chrome]:https://www.google.com/intl/en_uk/chrome/browser/
+[Node.js]:http://nodejs.org/
+[Notepad++]:http://notepad-plus-plus.org/
+[Sublime]:http://www.sublimetext.com/
 [travis-ci.org]:http://travis-ci.org
