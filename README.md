@@ -37,7 +37,7 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
         # from C:\Dev\qarally
         bower install
-   * Bower will look at the `bower.json` file and download any modules it needs into the `app/bower_modules` folder. These modules are client-side assets like Bootstrap, jQuery, AngularJS, Underscore and so forth. Bower differs from Node in that node supports 2 places to put modules (globally or locally), where we need client-side components installed inside of the website (`/app`). Bower is a ligher-weight package manager specifically for dealing with client side components _inside_ a sub-part of your project.
+   * Bower will look at the `bower.json` file and download any modules it needs into the `app/bower_modules` folder. These modules are client-side assets like Bootstrap, jQuery, AngularJS, Underscore and so forth. Bower differs from Node in that node supports 2 places to put modules (globally or locally), but we need client-side components installed inside of the website (`/app`). Bower is a ligher-weight package manager specifically for dealing with client side components _inside_ a sub-part of your project.
 
 1. Do a build to make sure it works
 
