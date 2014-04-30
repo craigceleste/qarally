@@ -8,18 +8,9 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
 1. Install the following software.
 
-    1. [Google Chrome] - required for running unit tests.
-    1. [FireFox] - required for running unit tests.
-    1. [Sublime] or [Notepad++] or your text editor of choice.
-    1. [Node.js] is the engine for running build scripts, unit tests, and all the dev-time stuff.
+    1. [Node.js] is the engine for most dev-time tasks (testing, building, scaffolding, etc.)
     1. [Git] console app or [GitHub] windows client, or another git client you like.
-
-1. Configure git
- 
-        git config --global user.email 'your@email.com'
-        git config --global user.name 'Your Name'
-        git config --global push.default simple
-   * This just saves you some warnings. I'm not a git expert. There is lots of advice on using and configuring git elsewhere.
+    1. [Sublime] or [Notepad++] or your text editor of choice.
 
 1. Install the following node modules by running this from PowerShell.
 
