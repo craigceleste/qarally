@@ -51,7 +51,7 @@ angular.module('qa-rally')
 
     service.setCurrentId = function(id) {
       if (id) {
-        $window.localStorage.wpiCurrentId = JSON.stringify(id);
+        $window.localStorage.wpiCurrentId = angular.toJson(id);
       }
       else {
         delete $window.localStorage.wpiCurrentId;
@@ -62,7 +62,7 @@ angular.module('qa-rally')
 
       var json = $window.localStorage.wpiCurrentId;
       if (json) {
-        return JSON.parse(json);
+        return angular.fromJson(json);
       }
       return undefined;
     };
@@ -72,13 +72,11 @@ angular.module('qa-rally')
 
     service.setList = function(list) {
 
-      // TODO consider validating list. Is it worth it?
-
       if (!list) {
         delete $window.localStorage.wpiList;
       }
       else {
-        $window.localStorage.wpiList = JSON.stringify({
+        $window.localStorage.wpiList = angular.toJson({
           version: service._currentListVersion,
           data: list
         });
@@ -91,7 +89,7 @@ angular.module('qa-rally')
       var resave;
       var outerDataJson = $window.localStorage.wpiList;
       if (outerDataJson) {
-        var outerData = JSON.parse(outerDataJson);
+        var outerData = angular.fromJson(outerDataJson);
         innerData = outerData.data;
         switch(outerData.version) {
           

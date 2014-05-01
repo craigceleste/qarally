@@ -198,7 +198,7 @@ module.exports = function (grunt) {
     // The following *-min tasks produce minified files in the dist folder
     cssmin: {
       options: {
-        root: '<%= yeoman.app %>'
+        relativeTo: '<%= yeoman.app %>'
       }
     },
 
@@ -297,6 +297,18 @@ module.exports = function (grunt) {
       }
     },
 
+    includeSource: {
+      options: {
+        basePath: 'dist/coverage',
+        baseUrl: ''
+      },
+      coverageIndex: {
+        files: {
+          'dist/coverage/index.html': 'app/coverage/index.template.html'
+        }
+      }
+    },
+
     // Run some tasks in parallel to speed up the build process
     concurrent: {
       server: [
@@ -385,6 +397,7 @@ module.exports = function (grunt) {
     'concat',
     'ngmin',
     'copy:dist',
+    'includeSource:coverageIndex',
     'cdnify',
     'cssmin',
     'uglify',

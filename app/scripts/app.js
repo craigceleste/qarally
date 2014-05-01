@@ -5,8 +5,6 @@ angular.module('qa-rally', ['ngSanitize', 'ngRoute'])
 
     $httpProvider.interceptors.push('rallyErrorHandler');
 
-// TODO consider using 'resolve' on routes to prepare data instead of an 'isLoading' state for the controller/template.
-
     $routeProvider
       .when('/', {
         templateUrl: 'pages/run-test-cases/view.html',

@@ -43,7 +43,11 @@ angular.module('qa-rally')
     // Internal helper to produce a single promise for a list of items.
 
     function allItemPromises(listOfItems, getPromiseForItem) {
-      return $q.all(_.reduce(listOfItems, function(promises, item) { return getPromiseForItem(item); }, []));
+      var promises = [];
+      angular.forEach(listOfItems, function(item) {
+        promises.push(getPromiseForItem(item));
+      });
+      return $q.all(promises);
     }
 
     // hard coded starting point: https://rally1.rallydev.com/slm/webservice/v3.0/subscription
@@ -160,6 +164,7 @@ angular.module('qa-rally')
           subscriptionData.workspaces = _.reduce(workspaceList, function(memo, ws) { memo[ws._ref] = ws; return memo; }, {});
 
       // For each workspace in the list, make a separate call for the projects of that workspace.
+      // allItemPromises waits until each concurrent request is complete before returning.
 
           return allItemPromises(workspaceList, function(workspace) {
             return service._getProjectList(workspace.projectsRef)
@@ -168,7 +173,7 @@ angular.module('qa-rally')
 
       // For each project, drill into the iterations in the same way.
 
-                return allItemPromises(projectList, function(project){
+                return allItemPromises(projectList, function(project) {
                   return service._getIterationList(project.iterationsRef)
                     .then(function(iterationList){
                       project.iterations = _.reduce(iterationList, function(memo, it) { memo[it._ref] = it; return memo; }, {});
@@ -199,7 +204,7 @@ angular.module('qa-rally')
       if (!ignoreCache) {
         var outerDataJson = $window.localStorage[storageKey];
         if (outerDataJson) {
-          var outerData = JSON.parse(outerDataJson);
+          var outerData = angular.fromJson(outerDataJson);
           // no upgrade path provided for this data. It is a pure cache; no user data is here.
           if (outerData.version === service._subscriptionDataVersion) {
             innerData = outerData.data;
@@ -212,7 +217,7 @@ angular.module('qa-rally')
       }
       else {
         service._getAllSubscriptionData().then(function(subscriptionData){
-          $window.localStorage[storageKey] = JSON.stringify({
+          $window.localStorage[storageKey] = angular.toJson({
             version: service._subscriptionDataVersion,
             data: subscriptionData
           });
@@ -334,7 +339,7 @@ angular.module('qa-rally')
           return getRallyJson(testSetResponse.data.TestSet.TestCases._ref, {pagesize: rallyMaxPageSize, start: pageStart})
             .then(function(testCaseListResponse){
 
-              _.each(testCaseListResponse.data.QueryResult.Results, function(tc) {
+              angular.forEach(testCaseListResponse.data.QueryResult.Results, function(tc) {
 
                 assert(typeof tc._ref === 'string' && !testSetDetails.testCases[tc._ref], 'TC must have a _ref and it must be unique.');
                 assert(typeof tc.Name === 'string', 'Name is required.');
@@ -428,7 +433,7 @@ angular.module('qa-rally')
       var lastAccessed = {};
       var lastAccessedJson = $window.localStorage[options.prefix + '_lastAccessed'];
       if (lastAccessedJson) {
-        var lastAccessedOuter = JSON.parse(lastAccessedJson);
+        var lastAccessedOuter = angular.fromJson(lastAccessedJson);
         if (lastAccessedOuter.version === 1) {
           lastAccessed = lastAccessedOuter.data;
         }
@@ -507,7 +512,7 @@ angular.module('qa-rally')
 
       assert(options && options.prefix && options.key && options.maxSize && options.data && options.version, 'cacheIt: required argument missing.');
 
-      var outerDataJson = JSON.stringify({
+      var outerDataJson = angular.toJson({
         version: options.version,
         data: options.data
       });
@@ -536,7 +541,7 @@ angular.module('qa-rally')
 
       var outerDataJson = $window.localStorage[options.prefix + '_' + options.key];
       if (outerDataJson) {
-        var outerData = JSON.parse(outerDataJson);
+        var outerData = angular.fromJson(outerDataJson);
 
         if (outerData.version === options.version) {
 
@@ -570,10 +575,10 @@ angular.module('qa-rally')
           workProducts: {}
         };
 
-        workingTestSetDetails.testFolders = JSON.parse(JSON.stringify(storedTestSetDetails.testFolders));
-        workingTestSetDetails.workProducts = JSON.parse(JSON.stringify(storedTestSetDetails.workProducts));
+        workingTestSetDetails.testFolders = angular.fromJson(angular.toJson(storedTestSetDetails.testFolders));
+        workingTestSetDetails.workProducts = angular.fromJson(angular.toJson(storedTestSetDetails.workProducts));
 
-        _.each(storedTestSetDetails.testCases, function(tc) {
+        angular.forEach(storedTestSetDetails.testCases, function(tc) {
           workingTestSetDetails.testCases.push(deminifyTestCase(tc));
         });
 
@@ -610,7 +615,7 @@ angular.module('qa-rally')
           getTestSetDetails(testSetRef).then(function(storedTestSetDetails) {
 
             service._cacheIt(
-              _.extend(cacheOptions, {data: storedTestSetDetails})
+              angular.extend(cacheOptions, {data: storedTestSetDetails})
             );
 
             var testSetDetails = deminifyTestSetDetails(storedTestSetDetails);
@@ -655,7 +660,7 @@ angular.module('qa-rally')
 
           assert(testCaseResultResponse.data.QueryResult.PageSize === rallyMaxPageSize, 'PageSize is expected to match.');
 
-          _.each(testCaseResultResponse.data.QueryResult.Results, function(tcr) {
+          angular.forEach(testCaseResultResponse.data.QueryResult.Results, function(tcr) {
 
             assert(typeof tcr.CreationDate === 'string', 'Test Case CreationDate is invalid.');
 

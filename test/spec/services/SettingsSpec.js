@@ -34,7 +34,7 @@ describe('Service Settings', function() {
     // Get to compare it
 
     var actual = settingsSvc.get();
-    expect(JSON.stringify(actual)).toBe(JSON.stringify(expected)); // cheap way to deep compare
+    expect(angular.toJson(actual)).toBe(angular.toJson(expected)); // cheap way to deep compare
 
     // Set undefined
 
@@ -43,7 +43,7 @@ describe('Service Settings', function() {
     // Get to compare it
 
     actual = settingsSvc.get();
-    expect(JSON.stringify(actual)).toBe(JSON.stringify({})); // get will return empty object if not present
+    expect(angular.toJson(actual)).toBe(angular.toJson({})); // get will return empty object if not present
 
   });
 

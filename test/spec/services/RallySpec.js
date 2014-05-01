@@ -36,7 +36,7 @@ describe('Service Rally', function(){
   // this is not meant to be robust.
 
   function deepCopy(x) {
-    return JSON.parse(JSON.stringify(x));
+    return angular.fromJson(angular.toJson(x));
   }
 
   it('is wired for construction.', function() {
@@ -197,7 +197,7 @@ describe('Service Rally', function(){
 
       // Arrange
 
-      mockWindow.localStorage.subscriptionData = JSON.stringify({
+      mockWindow.localStorage.subscriptionData = angular.toJson({
         version: rallySvc._subscriptionDataVersion,
         data: 'from cache'
       });
@@ -246,7 +246,7 @@ describe('Service Rally', function(){
 
       // Arrange
 
-      mockWindow.localStorage.subscriptionData = JSON.stringify({
+      mockWindow.localStorage.subscriptionData = angular.toJson({
         version: rallySvc._subscriptionDataVersion,
         data: 'from cache'
       });
@@ -277,7 +277,7 @@ describe('Service Rally', function(){
 
       // Arrange
 
-      mockWindow.localStorage.subscriptionData = JSON.stringify({
+      mockWindow.localStorage.subscriptionData = angular.toJson({
         version: rallySvc._subscriptionDataVersion - 1, // older version in the cache
         data: 'from cache'
       });
@@ -371,7 +371,7 @@ describe('Service Rally', function(){
           prefix: 'xx',
           key: '123',
           maxSize: 5000,
-          size: JSON.stringify({
+          size: angular.toJson({
             version:1,
             data: 'stuff'
           }).length
@@ -379,7 +379,7 @@ describe('Service Rally', function(){
 
         var key1 = 'xx_123';
         expect(mockWindow.localStorage[key1]).toEqual(
-          JSON.stringify({
+          angular.toJson({
             version: 1,
             data: 'stuff'
           }));
@@ -406,7 +406,7 @@ describe('Service Rally', function(){
         // Arrange
 
         var key1 = 'xx_123';
-        mockWindow.localStorage[key1] = JSON.stringify({
+        mockWindow.localStorage[key1] = angular.toJson({
             version: 1,
             data: 'stuff'
           });
@@ -451,7 +451,7 @@ describe('Service Rally', function(){
         // Arrange
 
         var key1 = 'xx_123';
-        mockWindow.localStorage[key1] = JSON.stringify({
+        mockWindow.localStorage[key1] = angular.toJson({
             version: 1, // <-- old
             data: 'stuff'
           });
@@ -495,7 +495,7 @@ describe('Service Rally', function(){
           b: 'is unmollested'
         };
 
-        var before = JSON.stringify(mockWindow.localStorage);
+        var before = angular.toJson(mockWindow.localStorage);
 
         // Act
 
@@ -508,7 +508,7 @@ describe('Service Rally', function(){
 
         // Assert
 
-        expect(mockWindow.localStorage).toEqual(JSON.parse(before)); // no change
+        expect(mockWindow.localStorage).toEqual(angular.fromJson(before)); // no change
 
       });
 
@@ -523,7 +523,7 @@ describe('Service Rally', function(){
           'xx_1': new Array(101).join('x'), //   100 x's
           'xx_2': new Array(101).join('x'), // + 100 x's = 200 characters used
 
-          'xx_lastAccessed': JSON.stringify({
+          'xx_lastAccessed': angular.toJson({
             version: 1,
             data: {
               'xx_1': 12345,
@@ -532,7 +532,7 @@ describe('Service Rally', function(){
           })
         };
 
-        var before = JSON.stringify(mockWindow.localStorage);
+        var before = angular.toJson(mockWindow.localStorage);
 
         // Act
 
@@ -545,7 +545,7 @@ describe('Service Rally', function(){
 
         // Assert
 
-        expect(mockWindow.localStorage).toEqual(JSON.parse(before));
+        expect(mockWindow.localStorage).toEqual(angular.fromJson(before));
 
       });
 
@@ -561,7 +561,7 @@ describe('Service Rally', function(){
           'xx_1': new Array(101).join('x'), //   100 x's
           'xx_2': new Array(101).join('x'), // + 100 x's = 200 characters used
 
-          'xx_lastAccessed': JSON.stringify({
+          'xx_lastAccessed': angular.toJson({
             version: 1,
             data: {
               'xx_1': 1, // <-- oldest one
@@ -570,7 +570,7 @@ describe('Service Rally', function(){
           })
         };
 
-        var before = JSON.stringify(mockWindow.localStorage);
+        var before = angular.toJson(mockWindow.localStorage);
 
         // Act
 
@@ -583,7 +583,7 @@ describe('Service Rally', function(){
 
         // Assert
 
-        var expected = JSON.parse(before);
+        var expected = angular.fromJson(before);
         delete expected[key1];
 //TODO not done yet        delete expected.xx_lastModified.data.xx_1;
 
@@ -602,7 +602,7 @@ describe('Service Rally', function(){
           'xx_1': new Array(101).join('x'), //   100 x's
           'xx_2': new Array(101).join('x'), // + 100 x's = 200 characters used
 
-          'xx_lastAccessed': JSON.stringify({
+          'xx_lastAccessed': angular.toJson({
             version: 1,
             data: {
               'xx_1': 2,
@@ -611,7 +611,7 @@ describe('Service Rally', function(){
           })
         };
 
-        var before = JSON.stringify(mockWindow.localStorage);
+        var before = angular.toJson(mockWindow.localStorage);
 
         // Act
 
@@ -625,7 +625,7 @@ describe('Service Rally', function(){
         // Assert
 
         var key2 = 'xx_2';
-        var expected = JSON.parse(before);
+        var expected = angular.fromJson(before);
         delete expected[key2];
 //TODO not done yet        delete expected.xx_lastModified.data.xx_1;
 
@@ -645,7 +645,7 @@ describe('Service Rally', function(){
           'xx_2': new Array(101).join('x'),  // + 100 x's = 200 characters used
           'xx_3': new Array(5000).join('x'), // ... item being replaced will not count
 
-          'xx_lastAccessed': JSON.stringify({
+          'xx_lastAccessed': angular.toJson({
             version: 1,
             data: {
               'xx_1': 1, // <-- oldest one
@@ -655,7 +655,7 @@ describe('Service Rally', function(){
           })
         };
 
-        var before = JSON.stringify(mockWindow.localStorage);
+        var before = angular.toJson(mockWindow.localStorage);
 
         // Act
 
@@ -669,7 +669,7 @@ describe('Service Rally', function(){
         // Assert
 
         var key1 = 'xx_1';
-        var expected = JSON.parse(before);
+        var expected = angular.fromJson(before);
         delete expected[key1];
 //TODO not done yet        delete expected.xx_lastModified.data.xx_1;
 
@@ -725,7 +725,7 @@ describe('Service Rally', function(){
           'xx_2': new Array(101).join('x'),  // + 100 x's = 200 characters used
           'xx_3': new Array(5000).join('x'), // ... item being replaced will not count
 
-          'xx_lastAccessed': JSON.stringify({
+          'xx_lastAccessed': angular.toJson({
             version: 'bad', // <----- wrong version
             data: {
               'xx_1': 3,
@@ -735,7 +735,7 @@ describe('Service Rally', function(){
           })
         };
 
-        var before = JSON.stringify(mockWindow.localStorage);
+        var before = angular.toJson(mockWindow.localStorage);
 
         // Act
 
@@ -749,7 +749,7 @@ describe('Service Rally', function(){
         // Assert
 
         var key1 = 'xx_1';
-        var expected = JSON.parse(before);
+        var expected = angular.fromJson(before);
         delete expected[key1]; // <---- it removes the first one instead of the earliest date
 //TODO not done yet        delete expected.xx_lastModified.data.xx_1;
 
@@ -769,7 +769,7 @@ describe('Service Rally', function(){
           'xx_2': new Array(101).join('x'),  // + 100 x's = 200 characters used
           'xx_3': new Array(5000).join('x'), // ... item being replaced will not count
 
-          'xx_lastAccessed': JSON.stringify({
+          'xx_lastAccessed': angular.toJson({
             version: 1,
             data: {
               'xx_1': 1,
@@ -779,7 +779,7 @@ describe('Service Rally', function(){
           })
         };
 
-        var before = JSON.stringify(mockWindow.localStorage);
+        var before = angular.toJson(mockWindow.localStorage);
 
         // Act
 
@@ -793,7 +793,7 @@ describe('Service Rally', function(){
         // Assert
 
         var key2 = 'xx_2';
-        var expected = JSON.parse(before);
+        var expected = angular.fromJson(before);
         delete expected[key2];
 //TODO not done yet        delete expected.xx_lastModified.data.xx_1;
 
@@ -959,10 +959,10 @@ describe('Service Rally', function(){
       fakeBackend.setup($httpBackend);
 
       // TODO this technique of using the output of the previous test was a bad idea. refator.
-      var temp = JSON.parse(cachedTestSetDetails);
+      var temp = angular.fromJson(cachedTestSetDetails);
       expect(temp.version).toEqual(rallySvc._testSetDetailsStorageVersion);
       temp.version = temp.version - 1; // <-- point of the test: old data in the cache
-      mockWindow.localStorage['tsd_' + fakeBackend.testSetDetails.inputs.testSetRef] = JSON.stringify(temp);
+      mockWindow.localStorage['tsd_' + fakeBackend.testSetDetails.inputs.testSetRef] = angular.toJson(temp);
 
       // Act
 
