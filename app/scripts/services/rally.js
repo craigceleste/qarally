@@ -43,7 +43,11 @@ angular.module('qa-rally')
     // Internal helper to produce a single promise for a list of items.
 
     function allItemPromises(listOfItems, getPromiseForItem) {
-      return $q.all(_.reduce(listOfItems, function(promises, item) { return getPromiseForItem(item); }, []));
+      var promises = [];
+      angular.forEach(listOfItems, function(item) {
+        promises.push(getPromiseForItem(item));
+      });
+      return $q.all(promises);
     }
 
     // hard coded starting point: https://rally1.rallydev.com/slm/webservice/v3.0/subscription
