@@ -300,7 +300,12 @@ module.exports = function (grunt) {
     includeSource: {
       options: {
         basePath: 'dist/coverage',
-        baseUrl: ''
+        baseUrl: '',
+        templates: {
+          html: {
+            link: '<li><a href="{filePath}">{filePathDecoded}</a></li>'
+          }
+        }
       },
       coverageIndex: {
         files: {
@@ -397,7 +402,7 @@ module.exports = function (grunt) {
     'concat',
     'ngmin',
     'copy:dist',
-//    'includeSource:coverageIndex',    // requires local modifications to includeSource grunt task. commented out unless working locally. I hope to push a feature to their code base or fork it later.
+//    'includeSource:coverageIndex',    // using modified includeSource grunt task. pull request pending.
     'cdnify',
     'cssmin',
     'uglify',
