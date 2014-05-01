@@ -14,7 +14,7 @@ angular.module('qa-rally')
         delete $window.localStorage[preferencesKey];
       }
       else {
-        $window.localStorage[preferencesKey] = JSON.stringify(preferences);
+        $window.localStorage[preferencesKey] = angular.toJson(preferences);
       }
     };
 
@@ -23,7 +23,7 @@ angular.module('qa-rally')
       var preferencesJson = $window.localStorage[preferencesKey];
       if (preferencesJson) {
         try {
-          preferences = JSON.parse(preferencesJson);
+          preferences = angular.fromJson(preferencesJson);
         }
         catch(e)
         {

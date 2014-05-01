@@ -14,11 +14,21 @@
     <!-- endbuild -->
   </head>
   <body>
-    <!--[if lt IE 9]>
-      <p>TODO: unsupported browser</p>
-    <![endif]-->
 
+    <!--[if lt IE 9]>
+
+<style>body { background-color: black;}</style>
+<div style="text-align:center;">
+    <img src="http://i.imgur.com/7Sjh2dg.gif">
+</div>
+
+    <![endif]-->
+    
+    <!--[if gte IE 9]><!-->
     <div ng-view></div>
+    <!--<![endif]-->
+
+    
 
     <!-- build:js scripts/vendor.js -->
     <!-- bower:js -->

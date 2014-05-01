@@ -35,7 +35,7 @@ angular.module('qa-rally').controller('RunTestCasesCtrl', ['$log', '$scope', '$l
 
     if ($scope.currentWpi && $scope.currentWpi.filter && $scope.testSetDetails) {
 
-      _.each($scope.testSetDetails.testCases, function(tc) {
+      angular.forEach($scope.testSetDetails.testCases, function(tc) {
 
         tc._isFiltered = (
              (!tc.WorkProductRef && $scope.currentWpi.filter.withoutWorkProduct) ||

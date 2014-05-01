@@ -177,7 +177,7 @@ describe('Service Wpi', function() {
 
       // Arrange
 
-      mockWindow.localStorage.wpiList = JSON.stringify({
+      mockWindow.localStorage.wpiList = angular.toJson({
         version: 1,
         data:{my:'list'}
       });
@@ -203,7 +203,7 @@ describe('Service Wpi', function() {
 
       // Arrange
 
-      mockWindow.localStorage.wpiList = JSON.stringify({
+      mockWindow.localStorage.wpiList = angular.toJson({
         version: 2,
         data:{my:'list'}
       });
@@ -228,7 +228,7 @@ describe('Service Wpi', function() {
 
       // Arrange
 
-      mockWindow.localStorage.wpiList = JSON.stringify({
+      mockWindow.localStorage.wpiList = angular.toJson({
         version: 555,
         data:{my:'list'}
       });

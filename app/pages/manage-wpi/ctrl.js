@@ -105,7 +105,7 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
 
     var mostRecentStartDate;
     if (project && project.iterations) {
-      _.each(project.iterations, function(iteration){
+      angular.forEach(project.iterations, function(iteration){
         var startDate = new Date(iteration.startDate);
         if (!mostRecentStartDate || mostRecentStartDate < startDate)
         {
