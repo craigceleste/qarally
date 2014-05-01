@@ -63,9 +63,8 @@ This app is an internal tool for our company. It will likely be maintained by AS
    * Consider using a "simple" text editor like [Sublime]. Visual Studio has a couple of problems for this project. First: it has a tendency to format code in a way that jshint will reject, and I kind of like jshint. It takes an amount of effort to configure Visual Studio to play nice. Second: Visual Studio has a tendency to leave extra files in the project, but I think you can configure it not to. If you do use Visual Studio, figure out what those files are and add them to `.gitignore`, and don't check-in using Visual Studio unless you know what it is going to manipulate in the project.
 
 1. Push to git when you're ready
-   * Please run `grunt` and that all the jshint, unit tests, etc pass before checking in.
-   * When you do push changes to github, [travis-ci.org] will be notified of the change, and it will do a build. This is a continuous integration server. Travis will look at the .travis.yml file in the root of the site for configuration.
-   * TODO: distribution from travis is not configured yet. I am hoping to push the `/dist` to an FTP site for a staging area.
+   * Please run `grunt` to verify that everything passes before pushing your changes up to github.
+   * When you do push changes to github, [travis-ci.org] will be notified of the change, and it will do a build. This is a continuous integration service. Travis will look at the .travis.yml file in the root of the site for configuration. If the build is successful, it will publish the `/dist` folder to [TODO not done].
 
 
 [Console2]:http://sourceforge.net/projects/console/
