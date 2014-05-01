@@ -72,8 +72,6 @@ angular.module('qa-rally')
 
     service.setList = function(list) {
 
-      // TODO consider validating list. Is it worth it?
-
       if (!list) {
         delete $window.localStorage.wpiList;
       }

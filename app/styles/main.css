@@ -40,7 +40,7 @@ But for now I add a vertical scrollbar on the dropdown-menu. But don't pollute b
 
 /*
 Limit the width of some labels in the navbar to avoid navbar wrapping.
-TODO review. this solution loses the .caret in the overflow area. Alternate solutions get klugey with keeping the caret on the baseline
+Note: this solution loses the .caret in the overflow area. Alternate solutions get klugey with keeping the caret on the baseline
 */
 @media(min-width:768px) {
   .dropdown > .wide-label {
@@ -64,7 +64,6 @@ Bootstrap 3 doesn't support the submenu.
 This solution: http://firdaus.grandexa.com/2013/09/twitter-bootstrap-3-multilevel-dropdown-menu/
 ...is not cross-browser perfect, especially at lower screen resolutions.
 But it gets the job done for the normal use case.
-TODO consider what media queries I need for it to work in responsive small-screen modes.
 */
 .dropdown-submenu { position:relative; }
 .dropdown-submenu > .dropdown-menu { top:0; left:100%; margin-top:-6px; margin-left:-1px; -webkit-border-radius:0 6px 6px 6px; -moz-border-radius:0 6px 6px 6px; border-radius:0 6px 6px 6px; }

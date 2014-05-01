@@ -229,9 +229,6 @@ angular.module('qa-rally').controller('ManageWpiCtrl', ['$log', '$scope', '$loca
         // TODO: continue defaulting WPI .label
         // If it is "FA Web", call it "FA Web 90" where 90 is the trailing number of iteration name (in the format "Sprint 90"). If it is off convention, leave the .label unchanged
 
-        // TODO review: sometimes I use Rally service and sometimes WPI service. Is it right? or badly designed?
-        // ... Rally service was originally meant as a data access layer to Rally. Wpi was logical stuff that was in the controller, but moved out to a service since several screens used it.
-
         Wpi.refreshTestSets($scope.currentWpi).then(function(wpi){
           Rally.initTestSetDetails(wpi.testSetRef);
         });
