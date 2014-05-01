@@ -3,8 +3,8 @@
 // Rally service
 
 //    - Stateless data access service to interact with Rally web services.
-//    - Manage caching of data in window.localStorage.
-//    - Transformation of Rally data into normalized local data (discard stuff we don't need).
+//    - Manage caching of data in window.localStorage   TODO clean embedded logic and move to a separate caching service
+//    - Transformation of Rally data into normalized local data (discard stuff we don't need) TODO find a third party JavaScript object mapper library
 
 angular.module('qa-rally')
   .factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http, $window) {

@@ -397,7 +397,7 @@ module.exports = function (grunt) {
     'concat',
     'ngmin',
     'copy:dist',
-    'includeSource:coverageIndex',
+//    'includeSource:coverageIndex',    // requires local modifications to includeSource grunt task. commented out unless working locally. I hope to push a feature to their code base or fork it later.
     'cdnify',
     'cssmin',
     'uglify',
