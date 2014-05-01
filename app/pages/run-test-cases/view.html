@@ -221,25 +221,21 @@
 
   <div id="tc-sidebar">
     <div class="well">
-      <form class="form">
-        <input type="search" class="form-control" accesskey="s" placeholder="Search (alt-s)" ng-model="search">
-      </form>
-      <h5 id="testCasesLabel">Test Cases</h5>
-      <div id="tc-list" class="button-list small" ps-stop-scroll>
-        <div class="tc-button"
-          ng-repeat="tc in testSetDetails.testCases"
-          ng-class="{
-            'sad': tc._isSad,
-            'happy': tc._isHappy,
-            'hide': tc._isFiltered
-          }"
-          hover-hint="{'#testCasesLabel': tc.FormattedID + ':' + tc.Name}">
-          <div>
-            {{tc.FormattedID}}
-            {{tc._isSad ? '&#x2718;' : tc._isHappy ? '&#x2713;' : '&#9675;'}}
-          </div>
-        </div>
-      </div>
+      <p>
+        <small>
+          I have plans for this area. Nothing here yet, though.
+        </small>
+      </p>
+      <p>
+        <small>
+          The rest of the content should work around it when it's visible or hidden. It should also adjust in size, responsive to the size of the window. It will eventually hide when the window is small.
+        </small>
+      </p>
+      <p>
+        <small>
+          No mandatory content will go here (that you can't use the app without). It is intended to contain overview or summary info, notifications and navigation helpers. It is optional and may be shown as a user option.
+        </small>
+      </p>
     </div>
   </div>
 
