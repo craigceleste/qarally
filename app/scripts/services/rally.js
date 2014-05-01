@@ -164,6 +164,7 @@ angular.module('qa-rally')
           subscriptionData.workspaces = _.reduce(workspaceList, function(memo, ws) { memo[ws._ref] = ws; return memo; }, {});
 
       // For each workspace in the list, make a separate call for the projects of that workspace.
+      // allItemPromises waits until each concurrent request is complete before returning.
 
           return allItemPromises(workspaceList, function(workspace) {
             return service._getProjectList(workspace.projectsRef)
@@ -172,7 +173,7 @@ angular.module('qa-rally')
 
       // For each project, drill into the iterations in the same way.
 
-                return allItemPromises(projectList, function(project){
+                return allItemPromises(projectList, function(project) {
                   return service._getIterationList(project.iterationsRef)
                     .then(function(iterationList){
                       project.iterations = _.reduce(iterationList, function(memo, it) { memo[it._ref] = it; return memo; }, {});
