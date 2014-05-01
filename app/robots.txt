@@ -1,3 +1,4 @@
-# robotstxt.org
+# it is an internal app of dynamic data. no point in indexing.
 
 User-agent: *
+Disallow: /
