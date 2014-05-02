@@ -6,6 +6,8 @@
 //    - Manage caching of data in window.localStorage   TODO clean embedded logic and move to a separate caching service
 //    - Transformation of Rally data into normalized local data (discard stuff we don't need) TODO find a third party JavaScript object mapper library
 
+// Methods that begin with _ are to be considered private but are exposed for ease of testing.
+
 angular.module('QaRally')
   .factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http, $window) {
 
@@ -605,9 +607,8 @@ angular.module('QaRally')
         // If we got it from cache, return it
 
         if (testSetDetails){
-
-
           deferred.resolve(testSetDetails);
+
         }
 
         // If we didn't get it from cache, get it from $http
