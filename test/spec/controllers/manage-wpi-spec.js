@@ -1,6 +1,6 @@
 'use strict';
 
-describe('ManageWpiCtrl', function() {
+describe('Controller ManageWpi', function() {
 
   var manageWpiCtrl; // unit under test
 
@@ -9,7 +9,7 @@ describe('ManageWpiCtrl', function() {
 
   beforeEach(function() {
 
-    module('qa-rally');
+    module('QaRally');
 
     module(function($provide) {
       mockWindow = { localStorage: {} };
@@ -57,7 +57,7 @@ describe('ManageWpiCtrl', function() {
     
       // Act
 
-      manageWpiCtrl = $controller('ManageWpiCtrl', { $scope: $scope });
+      manageWpiCtrl = $controller('ManageWpi', { $scope: $scope });
       
       // Assert
 
@@ -97,7 +97,7 @@ describe('ManageWpiCtrl', function() {
       
       // Act
 
-      manageWpiCtrl = $controller('ManageWpiCtrl', { $scope: $scope });
+      manageWpiCtrl = $controller('ManageWpi', { $scope: $scope });
       $httpBackend.flush();
 
       // Assert
@@ -119,7 +119,7 @@ describe('ManageWpiCtrl', function() {
       fakeBackend.setup($httpBackend);
 
       $scope = $rootScope.$new();
-      manageWpiCtrl = $controller('ManageWpiCtrl', { $scope: $scope });
+      manageWpiCtrl = $controller('ManageWpi', { $scope: $scope });
 
       $httpBackend.flush();
 

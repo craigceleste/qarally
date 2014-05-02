@@ -58,7 +58,7 @@ Main Form
         <div class="list-group">
           <a  href="javascript:void(0);"
             class="list-group-item"
-            ng-repeat="w in wpiList | toArray | orderBy:'label'"
+            ng-repeat="w in wpiList | psToArray | orderBy:'label'"
             ng-class="{
               'active': wpiCurrentId == w.id
             }"
@@ -99,7 +99,7 @@ Main Form
               ng-disabled="!currentWpi"
               ng-model="currentWpi.workspaceRef"
               ng-required
-              ng-options="w._ref as w.name for w in subscriptionData.workspaces | toArray | orderBy:'name'"
+              ng-options="w._ref as w.name for w in subscriptionData.workspaces | psToArray | orderBy:'name'"
               focus-me="focusCurrentWpiHack"
               >
               <option>Select a Workspace</option>
@@ -111,7 +111,7 @@ Main Form
               ng-disabled="!currentWpi"
               ng-model="currentWpi.projectRef"
               ng-required
-              ng-options="p._ref as p.name group by groupByProjectIterations(p) for (_ref,p) in subscriptionData.workspaces[currentWpi.workspaceRef].projects | toArray | orderBy:[orderByProjectIterations,'name']"
+              ng-options="p._ref as p.name group by groupByProjectIterations(p) for (_ref,p) in subscriptionData.workspaces[currentWpi.workspaceRef].projects | psToArray | orderBy:[orderByProjectIterations,'name']"
               >
               <option>Select a Project</option>
             </select>
@@ -125,7 +125,7 @@ Main Form
               ng-disabled="!currentWpi"
               ng-model="currentWpi.iterationRef"
               ng-required
-              ng-options="i._ref as i.name for i in subscriptionData.workspaces[currentWpi.workspaceRef].projects[currentWpi.projectRef].iterations | toArray | orderBy:'name':true"
+              ng-options="i._ref as i.name for i in subscriptionData.workspaces[currentWpi.workspaceRef].projects[currentWpi.projectRef].iterations | psToArray | orderBy:'name':true"
               >
               <option>Select an Iteration</option>
             </select>
@@ -170,7 +170,7 @@ Main Form
           </p>
           <br/>
           <div class="alert alert-success" ng-if="currentWpiIsValid()">
-            <p>Click <strong>Done</strong> to begin testing with this WPI.</p>
+            <p>Click <strong>Done</strong> to begin testing <strong>{{currentWpi.label}}</strong>.</p>
           </div>
           </form>
       </div>

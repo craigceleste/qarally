@@ -6,7 +6,7 @@
 //    - Manage caching of data in window.localStorage   TODO clean embedded logic and move to a separate caching service
 //    - Transformation of Rally data into normalized local data (discard stuff we don't need) TODO find a third party JavaScript object mapper library
 
-angular.module('qa-rally')
+angular.module('QaRally')
   .factory('Rally', ['$log', '$q', '$http', '$window', function($log, $q, $http, $window) {
 
     var service = {};

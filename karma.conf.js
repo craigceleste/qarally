@@ -28,7 +28,7 @@ module.exports = function(config) {
       'app/pages/**/*.js',
 
       // tests
-      'test/**/*Spec.js'
+      'test/**/*-spec.js'
     ],
 
     // list of files / patterns to exclude

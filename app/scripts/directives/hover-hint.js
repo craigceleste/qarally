@@ -2,8 +2,8 @@
 
 // When you hover over this element, another element gets a hint.
 // Use case: hover over TC in the left side nav area, the label above the nav area gets the title of the TC.
-angular.module('qa-rally')
-  .directive('hoverHint', [function() {
+angular.module('QaRally')
+  .directive('psHoverHint', [function() {
     return {
       link: function(scope, element, attr) {
 

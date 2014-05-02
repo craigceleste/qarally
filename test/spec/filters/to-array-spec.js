@@ -1,15 +1,15 @@
 'use strict';
 
-describe('Filter toArray', function(){
+describe('Filter psToArray', function(){
 
   // Unit under test
   var filter;
 
   beforeEach(function(){
-    module('qa-rally');
+    module('QaRally');
 
     inject(function($injector){
-      filter = $injector.get('$filter')('toArray');
+      filter = $injector.get('$filter')('psToArray');
     });
   });
 

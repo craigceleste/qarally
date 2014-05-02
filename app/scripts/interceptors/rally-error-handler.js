@@ -2,8 +2,8 @@
 
 // Intercept responses from Rally to centralize error handling.
 
-angular.module('qa-rally')
-  .factory('rallyErrorHandler', ['$q', '$log', function($q, $log){
+angular.module('QaRally')
+  .factory('RallyErrorHandler', ['$q', '$log', function($q, $log){
 
     // TODO: IMPORTANT, this is hugely fragile. How do I hook it up just to Rally requests, without knowledge about the URL's?
     // I need to identify which requests are directly to Rally.

@@ -23,7 +23,7 @@
           <li>
             <a>Select one WPI to work on.</a>
           </li>
-          <li ng-repeat="w in wpiList | toArray | filter:wpiIsValid | orderBy:'label'">
+          <li ng-repeat="w in wpiList | psToArray | filter:wpiIsValid | orderBy:'label'">
             <a ng-click="setCurrentWpi(w.id)" href="javascript:void(0);">
               <span class="glyphicon" ng-class="{'glyphicon-ok': wpiCurrentId == w.id}"></span>
               {{w.label}}
@@ -46,7 +46,7 @@
           <li>
             <a>Select one test set to work on.</a>
           </li>
-          <li ng-repeat="ts in currentWpi.testSets | toArray | orderBy:'name'">
+          <li ng-repeat="ts in currentWpi.testSets | psToArray | orderBy:'name'">
             <a ng-click="setCurrentTestSet(ts._ref)" href="javascript:void(0);">
               <span class="glyphicon" ng-class="{'glyphicon-ok': currentWpi.testSetRef == ts._ref}"></span>
               TS1234 {{ts.name}}
@@ -98,7 +98,7 @@
                 </a>
               </li>
               <li class="divider"></li>
-              <li ng-repeat="wp in testSetDetails.workProducts | toArray | orderBy:'name'">
+              <li ng-repeat="wp in testSetDetails.workProducts | psToArray | orderBy:'name'">
                 <a href="javascript:void(0);" ps-noprop-click="toggleWorkProductFilter(wp._ref)">
                   <span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.workProducts[wp._ref]}"></span>
                   {{wp.FormattedID}} {{wp.Name}}
@@ -132,7 +132,7 @@
                 </a>
               </li>
               <li class="divider"></li>
-              <li ng-repeat="tf in testSetDetails.testFolders | toArray | orderBy:'name'">
+              <li ng-repeat="tf in testSetDetails.testFolders | psToArray | orderBy:'name'">
                 <a href="javascript:void(0);" ps-noprop-click="toggleTestFolderFilter(tf._ref)">
                   <span class="glyphicon" ng-class="{'glyphicon-ok': !currentWpi.filter.testFolders[tf._ref]}"></span>
                   {{tf.FormattedID}} {{tf.Name}}

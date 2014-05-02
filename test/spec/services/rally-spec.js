@@ -10,7 +10,7 @@ describe('Service Rally', function(){
   
   beforeEach(function() {
 
-    module('qa-rally');
+    module('QaRally');
 
     mockWindow = { localStorage: {} };
 

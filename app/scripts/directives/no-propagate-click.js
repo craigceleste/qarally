@@ -2,7 +2,7 @@
 
 // Meant to work like ng-click, but to stopPropagation first.
 
-angular.module('qa-rally')
+angular.module('QaRally')
   .directive('psNopropClick', ['$parse', function($parse) {
     return {
       link: function(scope, element, attr) {

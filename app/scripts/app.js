@@ -1,18 +1,18 @@
 'use strict';
 
-angular.module('qa-rally', ['ngSanitize', 'ngRoute'])
+angular.module('QaRally', ['ngSanitize', 'ngRoute'])
   .config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
-    $httpProvider.interceptors.push('rallyErrorHandler');
+    $httpProvider.interceptors.push('RallyErrorHandler');
 
     $routeProvider
       .when('/', {
         templateUrl: 'pages/run-test-cases/view.html',
-        controller: 'RunTestCasesCtrl'
+        controller: 'RunTestCases'
       })
       .when('/manage-wpi', {
         templateUrl: 'pages/manage-wpi/view.html',
-        controller: 'ManageWpiCtrl'
+        controller: 'ManageWpi'
       })
       .otherwise({
         redirectTo: '/'

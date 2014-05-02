@@ -2,7 +2,7 @@
 
 // WPI = named combination of {Workspace + Project + Iteration} for easier access to commonly used iterations.
 
-angular.module('qa-rally')
+angular.module('QaRally')
   .factory('Settings', ['$log', '$window', function($log, $window) {
 
     var service = {};

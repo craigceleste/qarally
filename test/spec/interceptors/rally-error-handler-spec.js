@@ -10,10 +10,10 @@ describe('Interceptor RallyErrorHandler', function() {
 
   beforeEach(function(){
 
-    module('qa-rally');
+    module('QaRally');
 
-    inject(function(rallyErrorHandler){
-      interceptor = rallyErrorHandler;
+    inject(function(RallyErrorHandler){
+      interceptor = RallyErrorHandler;
     });
 
     inject(function(_$rootScope_) {
