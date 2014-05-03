@@ -6,6 +6,19 @@
 
 <h1>Code Coverage for QA Rally</h1>
 
+<p>The code for QA Rally is here: <a href="http://github.com/craigceleste/qarally">http://github.com/craigceleste/qarally</a></p>
+
+<p>The builds are done here: <a href="https://travis-ci.org/craigceleste/qarally">https://travis-ci.org/craigceleste/qarally</a></p>
+
+<p>
+  Unit tests for QA Rally are run against <a href="http://phantomjs.org/">PhantomJS</a> as part of the build process.
+  PhantomJS is a webkit browser (related to Chrome and Safari) except it does not have a GUI. The JavaScript engine, rendering engine, DOM, etc. are all controlled via command line.
+  It is not intended to guarantee that the code will work in mainstream browsers. It is intended to catch dumb mechanical and logical JavaScript issues.
+  Regular browsers are not available to test with on the build machine, but we can run the tests manually in most desktop browsers (I run them regularly on Sarari, Chrome and IE11).
+</p>
+
+<h2>Code coverage report</h2>
+
 <ul>
 <!-- include: "type": "link", "files": "*/index.html" -->
 </ul>

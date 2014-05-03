@@ -96,7 +96,8 @@ angular.module('QaRally')
           // IMPORTANT: wpiList contains user-entered data. We should make an effort not to blow it away after a software  update.
           // If the schema changes:
           // 1. increment service._currentListVersion
-          // 2. Note that there is no break until we get to _currentListVersion.
+          // 2. provide an upgrade path here, to transform the data: even if it is to intentionally nuke it.
+          // Note that there is no break until we get to _currentListVersion.
 
           case 1:
             {

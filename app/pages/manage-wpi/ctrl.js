@@ -9,6 +9,22 @@ angular.module('QaRally')
     // TODO inject it
     var _ = window._;
 
+    function init() {
+      // Expose wpiList to the $scope.
+      // Make .currentWpi a shorthand to one of the objects in the list.
+
+      $scope.wpiList = Wpi.getList();
+      $scope.wpiCurrentId = Wpi.getCurrentId();
+      $scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId]; // may be undefined if none selected
+      if ($scope.currentWpi) {
+        $scope.focusCurrentWpiHack = ($scope.focusCurrentWpiHack || 0) + 1;
+      }
+      $scope.refreshSubscriptionData();
+
+      $scope.$watch('currentWpi', watchCurrentWpi, true);
+      $scope.$watch('wpiList', watchWpiList , true);
+    }
+
     $scope.refreshSubscriptionData = function(ignoreCache) {
       $scope.isLoading = true;
       Rally.initSubscriptionData(ignoreCache).then(function(subscriptionData) {
@@ -159,103 +175,85 @@ angular.module('QaRally')
       }
     };
 
-    // Expose wpiList to the $scope.
-    // Make .currentWpi a shorthand to one of the objects in the list.
+    function watchCurrentWpi(newValue, oldValue) {
 
-    $scope.wpiList = Wpi.getList();
-    $scope.wpiCurrentId = Wpi.getCurrentId();
-    $scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId]; // may be undefined if none selected
-    if ($scope.currentWpi) {
-      $scope.focusCurrentWpiHack = ($scope.focusCurrentWpiHack || 0) + 1;
+      // We're looking for changes to the currentWpi, from editing the form.
+      // Ignore changes to which wpi is current.
+
+      if (!newValue || !oldValue || newValue.id !== oldValue.id) {
+        return;
+      }
+
+      function safeGetProjectName(workspaceRef, projectRef) {
+        // if objects are defined, expect their schema is correct.
+        if ($scope.subscriptionData) {
+
+          var workspace = $scope.subscriptionData.workspaces[workspaceRef];
+          if (workspace) {
+            var project = workspace.projects[projectRef];
+            if (project) {
+              return project.name;
+            }
+          }
+        }
+        return undefined;
+      }
+
+      var projectReset;
+      var iterationReset;
+
+      // If workspace changes, clear project
+
+      if (newValue.workspaceRef !== oldValue.workspaceRef) {
+        $scope.currentWpi.projectRef = undefined;
+        projectReset = true;
+      }
+
+      // If project changes, clear iteration
+
+      if (projectReset || newValue.projectRef !== oldValue.projectRef) {
+        $scope.currentWpi.iterationRef = undefined;
+        iterationReset = true;
+
+        // UX helper: actively try to default the label so everyone doesn't have "New WPI" or so as their WPI label
+        if (!newValue.label || newValue.label === Wpi.defaultWpiLabel) {
+          var projectName = safeGetProjectName(newValue.workspaceRef, newValue.projectRef);
+          if (projectName) {
+            $scope.currentWpi.label = projectName;
+          }
+        }
+      }
+
+      // If iteration changes, clear test set and buildNumber
+
+      if (iterationReset || newValue.iterationRef !== oldValue.iterationRef) {
+        $scope.currentWpi.buildNumber = undefined;
+
+        // TODO: continue defaulting WPI .label
+        // If it is "FA Web", call it "FA Web 90" where 90 is the trailing number of iteration name (in the format "Sprint 90"). If it is off convention, leave the .label unchanged
+
+        Wpi.refreshTestSets($scope.currentWpi).then(function(wpi){
+          Rally.initTestSetDetails(wpi.testSetRef);
+        });
+
+        Wpi.clearFilter();
+      }
     }
-    $scope.refreshSubscriptionData();
 
-    // As the current WPI is edited, correct 'downstream' fields.
+    function watchWpiList(newValue, oldValue) {
 
-    $scope.$watch('currentWpi',
-      function (newValue, oldValue) {
+      // An alert will show up in the UI if they use too much of local storage for WPI's
+      $scope.wpiBytes = angular.toJson(newValue).length;
 
-        // We're looking for changes to the currentWpi, from editing the form.
-        // Ignore changes to which wpi is current.
+      // Ignore false positive calls to this watch (happens on page load)
+      if (angular.toJson(newValue) === angular.toJson(oldValue))
+      {
+        return;
+      }
 
-        if (!newValue || !oldValue || newValue.id !== oldValue.id) {
-          return;
-        }
+      Wpi.setList($scope.wpiList);
+    }
 
-        function safeGetProjectName(workspaceRef, projectRef) {
-          // if objects are defined, expect their schema is correct.
-          if ($scope.subscriptionData) {
-
-            var workspace = $scope.subscriptionData.workspaces[workspaceRef];
-            if (workspace) {
-              var project = workspace.projects[projectRef];
-              if (project) {
-                return project.name;
-              }
-            }
-          }
-          return undefined;
-        }
-
-        var projectReset;
-        var iterationReset;
-
-        // If workspace changes, clear project
-
-        if (newValue.workspaceRef !== oldValue.workspaceRef) {
-          $scope.currentWpi.projectRef = undefined;
-          projectReset = true;
-        }
-
-        // If project changes, clear iteration
-
-        if (projectReset || newValue.projectRef !== oldValue.projectRef) {
-          $scope.currentWpi.iterationRef = undefined;
-          iterationReset = true;
-
-          // UX helper: actively try to default the label so everyone doesn't have "New WPI" or so as their WPI label
-          if (!newValue.label || newValue.label === Wpi.defaultWpiLabel) {
-            var projectName = safeGetProjectName(newValue.workspaceRef, newValue.projectRef);
-            if (projectName) {
-              $scope.currentWpi.label = projectName;
-            }
-          }
-        }
-
-        // If iteration changes, clear test set and buildNumber
-
-        if (iterationReset || newValue.iterationRef !== oldValue.iterationRef) {
-          $scope.currentWpi.buildNumber = undefined;
-
-          // TODO: continue defaulting WPI .label
-          // If it is "FA Web", call it "FA Web 90" where 90 is the trailing number of iteration name (in the format "Sprint 90"). If it is off convention, leave the .label unchanged
-
-          Wpi.refreshTestSets($scope.currentWpi).then(function(wpi){
-            Rally.initTestSetDetails(wpi.testSetRef);
-          });
-
-          Wpi.clearFilter();
-        }
-
-      }, true); // deep watch
-
-    // Watch the WPI List and save changes as they are made.
-    // Arguably this is expensive, but mitigated by the fact that the WPI list is not too huge.
-
-    $scope.$watch('wpiList',
-      function (newValue, oldValue) {
-
-        // An alert will show up in the UI if they use too much of local storage for WPI's
-        $scope.wpiBytes = angular.toJson(newValue).length;
-
-        // Ignore false positive calls to this watch (happens on page load)
-        if (angular.toJson(newValue) === angular.toJson(oldValue))
-        {
-          return;
-        }
-
-        Wpi.setList($scope.wpiList);
-      }, true); // deep watch
-
+    init();
   }]);
 

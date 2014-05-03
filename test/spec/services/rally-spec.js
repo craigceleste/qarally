@@ -642,7 +642,7 @@ describe('Service Rally', function(){
 
 
   // using roundabout ways to get coverage on internal helpers...
-  describe('cheats to get 100% code coverage', function() {
+  describe('cheats to get 100% code coverage:', function() {
 
     it('getRallyJson uses & instead of ? for querystring if url already has a ? in it.', function() {
 
@@ -651,11 +651,9 @@ describe('Service Rally', function(){
       var urlWithQuestionMark = 'http://whatever.dev?a=b';
       var expectedUrl         = 'http://whatever.dev?a=b&jsonp=JSON_CALLBACK&pagesize=200';
 
-      var fakeBackend = window.fakeBackendFactory.create();
-
       $httpBackend
         .whenJSONP(expectedUrl)
-        .respond(fakeBackend.workspaceList.data);
+        .respond(inFakes.SubscriptionWorkspacesResponse);
 
       // Act
 

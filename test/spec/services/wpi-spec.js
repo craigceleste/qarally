@@ -2,38 +2,50 @@
 
 describe('Service Wpi', function() {
 
-  var wpiSvc; // unit under test
+  // Unit under test
+  var wpiSvc;
 
-  var mockWindow, $rootScope, $httpBackend;
+  // Dependency Injections
+  var mockWindow, $rootScope, $q, rallySvc;
+
+  // Fakes
+  var rallyFakes; // inputs
+  var wpiFakes;   // expected results
 
   beforeEach(function(){
 
+    // Load app
+
     module('QaRally');
 
-    mockWindow = {
-      localStorage: {}
-    };
+    // Inject mock services into provider
 
-    module(function($provide){
+    mockWindow = { localStorage: {} };
+
+    module(function($provide) {
       $provide.value('$window', mockWindow);
     });
 
-    inject(function(Wpi, _$rootScope_, $injector){
-      $rootScope = _$rootScope_;
-      $httpBackend = $injector.get('$httpBackend');
+    // Get a reference to services
 
+    inject(function(_$rootScope_, _$q_, $injector, Rally, Wpi) {
+      $rootScope = _$rootScope_;
+      $q = _$q_;
+      rallySvc = Rally;
       wpiSvc = Wpi;
     });
+
+    // Create fake factories
+
+    rallyFakes = window.rallyServiceFakes.create();
+    wpiFakes = window.wpiServiceFakes.create();
   });
 
-  afterEach(function() {
-    $httpBackend.verifyNoOutstandingExpectation();
-    $httpBackend.verifyNoOutstandingRequest();
-  });
 
   it('is wired for construction.', function() {
     expect(wpiSvc).toBeDefined();
   });
+
 
   describe('defaultWpiLabel', function() {
 
@@ -45,6 +57,7 @@ describe('Service Wpi', function() {
     });
 
   });
+
 
   describe('createWpi', function() {
 
@@ -60,13 +73,14 @@ describe('Service Wpi', function() {
 
       // Assert
 
-      expect(wpi.id).toBeDefined();
-      expect(wpi.label).toEqual(wpiSvc.defaultWpiLabel);
-      expect(wpiSvc.clearFilter).toHaveBeenCalled();
+      expect(typeof wpi.id).toEqual('string');
+      wpi.id = (wpiFakes.createWpi.id); // real id is non-deterministic. push it to the expected result
+      expect(wpi).toEqual(wpiFakes.createWpi);
 
     });
 
   });
+
 
   describe('clearFilter', function() {
 
@@ -88,14 +102,11 @@ describe('Service Wpi', function() {
 
       // Assert
 
-      expect(wpi.filter.nameContains).toEqual('');
-      expect(wpi.filter.withoutTestFolder).toEqual(false);
-      expect(wpi.filter.withoutWorkProduct).toEqual(false);
-      expect(wpi.filter.workProducts).toBeDefined();
-      expect(wpi.filter.testFolders).toBeDefined();
+      expect(wpi.filter).toEqual(wpiFakes.createWpi.filter);
     });
 
   });
+
 
   describe('wpiIsValid', function() {
 
@@ -109,9 +120,9 @@ describe('Service Wpi', function() {
 
       // Invalid
 
-      expect(wpiSvc.wpiIsValid(null)).toBe(false);
+      expect(wpiSvc.wpiIsValid(null))     .toBe(false);
       expect(wpiSvc.wpiIsValid(undefined)).toBe(false);
-      expect(wpiSvc.wpiIsValid({})).toBe(false);
+      expect(wpiSvc.wpiIsValid({}))       .toBe(false);
 
       expect(wpiSvc.wpiIsValid({workspaceRef: '',    projectRef: 'set', iterationRef: 'set', label: 'set'})).toBe(false);
       expect(wpiSvc.wpiIsValid({workspaceRef: 'set', projectRef: '',    iterationRef: 'set', label: 'set'})).toBe(false);
@@ -120,6 +131,7 @@ describe('Service Wpi', function() {
     });
 
   });
+
 
   describe('setCurrentId', function() {
 
@@ -144,6 +156,7 @@ describe('Service Wpi', function() {
     });
 
   });
+
 
   describe('setList', function() {
 
@@ -171,6 +184,7 @@ describe('Service Wpi', function() {
 
   });
 
+
   describe('getList', function() {
 
     it('upgrade from 1 to current.', function() {
@@ -189,15 +203,11 @@ describe('Service Wpi', function() {
       // Assert
 
       expect(wpi).toEqual({
-        my: 'list',
-        test1: '1 to 2',
+        my: 'list',               // <-- existing value
+        test1: '1 to 2',          // <-- got transformed
         test2: '2 to 3'
       });
     });
-
-  });
-
-  describe('getList', function() {
 
     it('upgrade from 2 to current.', function() {
 
@@ -220,11 +230,7 @@ describe('Service Wpi', function() {
       });
     });
 
-  });
-
-  describe('getList', function() {
-
-    it('upgrade from 2 to current.', function() {
+    it('throws for unrecognized version.', function() {
 
       // Arrange
 
@@ -239,10 +245,12 @@ describe('Service Wpi', function() {
 
       // Assert
 
+      // wpiList contains user data 
       expect(shouldThrow).toThrow();
     });
 
   });
+
 
   describe('refreshTestSets', function() {
 
@@ -250,41 +258,37 @@ describe('Service Wpi', function() {
 
       // Arrange
 
-      var fakeBackend = window.fakeBackendFactory.create();
-      fakeBackend.setup($httpBackend);
 
-      var wpi = {
-        workspaceRef: fakeBackend.workspaceList.data.QueryResult.Results[0]._ref,
-        projectRef:   fakeBackend.projectList  .data.QueryResult.Results[0]._ref,
-        iterationRef: fakeBackend.iterationList.data.QueryResult.Results[0]._ref,
-        testSets: 'something', // <----- will be cleared
+      var wpi = angular.extend(wpiFakes.createWpi, {
+        workspaceRef: rallyFakes.getWorkspaceList[0]._ref,
+        projectRef:   rallyFakes.getProjectList[0]._ref,
+        iterationRef: rallyFakes.getIterationList[0]._ref,
+        testSets: 'something',       // <----- will be cleared
         testSetRef: 'something else' // <----- will be cleared
-      };
+      });
+
+      spyOn(rallySvc, 'getTestSetList').andReturn($q.when(rallyFakes.getTestSetList));
 
       // Act
 
       var wpiOut;
-      wpiSvc.refreshTestSets(wpi).then(function(data) {
-        wpiOut = data;
-      });
+      wpiSvc.refreshTestSets(wpi)
+        .then(function(data) { wpiOut = data; });
 
-      // Assert
-
-      // It should clear out the test sets while it's loading
+      // Assert: it should clear out the test sets while it's loading
 
       expect(wpi.testSets).not.toBeDefined();
       expect(wpi.testSetRef).not.toBeDefined();
 
-      // simulate async http completing
+      // Act: simulate async http completing
 
-      $httpBackend.flush();
+      $rootScope.$apply();
 
-      // It should echo back the wpi in the promise, having populated the testSetDetails
+      // Assert
+      
+      expect(wpiOut).toBe(wpi); // echo's back wpi
+      expect(wpiOut).toEqual(wpiFakes.refreshTestSets);
 
-      expect(wpiOut).toBe(wpi);
-      var testSetRef = fakeBackend.testSetsList.data.QueryResult.Results[0]._ref;
-      expect(wpi.testSets[testSetRef]._ref).toEqual(testSetRef);
-      expect(wpi.testSetRef).toEqual(testSetRef);
     });
 
     it('silently ignores it when there is no current wpi.', function() {
@@ -316,14 +320,13 @@ describe('Service Wpi', function() {
 
       // Arrange
 
-      var fakeBackend = window.fakeBackendFactory.create();
-      fakeBackend.setup($httpBackend);
+      var wpi = angular.extend(wpiFakes.createWpi, {
+        workspaceRef: rallyFakes.getWorkspaceList[0]._ref,
+        projectRef:   rallyFakes.getProjectList[0]._ref,
+        iterationRef: rallyFakes.getIterationList[0]._ref
+      });
 
-      var wpi = {
-        workspaceRef: fakeBackend.workspaceList.data.QueryResult.Results[0]._ref,
-        projectRef:   fakeBackend.projectList  .data.QueryResult.Results[0]._ref,
-        iterationRef: fakeBackend.iterationList.data.QueryResult.Results[0]._ref,
-      };
+      spyOn(rallySvc, 'getTestSetList').andReturn($q.when(rallyFakes.getTestSetList));
 
       // Act: someone calls the function to fetch test sets for an iteration.
 
@@ -336,7 +339,7 @@ describe('Service Wpi', function() {
 
       wpi.iterationRef = 'something different';
 
-      $httpBackend.flush(); // simulate async http completing
+      $rootScope.$apply(); // simulate async http completing
 
       // Assert: the function should discard the requested data if it is stale.
 
@@ -349,15 +352,16 @@ describe('Service Wpi', function() {
 
       // Arrange
 
-      var fakeBackend = window.fakeBackendFactory.create();
-      fakeBackend.testSetsList.data.QueryResult.Results = []; // delete stock test results
-      fakeBackend.setup($httpBackend);
+      var wpi = angular.extend(wpiFakes.createWpi, {
+        workspaceRef: rallyFakes.getWorkspaceList[0]._ref,
+        projectRef:   rallyFakes.getProjectList[0]._ref,
+        iterationRef: rallyFakes.getIterationList[0]._ref
+      });
 
-      var wpi = {
-        workspaceRef: fakeBackend.workspaceList.data.QueryResult.Results[0]._ref,
-        projectRef:   fakeBackend.projectList  .data.QueryResult.Results[0]._ref,
-        iterationRef: fakeBackend.iterationList.data.QueryResult.Results[0]._ref,
-      };
+      var serverData = rallyFakes.getTestSetList;
+      serverData.testSets = {}; // <-- no results
+
+      spyOn(rallySvc, 'getTestSetList').andReturn($q.when(serverData));
 
       // Act
 
@@ -366,7 +370,7 @@ describe('Service Wpi', function() {
         wpiOut = data;
       });
 
-      $httpBackend.flush(); // simulate async http completing
+      $rootScope.$apply(); // simulate async http completing
 
       // Assert
 
