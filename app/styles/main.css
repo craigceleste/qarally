@@ -119,6 +119,15 @@ This one is hand-made. :(
   #tc-content .tc-row > .tc-col2 { width: 47%; float: left; margin-left: 10px; }
 }
 
-
-
-
+.static-progres {
+  position: fixed;
+  width: 300px; left: 50%; margin-left: -150px; /* center */
+  top: 50px;
+  z-index: 5;
+}
+.static-progres .panel {
+  /* TODO use bootstrap mixin when we move to less */
+  -webkit-box-shadow: 0px 5px 15px 0px rgba(0,0,0,0.2);
+  -moz-box-shadow:    0px 5px 15px 0px rgba(0,0,0,0.2);
+  box-shadow:         0px 5px 15px 0px rgba(0,0,0,0.2);
+}

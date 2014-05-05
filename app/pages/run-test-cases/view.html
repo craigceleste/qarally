@@ -211,6 +211,23 @@
 </nav>
 <div class="nav-spacer"></div>
 
+<!--
+  TEST CASE LOADING BAR
+-->
+
+<div class="static-progres" ng-show="testCaseLoadingProgress && testCaseLoadingProgress < 100">
+  <div class="panel panel-default text-center">
+    <div class="panel-body">
+      <div class="progress">
+        <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">
+          <span class="sr-only">3 of 50</span>
+        </div>
+      </div>
+      <p>Loading Test Cases</p>
+    </div>
+  </div>
+</div>
+
 <div ng-class="{
   'show-tc-sidebar': preferences.showTcSidebar
   }">

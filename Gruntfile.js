@@ -303,7 +303,7 @@ module.exports = function (grunt) {
         baseUrl: '',
         templates: {
           html: {
-            link: '<li><a href="{filePath}">{filePath}</a></li>' // TODO pull request pending to support {filePathDecoded}: '<li><a href="{filePath}">{filePathDecoded}</a></li>'
+            link: '<li><a href="{filePath}">{filePathDecoded}</a></li>'
           }
         }
       },
