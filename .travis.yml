@@ -11,6 +11,7 @@ before_script:
 script:
 - grunt
 after_success:
-- zip qarally.%TRAVIS_BUILD_NUMBER% dist
-- curl --ftp-create-dirs -T qarally.%TRAVIS_BUILD_NUMBER%.zip -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca/qarally
+- zip qarally.$TRAVIS_BUILD_NUMBER dist/*
+- curl --ftp-create-dirs -T qarally.$TRAVIS_BUILD_NUMBER.zip -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca
+
 
