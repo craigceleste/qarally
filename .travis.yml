@@ -11,5 +11,5 @@ before_script:
 script:
 - grunt
 after_success:
-- curl --ftp-create-dirs -T dist -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca
+- curl --ftp-create-dirs -T dist -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca/qarally
 
