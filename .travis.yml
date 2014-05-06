@@ -9,4 +9,6 @@ before_script:
 - npm install -g bower grunt-cli
 - bower install
 after_success:
-  "curl --ftp-create-dirs -T /dist -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca/qarally"
+- "cwd"
+- "ls"
+- "curl --ftp-create-dirs -T dist -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca"
