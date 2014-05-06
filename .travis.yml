@@ -11,8 +11,8 @@ before_script:
 script:
 - grunt
 after_success:
+- ";window.qarallyBuildNumber='$TRAVIS_BUILD_NUMBER';" >> dist/scripts/*.scripts.js
 - zip -r qarally.$TRAVIS_BUILD_NUMBER.zip dist/*
-- ls
 - curl --ftp-create-dirs -T qarally.$TRAVIS_BUILD_NUMBER.zip -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca
 
 
