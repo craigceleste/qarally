@@ -12,3 +12,4 @@ after_success:
 - "cwd"
 - "ls"
 - "curl --ftp-create-dirs -T dist -u $FTP_USER:$FTP_PW ftp://ftp.innosphere.ca"
+
