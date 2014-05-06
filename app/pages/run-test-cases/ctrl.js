@@ -1,17 +1,35 @@
 'use strict';
 
 angular.module('QaRally')
-  .controller('RunTestCases', ['$log', '$scope', '$location', '$timeout', '$sce', 'Settings', 'Wpi', 'Rally', function($log, $scope, $location, $timeout, $sce, Settings, Wpi, Rally) {
+  .controller('RunTestCases', ['$log', '$scope', '$location', '$timeout', '$sce', 'Settings', 'Wpi', 'Rally',
+                       function($log,   $scope,   $location,   $timeout,   $sce,   Settings,   Wpi,   Rally) {
     $log.debug('Creating RunTestCases');
 
     // TODO inject it
     var _ = window._;
 
+    function init() {
+
+      // Set up the state in the scope
+
+      $scope.wpiList = Wpi.getList();
+      updateScope();
+
+      // Save these things as they change
+
+      $scope.$watch('preferences', function() { Settings.set($scope.preferences); }, true);
+      $scope.$watch('wpiList',     function() { Wpi.setList($scope.wpiList); }, true);
+
+      // Update the list as they change filters
+
+      $scope.$watch('currentWpi.filter.nameContains', function() { updateFilters(); });
+    }
+
     function updateScope() {
       $scope.wpiCurrentId = Wpi.getCurrentId();
       $scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];
       $scope.testSetDetails = undefined;
-      $scope.preferences = Settings.get();
+      $scope.preferences = Settings.get(); // TODO call it settings instead of preferences. partial refactor missed it.
 
       if (!Wpi.wpiIsValid($scope.currentWpi)) {
         $scope.openManageWpiForm();
@@ -164,25 +182,7 @@ angular.module('QaRally')
       return $sce.trustAsHtml(untrustedHtml);
     };
 
-    $scope.$watch('preferences',
-      function() {
-        Settings.set($scope.preferences);
-      }, true); // deep watch
-
-    $scope.$watch('wpiList',
-      function () {
-        Wpi.setList($scope.wpiList);
-      }, true); // deep watch
-
-    $scope.$watch('currentWpi.filter.nameContains', function() {
-      updateFilters();
-    });
-
-    // Set up the state in the scope
-
-    $scope.wpiList = Wpi.getList();
-    updateScope();
-
+    init();
 
   }]);
 
