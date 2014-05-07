@@ -11,18 +11,14 @@ describe('Controller RunTestCases', function() {
   // Fakes
   var rallyFakes;
   var wpiFakes;
-  var fakeSettings, fakeWpiIsValid, doScopeApply;
+  var fakeSettings, fakeWpiIsValid;
 
   // experiment:
   //    be aggressive about not using real service methods (force using mocks).
-  //    Option 1 (rejected):
-  //        manually create a mock that looks like the real service.
-  //        this is hard to keep the mock accurate and up to date.
-  //        if the real service changes and the mock doesn't, none of these tests will fail.
-  //    Option 2 (experiment)
-  //        use the real service, but replace all the methods with a function that throws.
-  //        if any of this code under test call these methods, it's a bug in the test not to mock the method.
-  //        code will use spyOn('method'). if the real service lacks that method, it will again throw.
+  //    by replacing all methods on a service with a 'throw' statement, we ensure that:
+  //      a) if tests forget to spyOn the method, they don't accidentally use a service method.
+  //      b) if a service drops a method, our spyOn calls will fail because the method doesn't exist
+  //          (as opposed to us making a mock with a similar interface and a bunch of empty methods)
   function cleanService(service) {
     angular.forEach(Object.keys(service), function(key) {
       if (typeof service[key] === 'function') {
@@ -32,288 +28,806 @@ describe('Controller RunTestCases', function() {
     return service;
   }
 
+
   beforeEach(function(){
 
     // Load app
 
     module('QaRally');
 
-    // Get a reference to services
+    // Get a reference to the services. clean our private ones (use third party services)
 
     inject(function(_$controller_, _$q_, _$location_, _$rootScope_, _$timeout_, _$sce_, Settings, Wpi, Rally) {
+      
       $q = _$q_;
       $location = _$location_;
       $rootScope = _$rootScope_;
       $timeout = _$timeout_;
       $sce = _$sce_;
       $controller = _$controller_;
+
       settingsSvc = cleanService(Settings);
       wpiSvc = cleanService(Wpi);
       rallySvc = cleanService(Rally);
+
     });
 
-  });
-
-  beforeEach(function() {
-
-    // Initialize fake data
+    // Initialize DEFAULT fake data: tests will overwrite this happy-path per test.
 
     rallyFakes = window.rallyServiceFakes.create();
     wpiFakes = window.wpiServiceFakes.create();
     fakeSettings = {};
     fakeWpiIsValid = true;
-    doScopeApply = false;
 
   })
 
-  // allow manipulation of the fake/mock data inside the test before ctrl is created
+  // REVIEW (deviates from angular's best practices, I guess)
+  // In order to adjust the fake data INSIDE EACH TEST, before injection into the ctrl,
+  // the ctrl needs to be created in each test (not beforeEach test).
+  // This is the helper that sets up the mocks.
 
   function createController() {
 
-      spyOn(settingsSvc, 'get').andReturn(fakeSettings);
-      spyOn(settingsSvc, 'set');
+    // Initialize mocks
 
-      spyOn(wpiSvc, 'getList')              .andReturn(wpiFakes.getList);
-      spyOn(wpiSvc, 'setList');
-      spyOn(wpiSvc, 'getCurrentId')         .andReturn(wpiFakes.getCurrentId);
-      spyOn(wpiSvc, 'setCurrentId');
-      spyOn(wpiSvc, 'wpiIsValid')           .andReturn(fakeWpiIsValid);
-      spyOn(wpiSvc, 'refreshTestSets')      .andReturn($q.when(wpiFakes.refreshTestSets));
-      spyOn(wpiSvc, 'clearFilter');
+    spyOn(settingsSvc, 'get')             .andReturn(fakeSettings);
+    spyOn(settingsSvc, 'set');
 
-      spyOn(rallySvc, 'initTestSetDetails') .andReturn($q.when(rallyFakes.initTestSetDetails));
+    spyOn(wpiSvc, 'getList')              .andReturn(wpiFakes.getList);
+    spyOn(wpiSvc, 'setList');
+    spyOn(wpiSvc, 'getCurrentId')         .andReturn(wpiFakes.getCurrentId);
+    spyOn(wpiSvc, 'setCurrentId');
+    spyOn(wpiSvc, 'wpiIsValid')           .andReturn(fakeWpiIsValid);
+    spyOn(wpiSvc, 'refreshTestSets')      .andReturn($q.when(wpiFakes.refreshTestSets));
+    spyOn(wpiSvc, 'clearFilter');
 
-      spyOn($location, 'url');
+    spyOn(rallySvc, 'initTestSetDetails') .andReturn($q.when(rallyFakes.initTestSetDetails));
 
-      $scope = $rootScope.$new();
+    spyOn($location, 'url');
 
-      ctrl = $controller('RunTestCases', { $scope: $scope });
+    // Create unit under test
 
-      if (doScopeApply) {
-        $rootScope.$apply(); // cause async's to finish during initialization
-      }
+    $scope = $rootScope.$new();
+    ctrl = $controller('RunTestCases', { $scope: $scope });
+
+    // Initialization has some async steps. Resolve them here.
+
+    $rootScope.$apply();
   }
 
-  // Tests in this 'describe' sub-section will create the controller manually
   describe('initialization', function() {
 
-    it('adds the settings to the scope.', function() {
-      fakeSettings = 'Gordon';
-      
-      createController();
-      
-      expect($scope.preferences).toEqual('Gordon');
+    describe('of the happy path', function() {
+
+      // The "happy path" is the baseline test with no additional changes to fake inputs.
+
+      beforeEach(function(){
+        createController();
+      });
+
+      it('adds the settings to the scope.', function() {
+        expect($scope.settings).toEqual(fakeSettings);
+      });
+
+      it('adds the wpiList to the scope.', function() {
+        expect($scope.wpiList).toEqual(wpiFakes.getList);
+      });
+
+      it('adds the current wpi to the scope.', function() {
+        expect($scope.wpiCurrentId).toEqual(wpiFakes.getCurrentId);
+        expect($scope.currentWpi).toEqual(wpiFakes.getList[wpiFakes.getCurrentId]);
+      });
+
+      it('adds the test set details to the scope.', function() {
+        expect($scope.testSetDetails).toEqual(rallyFakes.initTestSetDetails);
+      })
+
+      it('does not redirect away from the page.', function() {
+        expect($location.url).not.toHaveBeenCalled();
+      })
+
     });
 
-    it('adds the wpiList to the scope.', function() {
-      
-      createController();
+    it('with invalid WPI, redirects to Manage WPI form.', function() {
 
-      expect($scope.wpiList).toEqual(wpiFakes.getList);
-    });
-
-    it('adds the current wpi to the scope.', function() {
-      
-      createController();
-
-      expect($scope.wpiCurrentId).toEqual(wpiFakes.getCurrentId);
-      expect($scope.currentWpi).toEqual($scope.wpiList[wpiFakes.getCurrentId]);
-    });
-
-    it('loads the test set details asynchronously.', function() {
-      
-      createController();
-
-      expect($scope.testSetDetails)         .not.toBeDefined();          // ...initially undefined
-      $rootScope.$apply();                                               // promises resolve
-      expect($scope.testSetDetails).toBe(rallyFakes.initTestSetDetails); // ...then it's set
-    });
-
-    it('safely ignores loading test set details if there aren\'t any.', function() {
-
-      delete wpiFakes.getList[wpiFakes.getCurrentId].testSetRef; // <--- no test set this time
-
-      createController();
-
-      expect($scope.testSetDetails)         .not.toBeDefined();      // ...initially
-      $rootScope.$apply();                                           // promises resolve
-      expect($scope.testSetDetails)         .not.toBeDefined();      // ...still undefined (and no crashes)
-    });
-
-    it('redirects to Manage WPI if the current wpi is not valid.', function() {
-
-      // IMPORTANT: all code in this ctrl (past this initialization) may assume the WPI is well formed and defined.
+      // Arrange
       wpiFakes.getList = {};
       wpiFakes.getCurrentId = undefined;
       fakeWpiIsValid = false;
 
+      // Act
       createController();
 
-      expect($location.url)               .toHaveBeenCalledWith('/manage-wpi');
+      // Assert
+      expect($location.url).toHaveBeenCalledWith('/manage-wpi');
     });
-    
-    it('does not redirect for the happy path.', function() {
 
+    it('with valid WPI that has no test sets, leaves the testSetDetails unset.', function() {
+      
+      // Arrange
+      delete wpiFakes.getList[wpiFakes.getCurrentId].testSetRef;
+
+      // Act
       createController();
 
-      expect($location.url)               .not.toHaveBeenCalledWith('/manage-wpi');
+      // Assert
+      expect($scope.testSetDetails).not.toBeDefined()
     });
-    
+
+    it('adds watch to save changes to settings.', function() {
+
+      // Arrange
+      createController();
+
+      // Act
+      $scope.settings.something = 'whatever';
+      $rootScope.$apply();
+
+      // Assert
+      expect(settingsSvc.set).toHaveBeenCalledWith($scope.settings);
+    })
+
+    it('adds watch to save changes to wpiList.', function() {
+
+      // Arrange
+      createController();
+
+      // Act
+      $scope.wpiList[wpiFakes.getCurrentId].something = 'whatever';
+      $rootScope.$apply();
+
+      // Assert
+      expect(wpiSvc.setList).toHaveBeenCalledWith($scope.wpiList);
+    })
+
+    it('adds watch to save changes to filter textbox.', function() {
+
+      // Arrange
+      createController();
+      spyOn(ctrl.helpers, 'updateFilters');
+
+      // Act
+      $scope.currentWpi.filter.nameContains = "something new";
+      $rootScope.$apply();
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+    })
+
   });
-  
-  // the rest of the tests share some initialization
-  describe('', function() {
+
+
+  describe('updateFilters', function() {
+
+    var tc, filter;
 
     beforeEach(function() {
-      doScopeApply = true;
+      createController();
+
+      tc = $scope.testSetDetails.testCases[0];
+      delete tc._isFiltered; // it would be set while creating the controller. null it out.
+
+      filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
+      expect(filter).toBeDefined(); // sanity check
     });
 
-    describe('getLength', function() {
+    // happy path
 
-      it('returns the number of keys on an object.', function() {
-
-        createController();
-
-        expect( $scope.getLength(undefined))          .toEqual(0);
-        expect( $scope.getLength({}))                 .toEqual(0);
-        expect( $scope.getLength({ a: 'A', b: 'B' })) .toEqual(2);
-
-      });
-
+    it('sets the _isFiltered property on TC\'s.', function() {
+      ctrl.helpers.updateFilters();
+      expect(tc._isFiltered).toEqual(false);
     });
 
-
-    describe('openManageWpiForm', function() {
-
-      it('to navigate to the Manage WPI page.', function() {
-
-        createController();
-
-        $scope.openManageWpiForm();
-
-        expect($location.url).toHaveBeenCalledWith('/manage-wpi');
-
-      });
-
+    describe('does not crash', function() {
+      it('when there is no wpi.',             function () { $scope.currentWpi        = undefined; ctrl.helpers.updateFilters(); });
+      it('when there is no filter.',          function () { $scope.currentWpi.filter = undefined; ctrl.helpers.updateFilters(); });
+      it('when there are no testSetDetails.', function () { $scope.testSetDetails    = undefined; ctrl.helpers.updateFilters(); });
     });
 
+    // Matrix of cases
 
-    describe('wpiIsValid', function() {
+    describe('withoutWorkProducts', function(){
 
-      it('is a dumb callthrough.', function() {
-
-        // Arrange
-
-        createController();
-
-        wpiSvc.wpiIsValid = function() {}; // hack: blow away the existing spy
-        spyOn(wpiSvc, 'wpiIsValid').andReturn('something nonsensical');
-
-        // Act
-
-        var actualResult = $scope.wpiIsValid();
-
-        // Assert
-
-        expect(actualResult).toEqual('something nonsensical');
-
+      beforeEach(function() {
+        filter.withoutWorkProduct = true;
       });
 
+      it('filters.',         function() { tc.WorkProductRef = undefined;   ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('does not filter.', function() { tc.WorkProductRef = "something"; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
     });
 
+    describe('specific WorkProduct', function(){
 
-    describe('setCurrentWpi', function() {
-
-      it('persists the choice and updates the scope.', function() {
-
-        // Arrange
-
-        createController();
-        spyOn(ctrl.helpers, 'updateScope');
-
-        // Act
-
-        $scope.setCurrentWpi('0.987654');
-
-        // Assert
-
-        expect(wpiSvc.setCurrentId).wasCalledWith('0.987654');
-        expect(ctrl.helpers.updateScope).toHaveBeenCalled();
-
+      beforeEach(function() {
+        filter.workProducts["something"] = true;
       });
 
+      it('filters.',         function() { tc.WorkProductRef = "something";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('does not filter.', function() { tc.WorkProductRef = "different";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
     });
 
+    describe('withoutTestFolder', function(){
 
-    describe('refreshTestSets', function() {
-
-      it('asynchronously loads the test set details.', function() {
-
-        // Arrange
-
-        createController();
-        expect($scope.currentWpi.testSetRef).toBeDefined(); // sanity check. it's set
-
-        spyOn(ctrl.helpers, 'updateScope');
-
-        // Act
-
-        $scope.refreshTestSets();
-
-        // Assert
-
-        expect($scope.currentWpi.testSetRef).not.toBeDefined();    // it's cleared while we wait for the async to finish
-        expect(ctrl.helpers.updateScope.calls.length).toEqual(1);  // and the scope is updated to reflect it
-        expect(wpiSvc.refreshTestSets).toHaveBeenCalled();
-
-        $rootScope.$apply(); // async finishes
-
-        expect(ctrl.helpers.updateScope.calls.length).toEqual(2);  // it updates the scope after the async finishes
-
+      beforeEach(function() {
+        filter.withoutTestFolder = true;
       });
+
+      it('filters.',         function() { tc.TestFolderRef = undefined;   ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('does not filter.', function() { tc.TestFolderRef = "something"; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+    });
+
+    describe('specific TestFolder', function(){
+
+      beforeEach(function() {
+        filter.testFolders["something"] = true;
+      });
+
+      it('filters.',         function() { tc.TestFolderRef = "something";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('does not filter.', function() { tc.TestFolderRef = "different";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+    });
+
+    describe('by name', function(){
+
+      beforeEach(function() {
+        filter.nameContains = 'A';
+      });
+
+      it('filters.',         function() { tc.Name = "baaaarney";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+      it('does not filter.', function() { tc.Name = "beeeeeety";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('handles nulls.',   function() { delete tc.Name;         ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+    });
+
+  });
+
+
+  describe('getLength', function() {
+
+    beforeEach(function(){
+      createController();
+    });
+
+    it('of undefined equals 0.',                   function() { expect( $scope.getLength(undefined))          .toEqual(0); });
+    it('of empty object equals 0.',                function() { expect( $scope.getLength({}))                 .toEqual(0); });
+    it('of an array, returns the length.',         function() { expect( $scope.getLength([1,2,3]))            .toEqual(3); });
+    it('of actual object returns number of keys.', function() { expect( $scope.getLength({ a: 'A', b: 'B' })) .toEqual(2); });
+
+  });
+
+
+  describe('openManageWpiForm', function() {
+
+    it('to navigate to the Manage WPI page.', function() {
+
+      createController();
+
+      $scope.openManageWpiForm();
+
+      expect($location.url).toHaveBeenCalledWith('/manage-wpi');
 
     });
 
+  });
 
-    describe('setCurrentTestSet', function() {
 
-      it('changes the currently focused test set.', function() {
+  describe('wpiIsValid', function() {
 
-        // Arrange
+    it('is a dumb passthrough.', function() {
 
-        createController();
-        spyOn(ctrl.helpers, 'updateScope');
+      // Arrange
 
-        // Act
+      createController();
+      wpiSvc.wpiIsValid = function() {}; // hack: blow away the existing spy
+      spyOn(wpiSvc, 'wpiIsValid').andReturn('something nonsensical');
 
-        $scope.setCurrentTestSet('the best test');
+      // Act
 
-        // Arrange
+      var actualResult = $scope.wpiIsValid();
 
-        expect($scope.currentWpi.testSetRef).toEqual('the best test');  // ... it updtes the wpi
-        expect(ctrl.helpers.updateScope).toHaveBeenCalled();            // ... updates the scope because of it
-      });
+      // Assert
 
-      it('does nothing if it\'s already set.', function() {
+      expect(actualResult).toEqual('something nonsensical');
 
-        // Arrange
-
-        createController();
-        spyOn(ctrl.helpers, 'updateScope');
-
-        // Act
-
-        $scope.setCurrentTestSet($scope.currentWpi.testSetRef); // the existing value
-
-        // Arrange
-
-        expect($scope.currentWpi.testSetRef).toEqual($scope.currentWpi.testSetRef);  // no change
-        expect(ctrl.helpers.updateScope).not.toHaveBeenCalled();                     // no point to update since it may have a network/performance hit
-      });
     });
 
+  });
 
 
+  describe('setCurrentWpi', function() {
+
+    it('persists the choice and updates the scope.', function() {
+
+      // Arrange
+
+      createController();
+
+      $scope.wpiCurrentId = 'something';      // blank 'em out. They should get reset
+      $scope.currentWpi = undefined;
+      spyOn(ctrl.helpers, 'refreshTestSetDetails');
+
+      // Act
+
+      $scope.setCurrentWpi('0.987654');
+
+      // Assert
+
+      expect(wpiSvc.setCurrentId).wasCalledWith('0.987654');      // it should push it to the service
+      expect($scope.wpiCurrentId).toEqual(wpiFakes.getCurrentId); // but it should update wit a get to the service (in case the service rejected it or tranformed it)
+      expect($scope.currentWpi).toEqual($scope.wpiList[$scope.wpiCurrentId]);
+      expect(ctrl.helpers.refreshTestSetDetails).toHaveBeenCalled();
+    });
+
+  });
+
+
+  describe('refreshTestSets', function() {
+
+    it('asynchronously loads the test set details.', function() {
+
+      // Arrange
+
+      createController();
+      spyOn(ctrl.helpers, 'refreshTestSetDetails');
+
+      // Act
+
+      $scope.refreshTestSets();
+
+      // Assert
+
+      expect($scope.testSetDetails).not.toBeDefined(); // it should clear the test case list
+      expect(wpiSvc.refreshTestSets).toHaveBeenCalledWith($scope.currentWpi);
+
+      $rootScope.$apply(); // resolve $q promises
+
+      expect(ctrl.helpers.refreshTestSetDetails).toHaveBeenCalled();
+    });
+
+  });
+
+
+  describe('setCurrentTestSet', function() {
+
+    var clone;
+    beforeEach(function() {
+
+      // Add a second test set to the list
+      var wpi = wpiFakes.getList[wpiFakes.getCurrentId];
+      var ts1 = wpi.testSets[wpi.testSetRef];
+      clone = angular.fromJson(angular.toJson(ts1));
+      clone._ref = 'clone';
+      wpi.testSets[clone._ref] = clone;
+
+      createController();
+    });
+
+    it('changes the currently focused test set.', function() {
+
+      // Arrange
+      $scope.testSetDetails = undefined;
+      spyOn(ctrl.helpers, 'refreshTestSetDetails');
+
+      // Act
+      $scope.setCurrentTestSet(clone._ref);
+
+      // Assert
+
+      expect($scope.currentWpi.testSetRef).toEqual(clone._ref);
+      expect(wpiSvc.clearFilter).toHaveBeenCalledWith($scope.currentWpi);
+      expect(ctrl.helpers.refreshTestSetDetails).toHaveBeenCalled();
+    });
+
+    it('does nothing if it\'s already set.', function() {
+
+      // Arrange
+      spyOn(ctrl.helpers, 'refreshTestSetDetails');
+
+      // Act
+      $scope.setCurrentTestSet($scope.currentWpi.testSetRef); // already current
+
+      // Assert
+
+      expect(ctrl.helpers.refreshTestSetDetails).not.toHaveBeenCalled();
+    });
+  });
+
+
+  describe('toggleTestFolderFilter', function() {
+
+    beforeEach(function() {
+      createController();
+      spyOn(ctrl.helpers, 'updateFilters');
+    });
+
+    it('does nothing if there is no filter.', function() {
+      // Arrange
+      delete $scope.currentWpi.filter;
+
+      // Act
+      $scope.toggleTestFolderFilter('tfRef');
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+    });
+
+    it('toggles it on.', function() {
+
+      // Arrange
+      delete $scope.currentWpi.filter.testFolders['tfRef']; // redundant, but it's not set
+
+      // Act
+      $scope.toggleTestFolderFilter('tfRef');
+
+      // Assert
+      expect($scope.currentWpi.filter.testFolders['tfRef']).toEqual(true);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+    });
+
+    it('toggles it off.', function() {
+
+      // Arrange
+      $scope.currentWpi.filter.testFolders['tfRef'] = true;
+
+      // Act
+      $scope.toggleTestFolderFilter('tfRef');
+
+      // Assert
+      expect($scope.currentWpi.filter.testFolders['tfRef']).not.toBeDefined()
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+    });
+
+  });
+
+  describe('toggleWorkProductFilter', function() {
+
+    beforeEach(function() {
+      createController();
+      spyOn(ctrl.helpers, 'updateFilters');
+    });
+
+    it('does nothing if there is no filter.', function() {
+      // Arrange
+      delete $scope.currentWpi.filter;
+
+      // Act
+      $scope.toggleWorkProductFilter('tfRef');
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+    });
+
+    it('toggles it on.', function() {
+
+      // Arrange
+      delete $scope.currentWpi.filter.workProducts['tfRef']; // redundant, but it's not set
+
+      // Act
+      $scope.toggleWorkProductFilter('tfRef');
+
+      // Assert
+      expect($scope.currentWpi.filter.workProducts['tfRef']).toEqual(true);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+    });
+
+    it('toggles it off.', function() {
+
+      // Arrange
+      $scope.currentWpi.filter.workProducts['tfRef'] = true;
+
+      // Act
+      $scope.toggleWorkProductFilter('tfRef');
+
+      // Assert
+      expect($scope.currentWpi.filter.workProducts['tfRef']).not.toBeDefined()
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+    });
+
+  });
+
+
+  describe('toggleFilterTestCasesWithoutTestFolder', function() {
+
+    var filter;
+
+    beforeEach(function() {
+
+      createController();
+      filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
+      spyOn(ctrl.helpers, 'updateFilters');
+
+    });
+
+    it('toggles it on.', function() {
+
+      // Arrange
+      filter.withoutTestFolder = false;
+
+      // Act
+
+      $scope.toggleFilterTestCasesWithoutTestFolder();
+
+      // Assert
+      expect(filter.withoutTestFolder).toEqual(true);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+
+    });
+
+    it('toggles it off.', function() {
+
+      // Arrange
+      filter.withoutTestFolder = true;
+
+      // Act
+
+      $scope.toggleFilterTestCasesWithoutTestFolder();
+
+      // Assert
+      expect(filter.withoutTestFolder).toEqual(false);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+
+    });
+
+    it('do nothing if there is no filter.', function() {
+
+      // Arrange
+      delete $scope.wpiList[wpiFakes.getCurrentId].filter;
+
+      // Act
+
+      $scope.toggleFilterTestCasesWithoutTestFolder();
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+
+    });
+
+  });
+
+
+  describe('toggleFilterTestCasesWithoutWorkProduct', function() {
+
+    var filter;
+
+    beforeEach(function() {
+
+      createController();
+      filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
+      spyOn(ctrl.helpers, 'updateFilters');
+
+    });
+
+    it('toggles it on.', function() {
+
+      // Arrange
+      filter.withoutWorkProduct = false;
+
+      // Act
+
+      $scope.toggleFilterTestCasesWithoutWorkProduct();
+
+      // Assert
+      expect(filter.withoutWorkProduct).toEqual(true);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+
+    });
+
+    it('toggles it off.', function() {
+
+      // Arrange
+      filter.withoutWorkProduct = true;
+
+      // Act
+
+      $scope.toggleFilterTestCasesWithoutWorkProduct();
+
+      // Assert
+      expect(filter.withoutWorkProduct).toEqual(false);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+
+    });
+
+    it('do nothing if there is no filter.', function() {
+
+      // Arrange
+      delete $scope.wpiList[wpiFakes.getCurrentId].filter;
+
+      // Act
+
+      $scope.toggleFilterTestCasesWithoutWorkProduct();
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+
+    });
+
+  });
+
+
+  describe('toggleAllTestFolderFilters', function() {
+
+    var filter;
+    var folder1, folder2
+
+    beforeEach(function() {
+      createController();
+
+      // 2 test sets in the testSetDetails
+
+      folder1 = { _ref: "tf1", Name: "Wilma" };
+      folder2 = { _ref: "tf2", Name: "Betty" };
+
+      $scope.testSetDetails.testFolders = { };
+      $scope.testSetDetails.testFolders[folder1._ref] = folder1;
+      $scope.testSetDetails.testFolders[folder2._ref] = folder2;
+
+      // One of them is already filtered. the other is not
+
+      filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
+      filter.withoutTestFolder = true;
+      filter.testFolders[folder1._ref] = true; // folder2 is not filtered
+
+      spyOn(ctrl.helpers, 'updateFilters');
+    });
+
+    it('toggles it on.', function() {
+
+      // Arrange
+      filter.withoutTestFolder = false;
+
+      // Act
+      $scope.toggleAllTestFolderFilters(true);
+
+      // Assert
+      expect(filter.withoutTestFolder).toEqual(true);
+      expect(filter.testFolders[folder2._ref]).toEqual(true);
+      expect(filter.testFolders[folder1._ref]).toEqual(true);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+
+    });
+
+    it('toggles it off.', function() {
+
+      // Arrange
+      filter.withoutTestFolder = true;
+
+      // Act
+      $scope.toggleAllTestFolderFilters(false);
+
+      // Assert
+      expect(filter.withoutTestFolder).toEqual(false);
+      expect(filter.testFolders[folder2._ref]).not.toBeDefined();
+      expect(filter.testFolders[folder1._ref]).not.toBeDefined();
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+    });
+
+    it('ignores it if there is no filter.', function() {
+
+      // Arrange
+      delete $scope.wpiList[wpiFakes.getCurrentId].filter;
+
+      // Act
+      $scope.toggleAllTestFolderFilters(true);
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+
+    });
+
+    it('ignores it if there is no testSetDetails.', function() {
+
+      // Arrange
+      delete $scope.testSetDetails;
+
+      // Act
+      $scope.toggleAllTestFolderFilters(true);
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+
+    });
+
+  });
+
+
+ describe('toggleAllWorkProductFilter', function() {
+
+    var filter;
+    var product1, product2
+
+    beforeEach(function() {
+      createController();
+
+      // 2 test sets in the testSetDetails
+
+      product1 = { _ref: "tf1", Name: "Wilma" };
+      product2 = { _ref: "tf2", Name: "Betty" };
+
+      $scope.testSetDetails.workProducts = { };
+      $scope.testSetDetails.workProducts[product1._ref] = product1;
+      $scope.testSetDetails.workProducts[product2._ref] = product2;
+
+      // One of them is already filtered. the other is not
+
+      filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
+      filter.withoutWorkProduct = true;
+      filter.workProducts[product1._ref] = true; // product2 is not filtered
+
+      spyOn(ctrl.helpers, 'updateFilters');
+    });
+
+    it('toggles it on.', function() {
+
+      // Arrange
+      filter.withoutWorkProduct = false;
+
+      // Act
+      $scope.toggleAllWorkProductFilters(true);
+
+      // Assert
+      expect(filter.withoutWorkProduct).toEqual(true);
+      expect(filter.workProducts[product1._ref]).toEqual(true);
+      expect(filter.workProducts[product2._ref]).toEqual(true);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+
+    });
+
+    it('toggles it off.', function() {
+
+      // Arrange
+      filter.withoutWorkProduct = true;
+
+      // Act
+      $scope.toggleAllWorkProductFilters(false);
+
+      // Assert
+      expect(filter.withoutWorkProduct).toEqual(false);
+      expect(filter.workProducts[product1._ref]).not.toBeDefined();
+      expect(filter.workProducts[product2._ref]).not.toBeDefined();
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+
+    });
+
+    it('ignores it if there is no filter.', function() {
+
+      // Arrange
+      delete $scope.wpiList[wpiFakes.getCurrentId].filter;
+
+      // Act
+      $scope.toggleAllWorkProductFilters(true);
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+
+    });
+
+    it('ignores it if there is no testSetDetails.', function() {
+
+      // Arrange
+      delete $scope.testSetDetails;
+
+      // Act
+      $scope.toggleAllWorkProductFilters(true);
+
+      // Assert
+      expect(ctrl.helpers.updateFilters).not.toHaveBeenCalled();
+
+    });
+
+  });
+
+  
+  describe('clearFilters', function() {
+    it('uses wpiSvc and updates filters.', function() {
+      // Arrange
+      createController();
+      spyOn(ctrl.helpers, 'updateFilters');
+
+      // Act
+      $scope.clearFilters();
+
+      // Assert
+      expect(wpiSvc.clearFilter).toHaveBeenCalledWith($scope.currentWpi);
+      expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
+    });
   });
 
 });

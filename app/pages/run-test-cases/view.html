@@ -81,12 +81,12 @@
             </a>
             <ul class="dropdown-menu ps-scroll">
               <li>
-                <a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(true)">
+                <a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilters(true)">
                   Filter All
                 </a>
               </li>
               <li>
-                <a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilter(false)">
+                <a href="javascript:void(0);" ps-noprop-click="toggleAllWorkProductFilters(false)">
                   Show All
                 </a>
               </li>
@@ -115,12 +115,12 @@
             </a>
             <ul class="dropdown-menu ps-scroll">
               <li>
-                <a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(true)">
+                <a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilters(true)">
                   Filter All
                 </a>
               </li>
               <li>
-                <a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilter(false)">
+                <a href="javascript:void(0);" ps-noprop-click="toggleAllTestFolderFilters(false)">
                   Show All
                 </a>
               </li>
@@ -181,8 +181,8 @@
             <a href="javascript:void(0);">Options:</a>
           </li>
           <li>            
-            <a href="javascript:void(0);" ps-noprop-click="preferences.showTcSidebar = preferences.showTcSidebar ? undefined : true;">
-              <span class="glyphicon" ng-class="{'glyphicon-ok': preferences.showTcSidebar }"></span>
+            <a href="javascript:void(0);" ps-noprop-click="settings.showTcSidebar = settings.showTcSidebar ? undefined : true;">
+              <span class="glyphicon" ng-class="{'glyphicon-ok': settings.showTcSidebar }"></span>
               Show sidebar
             </a>
           </li>
@@ -193,8 +193,8 @@
             </a>
           </li>
           <li>
-            <a href="javascript:void(0);" ps-noprop-click="preferences.closedNoobBubble = preferences.closedNoobBubble ? undefined : true;">
-              <span class="glyphicon" ng-class="{'glyphicon-ok': !preferences.closedNoobBubble}"></span>
+            <a href="javascript:void(0);" ps-noprop-click="settings.closedNoobBubble = settings.closedNoobBubble ? undefined : true;">
+              <span class="glyphicon" ng-class="{'glyphicon-ok': !settings.closedNoobBubble}"></span>
               Show the Noob's intro bubble
             </a>
           </li>
@@ -229,7 +229,7 @@
 </div>
 
 <div ng-class="{
-  'show-tc-sidebar': preferences.showTcSidebar
+  'show-tc-sidebar': settings.showTcSidebar
   }">
 
   <!--
@@ -262,8 +262,8 @@
 
   <div id="tc-content">
 
-    <div class="alert alert-info alert-dismissable" ng-if="!preferences.closedNoobBubble">
-      <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="preferences.closedNoobBubble = true">&times;</button>
+    <div class="alert alert-info alert-dismissable" ng-if="!settings.closedNoobBubble">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="settings.closedNoobBubble = true">&times;</button>
       <h4>The noob's intro bubble.</h4>
       <ol>
         <li>You can return to the Manage WPI page under the <strong>{{currentWpi.label}}</strong> menu above.</li>
