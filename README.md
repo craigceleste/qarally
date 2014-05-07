@@ -43,8 +43,9 @@ This app is an internal tool for our company. It will likely be maintained by AS
 
         # from C:\Dev\qarally
         grunt
-   * This will ultimately run a bunch of small tasks (grunt is a task runner) that produces the `/dist` folder. Don't worry about the `/dist` folder. We just want to make sure things build properly.
-   * For ASP.NET developers, there is a headspace thing to realize here. The `/app` folder is 100% runable from your browser if you point a web server there, anallogous to `debug=true` in web.config. The `/dist` folder is analogous to `debug=false` in web.config. The build process is a transform that is run during build time. This differs from ASP.NET where a debug and release build run from the same folder, and transformation stuff happens at runtime. That may not be 100% accurate, but the concept that there are two folders you can run in a browser and that a first class part of your development is dealing with that transform.
+   * Grunt is a task runner. There are many grunt tasks on the web, in the form of node modules. This project includes grunt tasks for things like JavaScript validation (jshint), minification, file copying, bundling, running unit tests, etc.
+   * This will run the default task which aggregates a bunch of smaller tasks to produce the `/dist` folder. Don't worry about the `/dist` folder. We just want to make sure things build properly.
+   * For ASP.NET developers, there is a headspace thing to realize here. The `/app` folder is 100% runable from your browser if you point a web server there, anallogous to `debug=true` in web.config. The `/dist` folder is analogous to `debug=false` in web.config. The build process is a transform that is run during build time. This differs from ASP.NET where a debug and release build run from the same folder, and transformation stuff happens at runtime. That may not be 100% accurate, but the concept that there are two folders you can run in a browser, and that a first class part of your development is dealing with that transform.
 
 1. Start the unit tests running
 
