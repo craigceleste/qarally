@@ -106,17 +106,6 @@ TC Summary panel
   .show-tc-sidebar .tc-summary-area { left: 365px; }
 }
 
-.tc-summary-area .panel {  }
-.tc-summary-area .tc-count { margin-left: -15px; } /* bootstrap .col-md-* has padding inside it, which is necessary for the columns to work, but I don't like it in this instance. DO NOT change boostrap. instead compensate with negative margin here. */
-.tc-summary-area .pager-cell { margin-right: -15px; } /* bootstrap .col-md-* has padding inside it, which is necessary for the columns to work, but I don't like it in this instance. DO NOT change boostrap. instead compensate with negative margin here. */
-.tc-summary-area .pager-cell .pagination { margin: 0; }
-.tc-summary-area.has-scrolled .panel {
-  /* TODO use bootstrap mixin when we move to less */
-  -webkit-box-shadow: 0px 5px 15px 0px rgba(0,0,0,0.2);
-  -moz-box-shadow:    0px 5px 15px 0px rgba(0,0,0,0.2);
-  box-shadow:         0px 5px 15px 0px rgba(0,0,0,0.2);
-}
-
 /*
 The Test Case Content area
 */
