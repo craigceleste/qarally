@@ -38,7 +38,7 @@ describe('Controller RunTestCases', function() {
     // Get a reference to the services. clean our private ones (use third party services)
 
     inject(function(_$controller_, _$q_, _$location_, _$rootScope_, _$timeout_, _$sce_, Settings, Wpi, Rally) {
-      
+
       $q = _$q_;
       $location = _$location_;
       $rootScope = _$rootScope_;
@@ -143,7 +143,7 @@ describe('Controller RunTestCases', function() {
     });
 
     it('with valid WPI that has no test sets, leaves the testSetDetails unset.', function() {
-      
+
       // Arrange
       delete wpiFakes.getList[wpiFakes.getCurrentId].testSetRef;
 
@@ -196,8 +196,202 @@ describe('Controller RunTestCases', function() {
 
   });
 
-
   describe('updateFilters', function() {
+
+    var filter;
+    var tcNormal, tcWithoutTestFolder, tcWithoutWorkProduct, tcAltTestFolder, tcAltWorkProduct;
+
+    beforeEach(function() {
+
+      // Fake data gets 5 TC's with different filterable properties
+
+      tcNormal             = rallyFakes.initTestSetDetails.testCases[0]; // the default fake data
+
+      tcWithoutTestFolder  = angular.fromJson(angular.toJson(tcNormal)); // cloned and altered
+      tcWithoutTestFolder.id = '1';
+      delete tcWithoutTestFolder.TestFolderRef;
+      rallyFakes.initTestSetDetails.testCases.push(tcWithoutTestFolder);
+
+      tcWithoutWorkProduct = angular.fromJson(angular.toJson(tcNormal));
+      tcWithoutWorkProduct.id = '2';
+      delete tcWithoutWorkProduct.WorkProductRef;
+      rallyFakes.initTestSetDetails.testCases.push(tcWithoutWorkProduct);
+
+      tcAltTestFolder      = angular.fromJson(angular.toJson(tcNormal));
+      tcAltTestFolder.id = '3';
+      tcAltTestFolder.TestFolderRef = 'alternate value';
+      rallyFakes.initTestSetDetails.testCases.push(tcAltTestFolder);
+
+      tcAltWorkProduct      = angular.fromJson(angular.toJson(tcNormal));
+      tcAltWorkProduct.id = '4';
+      tcAltWorkProduct.WorkProductRef = 'alternate value';
+      rallyFakes.initTestSetDetails.testCases.push(tcAltWorkProduct);
+
+      tcNormal.WorkProductRef = 'filter wp';
+      tcNormal.TestFolderRef = 'filter tf';
+      tcNormal.Name = "Contains TEST PHRASE in the name";
+
+      createController();
+
+      filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
+      expect(filter).toBeDefined(); // sanity check
+    });
+
+    it('accepts everything with default filter.', function() {
+      // Arrange
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(false);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(false);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(false);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(false);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(false);
+
+      expect($scope.filteredCount).toEqual(0);
+      expect($scope.filterColor).not.toBeDefined();
+    });
+
+    it('can filter withoutWorkProducts.', function() {
+      // Arrange
+      filter.withoutWorkProduct = true;
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(false);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(false);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(true);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(false);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(false);
+
+      expect($scope.filteredCount).toEqual(1);
+      expect($scope.filterColor).toEqual('green');
+    });
+
+    it('can filter withoutTestFolder.', function() {
+      // Arrange
+      filter.withoutTestFolder = true;
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(false);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(true);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(false);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(false);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(false);
+
+      expect($scope.filteredCount).toEqual(1);
+      expect($scope.filterColor).toEqual('green');
+    });
+
+    it('can filter by work product.', function() {
+      // Arrange
+      filter.workProducts['filter wp'] = true;
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(true);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(false);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(false);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(false);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(false);
+
+      expect($scope.filteredCount).toEqual(1);
+      expect($scope.filterColor).toEqual('green');
+    });
+
+    it('can filter by test folder.', function() {
+      // Arrange
+      filter.testFolders['filter tf'] = true;
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(true);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(false);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(false);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(false);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(false);
+
+      expect($scope.filteredCount).toEqual(1);
+      expect($scope.filterColor).toEqual('green');
+    });
+
+    it('can filter by name.', function() {
+      // Arrange
+      filter.nameContains = "test phrase";
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(false);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(true);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(true);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(true);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(true);
+
+      expect($scope.filteredCount).toEqual(4);
+      expect($scope.filterColor).toEqual('green');
+    });
+
+    it('can filter by name gracefully ignores null name.', function() {
+      // Arrange
+      filter.nameContains = "test phrase";
+      delete tcWithoutTestFolder.Name;
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(false);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(true);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(true);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(true);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(true);
+
+      expect($scope.filteredCount).toEqual(4);
+      expect($scope.filterColor).toEqual('green');
+    });
+
+    it('will set filterColor to red if all TCs are filtered.', function() {
+      // Arrange
+      filter.nameContains = "NONE OF THEM MATCH IT";
+
+      // Act
+      ctrl.helpers.updateFilters();
+
+      // Assert
+      expect(tcNormal            ._isFiltered).toEqual(true);
+      expect(tcWithoutTestFolder ._isFiltered).toEqual(true);
+      expect(tcWithoutWorkProduct._isFiltered).toEqual(true);
+      expect(tcAltTestFolder     ._isFiltered).toEqual(true);
+      expect(tcAltWorkProduct    ._isFiltered).toEqual(true);
+
+      expect($scope.filteredCount).toEqual(5);
+      expect($scope.filterColor).toEqual('red');
+    });
+
+  });
+
+  xdescribe('updateFilters', function() {
+
+    // TODO refactor
+    // beforeEach: create a TC list containing all combinations of TC's (should be 4)
+    //    - with/without folder
+    //    - with/without product
+    // 4 filter tests: for each of those cases: expect the exact number to be and not be filtered
+    // 2 tests for name, using same for TCs
+
 
     var tc, filter;
 
@@ -814,7 +1008,7 @@ describe('Controller RunTestCases', function() {
 
   });
 
-  
+
   describe('clearFilters', function() {
     it('uses wpiSvc and updates filters.', function() {
       // Arrange

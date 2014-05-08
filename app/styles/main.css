@@ -60,6 +60,10 @@ The form inside the Filter dropdown needs some help.
 }
 
 /*
+*/
+.dropdown-header { white-space: nowrap; }
+
+/*
 Bootstrap 3 doesn't support the submenu.
 This solution: http://firdaus.grandexa.com/2013/09/twitter-bootstrap-3-multilevel-dropdown-menu/
 ...is not cross-browser perfect, especially at lower screen resolutions.
@@ -74,6 +78,7 @@ But it gets the job done for the normal use case.
 
 /*
 Sidebar area
+- the CSS class .show-tc-sidebar indicates the users preference to show it or not
 */
 #tc-sidebar { display: none; }
 @media(min-width:992px) {
@@ -91,34 +96,40 @@ Sidebar area
 }
 
 /*
+TC Summary panel
+*/
+.tc-summary-area { position: fixed; right: 0; left: 0; padding: 0 10px; z-index: 2; }
+@media(min-width:992px){
+  .show-tc-sidebar .tc-summary-area { left: 270px; }
+}
+@media(min-width:1200px){
+  .show-tc-sidebar .tc-summary-area { left: 365px; }
+}
+
+.tc-summary-area .panel {  }
+.tc-summary-area .tc-count { margin-left: -15px; } /* bootstrap .col-md-* has padding inside it, which is necessary for the columns to work, but I don't like it in this instance. DO NOT change boostrap. instead compensate with negative margin here. */
+.tc-summary-area .pager-cell { margin-right: -15px; } /* bootstrap .col-md-* has padding inside it, which is necessary for the columns to work, but I don't like it in this instance. DO NOT change boostrap. instead compensate with negative margin here. */
+.tc-summary-area .pager-cell .pagination { margin: 0; }
+.tc-summary-area.has-scrolled .panel {
+  /* TODO use bootstrap mixin when we move to less */
+  -webkit-box-shadow: 0px 5px 15px 0px rgba(0,0,0,0.2);
+  -moz-box-shadow:    0px 5px 15px 0px rgba(0,0,0,0.2);
+  box-shadow:         0px 5px 15px 0px rgba(0,0,0,0.2);
+}
+
+/*
 The Test Case Content area
 */
 #tc-content {
-  padding: 0 10px;
+  padding: 10px;
+  padding-top: 70px; /* push it below the static TC summary panel */
 }
 @media(min-width: 992px) { .show-tc-sidebar #tc-content { margin-left: 270px; } }
 @media(min-width: 1200px) { .show-tc-sidebar #tc-content { margin-left: 365px; } }
 
 /*
-Sad. The bootstrap grid didn't work for me,
-because I have a fixed-width sidebar (left) and a flexible content area (right) that fills 100% of the window,
-and I want the flexible width area divided into 2 50% wide columns.
-That's not really how the Bootstrap grid is meant to work, and I don't want to hack it.
-Instead of fighting/faking it, I'll use the Bootstrap grid in other places.
-This one is hand-made. :(
+The progress bar on for loading test cases.
 */
-@media(max-width: 767px) {
-  #tc-content .tc-row { margin-bottom: 10px; }
-  #tc-content .tc-row > .tc-col1 {  }
-  #tc-content .tc-row > .tc-col2 {  }
-}
-@media(min-width: 768px) {
-  #tc-content .tc-row { margin-bottom: 10px; }
-  #tc-content .tc-row::after { content:''; display:block; clear: both; } /* TODO use bootstrap mixin for clearfloat when we add less support. */
-  #tc-content .tc-row > .tc-col1 { width: 47%; float: left; }
-  #tc-content .tc-row > .tc-col2 { width: 47%; float: left; margin-left: 10px; }
-}
-
 .static-progres {
   position: fixed;
   width: 300px; left: 50%; margin-left: -150px; /* center */
@@ -131,3 +142,10 @@ This one is hand-made. :(
   -moz-box-shadow:    0px 5px 15px 0px rgba(0,0,0,0.2);
   box-shadow:         0px 5px 15px 0px rgba(0,0,0,0.2);
 }
+
+
+
+
+
+
+

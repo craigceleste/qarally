@@ -20,8 +20,8 @@
           <span>{{currentWpi.label}}</span> <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
-          <li>
-            <a>Select one WPI to work on.</a>
+          <li role="presentation" class="dropdown-header">
+            Select one WPI to work on.
           </li>
           <li ng-repeat="w in wpiList | psToArray | filter:wpiIsValid | orderBy:'label'">
             <a ng-click="setCurrentWpi(w.id)" href="javascript:void(0);">
@@ -43,8 +43,8 @@
           {{currentWpi.testSets[currentWpi.testSetRef].name}} <b class="caret"></b>
         </a>
         <ul class="dropdown-menu ps-scroll">
-          <li>
-            <a>Select one test set to work on.</a>
+          <li role="presentation" class="dropdown-header">
+            Select one test set to work on.
           </li>
           <li ng-repeat="ts in currentWpi.testSets | psToArray | orderBy:'name'">
             <a ng-click="setCurrentTestSet(ts._ref)" href="javascript:void(0);">
@@ -63,9 +63,15 @@
       </li>
       <li class="dropdown">
         <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown">
-          <span class="glyphicon glyphicon-filter"></span> <b class="caret"></b>
+          <span class="glyphicon glyphicon-filter" style="color:{{filterColor}}"></span> <b class="caret"></b>
         </a>
         <ul class="dropdown-menu">
+
+          <li role="presentation" class="dropdown-header">
+            Showing {{testSetDetails.testCases.length-filteredCount}} of {{testSetDetails.testCases.length}} TCs.
+          </li>
+          <li class="divider"></li>
+
           <li>
             <form id="filterForm">
               <label>
@@ -177,8 +183,8 @@
           &nbsp;&nbsp;
         </a>
         <ul class="dropdown-menu">
-          <li>
-            <a href="javascript:void(0);">Options:</a>
+          <li role="presentation" class="dropdown-header">
+            Options:
           </li>
           <li>            
             <a href="javascript:void(0);" ps-noprop-click="settings.showTcSidebar = settings.showTcSidebar ? undefined : true;">
@@ -193,8 +199,8 @@
             </a>
           </li>
           <li>
-            <a href="javascript:void(0);" ps-noprop-click="settings.closedNoobBubble = settings.closedNoobBubble ? undefined : true;">
-              <span class="glyphicon" ng-class="{'glyphicon-ok': !settings.closedNoobBubble}"></span>
+            <a href="javascript:void(0);" ps-noprop-click="settings.closedIntroAlert = settings.closedIntroAlert ? undefined : true;">
+              <span class="glyphicon" ng-class="{'glyphicon-ok': !settings.closedIntroAlert}"></span>
               Show the Noob's intro bubble
             </a>
           </li>
@@ -262,8 +268,12 @@
 
   <div id="tc-content">
 
-    <div class="alert alert-info alert-dismissable" ng-if="!settings.closedNoobBubble">
-      <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="settings.closedNoobBubble = true">&times;</button>
+    <!--
+      Introduction alert
+    -->
+
+    <div class="alert alert-info alert-dismissable" ng-if="!settings.closedIntroAlert">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true" ng-click="settings.closedIntroAlert = true">&times;</button>
       <h4>The noob's intro bubble.</h4>
       <ol>
         <li>You can return to the Manage WPI page under the <strong>{{currentWpi.label}}</strong> menu above.</li>
@@ -275,6 +285,10 @@
       </ol>
       <p>And quick... close this bubble or people will think you're some kind of a noob!</p>
     </div>
+
+    <!--
+      Test Case (repeated)
+    -->
 
     <div class="panel panel-default"
       ng-repeat="tc in testSetDetails.testCases"
@@ -290,32 +304,33 @@
       <div class="panel-body">
         <p><small>{{tc.Description}}</small></p>
         <small>Some line about the last test result for this test case goes in here somewhere.</small>
-        <div class="tc-row" ng-if="tc.Notes || tc.Objective">
-          <div class="tc-col1" ng-if="tc.Notes">
+        
+        <div class="container-fluid" ng-if="tc.Notes || tc.Objective">
+          <div class="col-sm-6" ng-if="tc.Notes">
             <h4>Notes</h4>
             <small ng-bind-html="tc.Notes"></small>
           </div>
-          <div class="tc-col2" ng-if="tc.Objective">
+          <div class="col-sm-6" ng-if="tc.Objective">
             <h4>Objective</h4>
             <small ng-bind-html="tc.Objective"></small>
           </div>
         </div>
-        <div class="tc-row">
-          <div class="tc-col1" ng-if="tc.PreConditions">
+        <div class="container-fluid">
+          <div class="col-sm-6" ng-if="tc.PreConditions">
             <h4>Pre Conditions</h4>
             <small ng-bind-html="tc.PreConditions"></small>
           </div>
-          <div class="tc-col2" ng-if="tc.PostConditions">
+          <div class="col-sm-6" ng-if="tc.PostConditions">
             <h4>Post Conditions</h4>
             <small ng-bind-html="PostConditions"></small>
           </div>
         </div>
-        <div class="tc-row">
-          <div class="tc-col1" ng-if="tc.ValidationInput">
+        <div class="container-fluid">
+          <div class="col-sm-6" ng-if="tc.ValidationInput">
             <h4>Validation Input</h4>
             <small ng-bind-html="tc.ValidationInput"></small>
           </div>
-          <div class="tc-col2" ng-if="tc.ValidationExpectedResult">
+          <div class="col-sm-6" ng-if="tc.ValidationExpectedResult">
             <h4>Expected Results</h4>
             <small ng-bind-html="tc.ValidationExpectedResult"></small>
           </div>

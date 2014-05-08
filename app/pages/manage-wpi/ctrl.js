@@ -241,7 +241,7 @@ angular.module('QaRally')
     // Expose wpiList to the $scope.
     // Make .currentWpi a shorthand to one of the objects in the list.
 
-    $scope.build = window.qarallyBuildNumber ? "build " + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
+    $scope.build = window.qarallyBuildNumber ? 'build ' + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
 
     $scope.wpiList = Wpi.getList();
     $scope.wpiCurrentId = Wpi.getCurrentId();

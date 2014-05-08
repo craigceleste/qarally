@@ -25,19 +25,41 @@ angular.module('QaRally')
       // ALSO NOTE filtering is NOT done with Angular JS.
       // It is MUCH MUCH faster to render all data to the DOM and then show/hide it, rather than add/remove elements from the DOM on the fly.
 
-      if ($scope.currentWpi && $scope.currentWpi.filter && $scope.testSetDetails) {
+      $scope.filterColor = undefined;
+      $scope.filteredCount = 0;
 
-        angular.forEach($scope.testSetDetails.testCases, function(tc) {
-
-          tc._isFiltered = (
-               (!tc.WorkProductRef && $scope.currentWpi.filter.withoutWorkProduct) ||
-               ( tc.WorkProductRef && $scope.currentWpi.filter.workProducts[tc.WorkProductRef]) ||
-               (!tc.TestFolderRef  && $scope.currentWpi.filter.withoutTestFolder) ||
-               ( tc.TestFolderRef  && $scope.currentWpi.filter.testFolders[tc.TestFolderRef]) ||
-               ($scope.currentWpi.filter.nameContains && (tc.Name || '').toUpperCase().indexOf($scope.currentWpi.filter.nameContains.toUpperCase()) < 0)
-            ) ? true : false;
-        });
+      if (!$scope.currentWpi || !$scope.currentWpi.filter || !$scope.testSetDetails) {
+        return;
       }
+
+      angular.forEach($scope.testSetDetails.testCases, function(tc) {
+
+        tc._isFiltered = (
+             (!tc.WorkProductRef && $scope.currentWpi.filter.withoutWorkProduct) ||
+             ( tc.WorkProductRef && $scope.currentWpi.filter.workProducts[tc.WorkProductRef]) ||
+             (!tc.TestFolderRef  && $scope.currentWpi.filter.withoutTestFolder) ||
+             ( tc.TestFolderRef  && $scope.currentWpi.filter.testFolders[tc.TestFolderRef]) ||
+             ($scope.currentWpi.filter.nameContains && (tc.Name || '').toUpperCase().indexOf($scope.currentWpi.filter.nameContains.toUpperCase()) < 0)
+          ) ? true : false;
+
+        $scope.filteredCount += tc._isFiltered ? 1 : 0;
+      });
+
+      if (!$scope.currentWpi.filter.withoutWorkProduct &&
+          !$scope.currentWpi.filter.withoutTestFolder &&
+          !Object.keys($scope.currentWpi.filter.workProducts).length &&
+          !Object.keys($scope.currentWpi.filter.testFolders).length &&
+          !$scope.currentWpi.filter.nameContains) {
+        $scope.filterColor = undefined; // not filtering
+      }
+      else if ($scope.testSetDetails.testCases.length > 0 && $scope.filteredCount === $scope.testSetDetails.testCases.length) {
+        $scope.filterColor = 'red'; // all items are filtered out
+      }
+      else
+      {
+        $scope.filterColor = 'green'; // is filtering
+      }
+
     };
 
     privateHelpers.refreshTestSetDetails = function() {
@@ -53,7 +75,7 @@ angular.module('QaRally')
     
     // Initialization
 
-    $scope.build = window.qarallyBuildNumber ? "build " + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
+    $scope.build = window.qarallyBuildNumber ? 'build ' + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
 
     $scope.wpiList = Wpi.getList();
     $scope.wpiCurrentId = Wpi.getCurrentId();
