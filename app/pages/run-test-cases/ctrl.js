@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('QaRally')
-  .controller('RunTestCases', ['$log', '$scope', '$location', '$timeout', '$sce', 'Settings', 'Wpi', 'Rally',
-                       function($log,   $scope,   $location,   $timeout,   $sce,   Settings,   Wpi,   Rally) {
+  .controller('RunTestCases', ['$log', '$window', '$scope', '$location', '$timeout', '$sce', 'Settings', 'Wpi', 'Rally',
+                       function($log,   $window,   $scope,   $location,   $timeout,   $sce,   Settings,   Wpi,   Rally) {
     $log.debug('Creating RunTestCases');
 
     // TODO inject it
@@ -75,7 +75,7 @@ angular.module('QaRally')
     
     // Initialization
 
-    $scope.build = window.qarallyBuildNumber ? 'build ' + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
+    $scope.build = $window.qarallyBuildNumber ? 'build ' + $window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
 
     $scope.wpiList = Wpi.getList();
     $scope.wpiCurrentId = Wpi.getCurrentId();

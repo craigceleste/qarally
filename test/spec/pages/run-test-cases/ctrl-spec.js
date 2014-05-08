@@ -6,7 +6,7 @@ describe('Controller RunTestCases', function() {
   var ctrl;
 
   // Dependency Injections
-  var $controller, $q, $location, $rootScope, $scope, $timeout, $sce, settingsSvc, wpiSvc, rallySvc;
+  var $controller, $q, $window, $location, $rootScope, $scope, $timeout, $sce, settingsSvc, wpiSvc, rallySvc;
 
   // Fakes
   var rallyFakes;
@@ -37,8 +37,9 @@ describe('Controller RunTestCases', function() {
 
     // Get a reference to the services. clean our private ones (use third party services)
 
-    inject(function(_$controller_, _$q_, _$location_, _$rootScope_, _$timeout_, _$sce_, Settings, Wpi, Rally) {
+    inject(function(_$controller_, _$window_, _$q_, _$location_, _$rootScope_, _$timeout_, _$sce_, Settings, Wpi, Rally) {
 
+      $window = _$window_;
       $q = _$q_;
       $location = _$location_;
       $rootScope = _$rootScope_;
@@ -194,6 +195,17 @@ describe('Controller RunTestCases', function() {
       expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
     });
 
+    it('adds the build number in dev environment', function() {
+      $window.qarallyBuildNumber = undefined; // we don't set it in dev
+      createController();
+      expect($scope.build).toEqual('unbuilt');
+    });
+
+    it('adds the build number in production', function() {
+      $window.qarallyBuildNumber = 44; // the build process appends to the bundle: var qarallyBuildNumber = 44;
+      createController();
+      expect($scope.build).toEqual('build 44');
+    });
   });
 
   describe('updateFilters', function() {
@@ -229,7 +241,7 @@ describe('Controller RunTestCases', function() {
 
       tcNormal.WorkProductRef = 'filter wp';
       tcNormal.TestFolderRef = 'filter tf';
-      tcNormal.Name = "Contains TEST PHRASE in the name";
+      tcNormal.Name = 'Contains TEST PHRASE in the name';
 
       createController();
 
@@ -328,7 +340,7 @@ describe('Controller RunTestCases', function() {
 
     it('can filter by name.', function() {
       // Arrange
-      filter.nameContains = "test phrase";
+      filter.nameContains = 'test phrase';
 
       // Act
       ctrl.helpers.updateFilters();
@@ -346,7 +358,7 @@ describe('Controller RunTestCases', function() {
 
     it('can filter by name gracefully ignores null name.', function() {
       // Arrange
-      filter.nameContains = "test phrase";
+      filter.nameContains = 'test phrase';
       delete tcWithoutTestFolder.Name;
 
       // Act
@@ -365,7 +377,7 @@ describe('Controller RunTestCases', function() {
 
     it('will set filterColor to red if all TCs are filtered.', function() {
       // Arrange
-      filter.nameContains = "NONE OF THEM MATCH IT";
+      filter.nameContains = 'NONE OF THEM MATCH IT';
 
       // Act
       ctrl.helpers.updateFilters();
@@ -379,96 +391,6 @@ describe('Controller RunTestCases', function() {
 
       expect($scope.filteredCount).toEqual(5);
       expect($scope.filterColor).toEqual('red');
-    });
-
-  });
-
-  xdescribe('updateFilters', function() {
-
-    // TODO refactor
-    // beforeEach: create a TC list containing all combinations of TC's (should be 4)
-    //    - with/without folder
-    //    - with/without product
-    // 4 filter tests: for each of those cases: expect the exact number to be and not be filtered
-    // 2 tests for name, using same for TCs
-
-
-    var tc, filter;
-
-    beforeEach(function() {
-      createController();
-
-      tc = $scope.testSetDetails.testCases[0];
-      delete tc._isFiltered; // it would be set while creating the controller. null it out.
-
-      filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
-      expect(filter).toBeDefined(); // sanity check
-    });
-
-    // happy path
-
-    it('sets the _isFiltered property on TC\'s.', function() {
-      ctrl.helpers.updateFilters();
-      expect(tc._isFiltered).toEqual(false);
-    });
-
-    describe('does not crash', function() {
-      it('when there is no wpi.',             function () { $scope.currentWpi        = undefined; ctrl.helpers.updateFilters(); });
-      it('when there is no filter.',          function () { $scope.currentWpi.filter = undefined; ctrl.helpers.updateFilters(); });
-      it('when there are no testSetDetails.', function () { $scope.testSetDetails    = undefined; ctrl.helpers.updateFilters(); });
-    });
-
-    // Matrix of cases
-
-    describe('withoutWorkProducts', function(){
-
-      beforeEach(function() {
-        filter.withoutWorkProduct = true;
-      });
-
-      it('filters.',         function() { tc.WorkProductRef = undefined;   ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.WorkProductRef = 'something'; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
-    });
-
-    describe('specific WorkProduct', function(){
-
-      beforeEach(function() {
-        filter.workProducts.something = true;
-      });
-
-      it('filters.',         function() { tc.WorkProductRef = 'something';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.WorkProductRef = 'different';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
-    });
-
-    describe('withoutTestFolder', function(){
-
-      beforeEach(function() {
-        filter.withoutTestFolder = true;
-      });
-
-      it('filters.',         function() { tc.TestFolderRef = undefined;   ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.TestFolderRef = 'something'; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
-    });
-
-    describe('specific TestFolder', function(){
-
-      beforeEach(function() {
-        filter.testFolders.something = true;
-      });
-
-      it('filters.',         function() { tc.TestFolderRef = 'something';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.TestFolderRef = 'different';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
-    });
-
-    describe('by name', function(){
-
-      beforeEach(function() {
-        filter.nameContains = 'A';
-      });
-
-      it('filters.',         function() { tc.Name = 'baaaarney';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
-      it('does not filter.', function() { tc.Name = 'beeeeeety';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('handles nulls.',   function() { delete tc.Name;         ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
     });
 
   });

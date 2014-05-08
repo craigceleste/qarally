@@ -3,7 +3,8 @@
 // Manage WPI form
 
 angular.module('QaRally')
-  .controller('ManageWpi', ['$log', '$scope', '$location', '$q', 'Wpi', 'Rally',  function($log, $scope, $location, $q, Wpi, Rally) {
+  .controller('ManageWpi', ['$log', '$window', '$scope', '$location', '$q', 'Wpi', 'Rally',
+                    function($log,   $window,   $scope,   $location,   $q,   Wpi,   Rally) {
     $log.debug('Creating ManageWpi');
 
     // TODO inject it
@@ -241,7 +242,7 @@ angular.module('QaRally')
     // Expose wpiList to the $scope.
     // Make .currentWpi a shorthand to one of the objects in the list.
 
-    $scope.build = window.qarallyBuildNumber ? 'build ' + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
+    $scope.build = $window.qarallyBuildNumber ? 'build ' + $window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
 
     $scope.wpiList = Wpi.getList();
     $scope.wpiCurrentId = Wpi.getCurrentId();

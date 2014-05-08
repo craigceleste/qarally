@@ -6,7 +6,7 @@ describe('Controller ManageWpi', function() {
   var manageWpiCtrl;
 
   // Dependency Injections
-  var $q, $location, $rootScope, $scope, rallySvc, wpiSvc;
+  var $q, $window, $location, $rootScope, $scope, rallySvc, wpiSvc;
 
   // Fakes
   var rallyFakes; // inputs
@@ -20,8 +20,9 @@ describe('Controller ManageWpi', function() {
 
     // Get a reference to services
 
-    inject(function(_$q_, _$location_, _$rootScope_, Wpi, Rally) {
+    inject(function(_$q_, _$window_, _$location_, _$rootScope_, Wpi, Rally) {
       $q = _$q_;
+      $window = _$window_;
       $location = _$location_;
       $rootScope = _$rootScope_;
       wpiSvc = Wpi;
@@ -103,6 +104,17 @@ describe('Controller ManageWpi', function() {
       expect($scope.subscriptionData).toEqual(rallyFakes.initSubscriptionData);
     });
 
+    it('adds the build number in dev environment', function() {
+      $window.qarallyBuildNumber = undefined; // we don't set it in dev
+      manageWpiCtrl = $controller('ManageWpi', { $scope: $scope });
+      expect($scope.build).toEqual('unbuilt');
+    });
+
+    it('adds the build number in production', function() {
+      $window.qarallyBuildNumber = 44; // the build process appends to the bundle: var qarallyBuildNumber = 44;
+      manageWpiCtrl = $controller('ManageWpi', { $scope: $scope });
+      expect($scope.build).toEqual('build 44');
+    });
   });
 
 
