@@ -96,23 +96,9 @@ Sidebar area
 }
 
 /*
-TC Summary panel
-*/
-.tc-summary-area { position: fixed; right: 0; left: 0; padding: 0 10px; z-index: 2; }
-@media(min-width:992px){
-  .show-tc-sidebar .tc-summary-area { left: 270px; }
-}
-@media(min-width:1200px){
-  .show-tc-sidebar .tc-summary-area { left: 365px; }
-}
-
-/*
 The Test Case Content area
 */
-#tc-content {
-  padding: 10px;
-  padding-top: 70px; /* push it below the static TC summary panel */
-}
+#tc-content { padding: 0 10px;}
 @media(min-width: 992px) { .show-tc-sidebar #tc-content { margin-left: 270px; } }
 @media(min-width: 1200px) { .show-tc-sidebar #tc-content { margin-left: 365px; } }
 
