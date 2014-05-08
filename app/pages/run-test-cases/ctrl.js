@@ -62,11 +62,32 @@ angular.module('QaRally')
 
     };
 
+    var refreshTestSetDetailsConcurrencyCounter = 0;
     privateHelpers.refreshTestSetDetails = function() {
+
+      // Stop adding if something changed while we were working.
+      var concurrencyCheck = ++refreshTestSetDetailsConcurrencyCounter;
+
       $scope.testSetDetails = undefined;
       if ($scope.currentWpi.testSetRef) {
         Rally.initTestSetDetails($scope.currentWpi.testSetRef).then(function(testSetDetails) {
+          
+          // it takes a significant amount of time for angular to render a large collection.
+          // Adding them to the scope 1 at a time in sequential $timeout's takes longer, but feels much shorter.
+
+          var testCases = testSetDetails.testCases;
+          testSetDetails.testCases = [];
           $scope.testSetDetails = testSetDetails;
+          
+          for (var i = 0; i < testCases.length; ++i) {
+            $timeout(function() {
+              if (concurrencyCheck === refreshTestSetDetailsConcurrencyCounter) {
+                $scope.testSetDetails.testCases.push(testCases.shift());
+                privateHelpers.updateFilters(); // it's overkill but it's quick
+              }
+            });
+          }
+
           privateHelpers.updateFilters();
         });
       }

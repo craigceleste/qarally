@@ -215,35 +215,34 @@ describe('Controller RunTestCases', function() {
 
     beforeEach(function() {
 
-      // Fake data gets 5 TC's with different filterable properties
+      createController();
+      $timeout.flush();
 
-      tcNormal             = rallyFakes.initTestSetDetails.testCases[0]; // the default fake data
+      tcNormal             = $scope.testSetDetails.testCases[0]; // the default fake data
 
       tcWithoutTestFolder  = angular.fromJson(angular.toJson(tcNormal)); // cloned and altered
       tcWithoutTestFolder.id = '1';
       delete tcWithoutTestFolder.TestFolderRef;
-      rallyFakes.initTestSetDetails.testCases.push(tcWithoutTestFolder);
+      $scope.testSetDetails.testCases.push(tcWithoutTestFolder);
 
       tcWithoutWorkProduct = angular.fromJson(angular.toJson(tcNormal));
       tcWithoutWorkProduct.id = '2';
       delete tcWithoutWorkProduct.WorkProductRef;
-      rallyFakes.initTestSetDetails.testCases.push(tcWithoutWorkProduct);
+      $scope.testSetDetails.testCases.push(tcWithoutWorkProduct);
 
       tcAltTestFolder      = angular.fromJson(angular.toJson(tcNormal));
       tcAltTestFolder.id = '3';
       tcAltTestFolder.TestFolderRef = 'alternate value';
-      rallyFakes.initTestSetDetails.testCases.push(tcAltTestFolder);
+      $scope.testSetDetails.testCases.push(tcAltTestFolder);
 
       tcAltWorkProduct      = angular.fromJson(angular.toJson(tcNormal));
       tcAltWorkProduct.id = '4';
       tcAltWorkProduct.WorkProductRef = 'alternate value';
-      rallyFakes.initTestSetDetails.testCases.push(tcAltWorkProduct);
+      $scope.testSetDetails.testCases.push(tcAltWorkProduct);
 
       tcNormal.WorkProductRef = 'filter wp';
       tcNormal.TestFolderRef = 'filter tf';
       tcNormal.Name = 'Contains TEST PHRASE in the name';
-
-      createController();
 
       filter = $scope.wpiList[wpiFakes.getCurrentId].filter;
       expect(filter).toBeDefined(); // sanity check
