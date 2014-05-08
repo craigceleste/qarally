@@ -19,8 +19,14 @@ Loading Splash Screen
   ng-cloak
   ng-if="!isLoading">
 
+  <div class="navbar-header">
     <a class="navbar-brand" href="/">QARally</a>
   </div>
+
+  <ul class="nav navbar-nav pull-right">
+    <li><p class="navbar-text">{{build}}</p></li>
+  </ul>
+
 
 </nav>
 <div class="nav-spacer"></div>
@@ -85,7 +91,7 @@ Main Form
           <p class="small">All data that is not stored in Rally is stored on your computer using HTML5 local storage. This improves speed tremendously, but if you clear your browser storage, you will lose your WPI list, filter options and preferences.</p>
 
           <h5>WPI Secret Data</h5>
-          <p class="small">In addition to your choice of workspace, project, iteration and label, each WPI also remembers the build number entered on the main screen, the test set you're working on and your filter options. <strong>Protip</strong>: if you create multiple WPI's to the same iteration, you can have multiple test set configurations with different filters. The test cases for each are stored separately and once.</p>
+          <p class="small">In addition to your choice of workspace, project, iteration and label, each WPI also remembers the build number entered on the main screen, the test set you're working on and your filter options. <strong>Protip</strong>: if you create multiple WPI's to the same iteration, you can have multiple test set configurations with different filters.</p>
 
         </div>
       </div>

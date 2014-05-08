@@ -9,22 +9,6 @@ angular.module('QaRally')
     // TODO inject it
     var _ = window._;
 
-    function init() {
-      // Expose wpiList to the $scope.
-      // Make .currentWpi a shorthand to one of the objects in the list.
-
-      $scope.wpiList = Wpi.getList();
-      $scope.wpiCurrentId = Wpi.getCurrentId();
-      $scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId]; // may be undefined if none selected
-      if ($scope.currentWpi) {
-        $scope.focusCurrentWpiHack = ($scope.focusCurrentWpiHack || 0) + 1;
-      }
-      $scope.refreshSubscriptionData();
-
-      $scope.$watch('currentWpi', watchCurrentWpi, true);
-      $scope.$watch('wpiList', watchWpiList , true);
-    }
-
     $scope.refreshSubscriptionData = function(ignoreCache) {
       $scope.isLoading = true;
       Rally.initSubscriptionData(ignoreCache).then(function(subscriptionData) {
@@ -254,6 +238,21 @@ angular.module('QaRally')
       Wpi.setList($scope.wpiList);
     }
 
-    init();
+    // Expose wpiList to the $scope.
+    // Make .currentWpi a shorthand to one of the objects in the list.
+
+    $scope.build = window.qarallyBuildNumber ? "build " + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
+
+    $scope.wpiList = Wpi.getList();
+    $scope.wpiCurrentId = Wpi.getCurrentId();
+    $scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId]; // may be undefined if none selected
+    if ($scope.currentWpi) {
+      $scope.focusCurrentWpiHack = ($scope.focusCurrentWpiHack || 0) + 1;
+    }
+    $scope.refreshSubscriptionData();
+
+    $scope.$watch('currentWpi', watchCurrentWpi, true);
+    $scope.$watch('wpiList', watchWpiList , true);
+
   }]);
 

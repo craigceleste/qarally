@@ -53,6 +53,8 @@ angular.module('QaRally')
     
     // Initialization
 
+    $scope.build = window.qarallyBuildNumber ? "build " + window.qarallyBuildNumber : 'unbuilt'; // the build process will append this at the end of the main bundle.
+
     $scope.wpiList = Wpi.getList();
     $scope.wpiCurrentId = Wpi.getCurrentId();
     $scope.currentWpi = $scope.wpiList[$scope.wpiCurrentId];

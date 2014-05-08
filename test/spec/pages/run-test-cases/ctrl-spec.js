@@ -22,7 +22,7 @@ describe('Controller RunTestCases', function() {
   function cleanService(service) {
     angular.forEach(Object.keys(service), function(key) {
       if (typeof service[key] === 'function') {
-        service[key] = function() { throw key + ' was called without mock.'; }
+        service[key] = function() { throw key + ' was called without mock.'; };
       }
     });
     return service;
@@ -59,7 +59,7 @@ describe('Controller RunTestCases', function() {
     fakeSettings = {};
     fakeWpiIsValid = true;
 
-  })
+  });
 
   // REVIEW (deviates from angular's best practices, I guess)
   // In order to adjust the fake data INSIDE EACH TEST, before injection into the ctrl,
@@ -120,11 +120,11 @@ describe('Controller RunTestCases', function() {
 
       it('adds the test set details to the scope.', function() {
         expect($scope.testSetDetails).toEqual(rallyFakes.initTestSetDetails);
-      })
+      });
 
       it('does not redirect away from the page.', function() {
         expect($location.url).not.toHaveBeenCalled();
-      })
+      });
 
     });
 
@@ -151,7 +151,7 @@ describe('Controller RunTestCases', function() {
       createController();
 
       // Assert
-      expect($scope.testSetDetails).not.toBeDefined()
+      expect($scope.testSetDetails).not.toBeDefined();
     });
 
     it('adds watch to save changes to settings.', function() {
@@ -165,7 +165,7 @@ describe('Controller RunTestCases', function() {
 
       // Assert
       expect(settingsSvc.set).toHaveBeenCalledWith($scope.settings);
-    })
+    });
 
     it('adds watch to save changes to wpiList.', function() {
 
@@ -178,7 +178,7 @@ describe('Controller RunTestCases', function() {
 
       // Assert
       expect(wpiSvc.setList).toHaveBeenCalledWith($scope.wpiList);
-    })
+    });
 
     it('adds watch to save changes to filter textbox.', function() {
 
@@ -187,12 +187,12 @@ describe('Controller RunTestCases', function() {
       spyOn(ctrl.helpers, 'updateFilters');
 
       // Act
-      $scope.currentWpi.filter.nameContains = "something new";
+      $scope.currentWpi.filter.nameContains = 'something new';
       $rootScope.$apply();
 
       // Assert
       expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
-    })
+    });
 
   });
 
@@ -233,17 +233,17 @@ describe('Controller RunTestCases', function() {
       });
 
       it('filters.',         function() { tc.WorkProductRef = undefined;   ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.WorkProductRef = "something"; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+      it('does not filter.', function() { tc.WorkProductRef = 'something'; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
     });
 
     describe('specific WorkProduct', function(){
 
       beforeEach(function() {
-        filter.workProducts["something"] = true;
+        filter.workProducts.something = true;
       });
 
-      it('filters.',         function() { tc.WorkProductRef = "something";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.WorkProductRef = "different";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+      it('filters.',         function() { tc.WorkProductRef = 'something';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('does not filter.', function() { tc.WorkProductRef = 'different';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
     });
 
     describe('withoutTestFolder', function(){
@@ -253,17 +253,17 @@ describe('Controller RunTestCases', function() {
       });
 
       it('filters.',         function() { tc.TestFolderRef = undefined;   ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.TestFolderRef = "something"; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+      it('does not filter.', function() { tc.TestFolderRef = 'something'; ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
     });
 
     describe('specific TestFolder', function(){
 
       beforeEach(function() {
-        filter.testFolders["something"] = true;
+        filter.testFolders.something = true;
       });
 
-      it('filters.',         function() { tc.TestFolderRef = "something";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
-      it('does not filter.', function() { tc.TestFolderRef = "different";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+      it('filters.',         function() { tc.TestFolderRef = 'something';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('does not filter.', function() { tc.TestFolderRef = 'different';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
     });
 
     describe('by name', function(){
@@ -272,8 +272,8 @@ describe('Controller RunTestCases', function() {
         filter.nameContains = 'A';
       });
 
-      it('filters.',         function() { tc.Name = "baaaarney";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
-      it('does not filter.', function() { tc.Name = "beeeeeety";  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
+      it('filters.',         function() { tc.Name = 'baaaarney';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(false);  });
+      it('does not filter.', function() { tc.Name = 'beeeeeety';  ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
       it('handles nulls.',   function() { delete tc.Name;         ctrl.helpers.updateFilters();  expect(tc._isFiltered).toEqual(true);  });
     });
 
@@ -452,26 +452,26 @@ describe('Controller RunTestCases', function() {
     it('toggles it on.', function() {
 
       // Arrange
-      delete $scope.currentWpi.filter.testFolders['tfRef']; // redundant, but it's not set
+      delete $scope.currentWpi.filter.testFolders.tfRef; // redundant, but it's not set
 
       // Act
       $scope.toggleTestFolderFilter('tfRef');
 
       // Assert
-      expect($scope.currentWpi.filter.testFolders['tfRef']).toEqual(true);
+      expect($scope.currentWpi.filter.testFolders.tfRef).toEqual(true);
       expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
     });
 
     it('toggles it off.', function() {
 
       // Arrange
-      $scope.currentWpi.filter.testFolders['tfRef'] = true;
+      $scope.currentWpi.filter.testFolders.tfRef = true;
 
       // Act
       $scope.toggleTestFolderFilter('tfRef');
 
       // Assert
-      expect($scope.currentWpi.filter.testFolders['tfRef']).not.toBeDefined()
+      expect($scope.currentWpi.filter.testFolders.tfRef).not.toBeDefined();
       expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
     });
 
@@ -498,26 +498,26 @@ describe('Controller RunTestCases', function() {
     it('toggles it on.', function() {
 
       // Arrange
-      delete $scope.currentWpi.filter.workProducts['tfRef']; // redundant, but it's not set
+      delete $scope.currentWpi.filter.workProducts.tfRef; // redundant, but it's not set
 
       // Act
       $scope.toggleWorkProductFilter('tfRef');
 
       // Assert
-      expect($scope.currentWpi.filter.workProducts['tfRef']).toEqual(true);
+      expect($scope.currentWpi.filter.workProducts.tfRef).toEqual(true);
       expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
     });
 
     it('toggles it off.', function() {
 
       // Arrange
-      $scope.currentWpi.filter.workProducts['tfRef'] = true;
+      $scope.currentWpi.filter.workProducts.tfRef = true;
 
       // Act
       $scope.toggleWorkProductFilter('tfRef');
 
       // Assert
-      expect($scope.currentWpi.filter.workProducts['tfRef']).not.toBeDefined()
+      expect($scope.currentWpi.filter.workProducts.tfRef).not.toBeDefined();
       expect(ctrl.helpers.updateFilters).toHaveBeenCalled();
     });
 
@@ -645,15 +645,15 @@ describe('Controller RunTestCases', function() {
   describe('toggleAllTestFolderFilters', function() {
 
     var filter;
-    var folder1, folder2
+    var folder1, folder2;
 
     beforeEach(function() {
       createController();
 
       // 2 test sets in the testSetDetails
 
-      folder1 = { _ref: "tf1", Name: "Wilma" };
-      folder2 = { _ref: "tf2", Name: "Betty" };
+      folder1 = { _ref: 'tf1', Name: 'Wilma' };
+      folder2 = { _ref: 'tf2', Name: 'Betty' };
 
       $scope.testSetDetails.testFolders = { };
       $scope.testSetDetails.testFolders[folder1._ref] = folder1;
@@ -728,18 +728,18 @@ describe('Controller RunTestCases', function() {
   });
 
 
- describe('toggleAllWorkProductFilter', function() {
+  describe('toggleAllWorkProductFilter', function() {
 
     var filter;
-    var product1, product2
+    var product1, product2;
 
     beforeEach(function() {
       createController();
 
       // 2 test sets in the testSetDetails
 
-      product1 = { _ref: "tf1", Name: "Wilma" };
-      product2 = { _ref: "tf2", Name: "Betty" };
+      product1 = { _ref: 'tf1', Name: 'Wilma' };
+      product2 = { _ref: 'tf2', Name: 'Betty' };
 
       $scope.testSetDetails.workProducts = { };
       $scope.testSetDetails.workProducts[product1._ref] = product1;
