@@ -79,13 +79,15 @@ angular.module('QaRally')
           testSetDetails.testCases = [];
           $scope.testSetDetails = testSetDetails;
           
+          function addOneTestCase() {
+            if (concurrencyCheck === refreshTestSetDetailsConcurrencyCounter) {
+              $scope.testSetDetails.testCases.push(testCases.shift());
+              privateHelpers.updateFilters(); // it's overkill but it's quick
+            }
+          }
+
           for (var i = 0; i < testCases.length; ++i) {
-            $timeout(function() {
-              if (concurrencyCheck === refreshTestSetDetailsConcurrencyCounter) {
-                $scope.testSetDetails.testCases.push(testCases.shift());
-                privateHelpers.updateFilters(); // it's overkill but it's quick
-              }
-            });
+            $timeout(addOneTestCase);
           }
 
           privateHelpers.updateFilters();
